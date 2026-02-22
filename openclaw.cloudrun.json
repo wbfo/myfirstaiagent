@@ -1,4 +1,9 @@
 {
+  "agents": {
+    "defaults": {
+      "model": "google/gemini-3-flash-preview"
+    }
+  },
   "gateway": {
     "mode": "local",
     "bind": "lan"

@@ -44,11 +44,13 @@ jobs:
             --no-cpu-throttling
           env_vars: |
             OPENCLAW_GATEWAY_MODE=local
-            OPENCLAW_MODEL=google/gemini-2.0-flash
+            OPENCLAW_GATEWAY_PORT=8080
+            OPENCLAW_MODEL=google/gemini-3-flash-preview
             OPENCLAW_SKIP_CANVAS_HOST=1
             OPENCLAW_CONFIG_PATH=/app/openclaw.cloudrun.json
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            GOOGLE_API_KEY=${{ secrets.GEMINI_API_KEY }}
             OPENCLAW_GATEWAY_TOKEN=${{ secrets.OPENCLAW_GATEWAY_TOKEN }}
 
 
