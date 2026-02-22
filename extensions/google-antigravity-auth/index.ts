@@ -8,7 +8,9 @@ import {
   type ProviderAuthContext,
 } from "openclaw/plugin-sdk";
 
-// OAuth credentials loaded from env vars at runtime.
+// OAuth credentials are loaded from environment variables at runtime.
+// Set GOOGLE_ANTIGRAVITY_CLIENT_ID and GOOGLE_ANTIGRAVITY_CLIENT_SECRET
+// before starting the gateway, or configure them in your .env file.
 const CLIENT_ID = process.env.GOOGLE_ANTIGRAVITY_CLIENT_ID ?? "";
 const CLIENT_SECRET = process.env.GOOGLE_ANTIGRAVITY_CLIENT_SECRET ?? "";
 const REDIRECT_URI = "http://localhost:51121/oauth-callback";
