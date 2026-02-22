@@ -46,6 +46,7 @@ jobs:
             OPENCLAW_GATEWAY_MODE=local
             OPENCLAW_MODEL=google/gemini-2.0-flash
             OPENCLAW_SKIP_CANVAS_HOST=1
+            OPENCLAW_CONFIG_PATH=/app/openclaw.cloudrun.json
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
             OPENCLAW_GATEWAY_TOKEN=${{ secrets.OPENCLAW_GATEWAY_TOKEN }}

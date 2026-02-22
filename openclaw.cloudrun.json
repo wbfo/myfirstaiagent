@@ -1,0 +1,20 @@
+{
+  "gateway": {
+    "mode": "local",
+    "bind": "lan"
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "open",
+      "allowFrom": ["*"],
+      "groupPolicy": "open",
+      "groups": {
+        "*": {
+          "requireMention": false
+        }
+      },
+      "mediaMaxMb": 20
+    }
+  }
+}
