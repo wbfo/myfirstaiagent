@@ -36,7 +36,6 @@ jobs:
           service: myfirstaiagent
           region: europe-west1
           image: ghcr.io/${{ github.repository }}:main
-          skip_dirty_check: 'true'
           flags: >-
             --allow-unauthenticated
             --port 8080
@@ -46,6 +45,7 @@ jobs:
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
             OPENCLAW_GATEWAY_TOKEN=${{ secrets.OPENCLAW_GATEWAY_TOKEN }}
+
 
 
       - name: Show deployed URL
