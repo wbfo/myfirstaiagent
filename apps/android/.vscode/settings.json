@@ -1,0 +1,11 @@
+{
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-21",
+      "path": "/Users/wbfoclaw/.jdks/jdk-21.0.10+7/Contents/Home",
+      "default": true
+    }
+  ],
+  "java.import.gradle.java.home": "/Users/wbfoclaw/.jdks/jdk-21.0.10+7/Contents/Home"
+}

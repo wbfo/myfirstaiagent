@@ -18,5 +18,15 @@
   "typescript.reportStyleChecksAsWarnings": false,
   "typescript.updateImportsOnFileMove.enabled": "always",
   "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.experimental.useTsgo": true
+  "typescript.experimental.useTsgo": true,
+  "java.jdt.ls.java.home": "/tmp/jdk21/Contents/Home",
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-21",
+      "path": "/tmp/jdk21/Contents/Home",
+      "default": true
+    }
+  ],
+  "java.import.gradle.java.home": "/tmp/jdk21/Contents/Home"
 }

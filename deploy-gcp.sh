@@ -4,9 +4,9 @@ set -euo pipefail
 # OpenClaw GCP Cloud Run Deployment Script 🦞
 
 # --- Configuration ---
-PROJECT_ID=$(gcloud config get-value project 2>/dev/null || echo "")
-REGION="us-central1"
-SERVICE_NAME="honey-badger-gateway"
+PROJECT_ID="gen-lang-client-0520127179"
+REGION="europe-west1"
+SERVICE_NAME="myfirstaiagent"
 REPO_NAME="openclaw-repo"
 IMAGE_TAG="latest"
 

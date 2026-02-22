@@ -240,6 +240,21 @@ export class MediaAttachmentCache {
     timeoutMs: number;
   }): Promise<MediaBufferResult> {
     const entry = await this.ensureEntry(params.attachmentIndex);
+    if (entry.attachment.data) {
+      const buffer = Buffer.from(entry.attachment.data, "base64");
+      if (buffer.length > params.maxBytes) {
+        throw new MediaUnderstandingSkipError(
+          "maxBytes",
+          `Attachment ${params.attachmentIndex + 1} exceeds maxBytes ${params.maxBytes}`,
+        );
+      }
+      return {
+        buffer,
+        mime: entry.attachment.mime,
+        fileName: entry.attachment.name ?? `media-${params.attachmentIndex + 1}`,
+        size: buffer.length,
+      };
+    }
     if (entry.buffer) {
       if (entry.buffer.length > params.maxBytes) {
         throw new MediaUnderstandingSkipError(
@@ -375,7 +390,7 @@ export class MediaAttachmentCache {
     await fs.writeFile(tmpPath, bufferResult.buffer);
     entry.tempPath = tmpPath;
     entry.tempCleanup = async () => {
-      await fs.unlink(tmpPath).catch(() => {});
+      await fs.unlink(tmpPath).catch(() => { });
     };
     return { path: tmpPath, cleanup: entry.tempCleanup };
   }

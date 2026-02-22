@@ -9,6 +9,8 @@ export type MediaAttachment = {
   path?: string;
   url?: string;
   mime?: string;
+  data?: string; // base64
+  name?: string;
   index: number;
   alreadyTranscribed?: boolean;
 };

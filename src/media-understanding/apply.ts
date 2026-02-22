@@ -7,6 +7,7 @@ import {
   extractFileContentFromSource,
   normalizeMimeType,
   resolveInputFileLimits,
+  type InputImageContent,
 } from "../media/input-files.js";
 import { resolveAttachmentKind } from "./attachments.js";
 import { runWithConcurrency } from "./concurrency.js";
@@ -25,6 +26,7 @@ import {
   runCapability,
 } from "./runner.js";
 import type {
+  MediaAttachment,
   MediaUnderstandingCapability,
   MediaUnderstandingDecision,
   MediaUnderstandingOutput,
@@ -340,12 +342,12 @@ async function extractFileBlocks(params: {
   cache: ReturnType<typeof createMediaAttachmentCache>;
   limits: ReturnType<typeof resolveFileLimits>;
   skipAttachmentIndexes?: Set<number>;
-}): Promise<string[]> {
+}): Promise<FileExtract[]> {
   const { attachments, cache, limits, skipAttachmentIndexes } = params;
   if (!attachments || attachments.length === 0) {
     return [];
   }
-  const blocks: string[] = [];
+  const results: FileExtract[] = [];
   for (const attachment of attachments) {
     if (!attachment) {
       continue;
@@ -444,23 +446,35 @@ async function extractFileBlocks(params: {
     }
     const text = extracted?.text?.trim() ?? "";
     let blockText = text;
-    if (!blockText) {
-      if (extracted?.images && extracted.images.length > 0) {
-        blockText = "[PDF content rendered to images; images not forwarded to model]";
-      } else {
-        blockText = "[No extractable text]";
-      }
-    }
     const safeName = (bufferResult.fileName ?? `file-${attachment.index + 1}`)
       .replace(/[\r\n\t]+/g, " ")
       .trim();
-    // Escape XML special characters in attributes to prevent injection
-    blocks.push(
-      `<file name="${xmlEscapeAttr(safeName)}" mime="${xmlEscapeAttr(mimeType)}">\n${escapeFileBlockContent(blockText)}\n</file>`,
-    );
+
+    const minTextChars = limits.pdf?.minTextChars ?? 100;
+    const isLowTextPdf = normalizedRawMime === "application/pdf" && text.length < minTextChars;
+
+    if (!blockText || isLowTextPdf) {
+      if (extracted?.images && extracted.images.length > 0) {
+        results.push({ text: "", images: extracted.images, mimeType, fileName: safeName });
+        continue;
+      }
+      if (!blockText) {
+        blockText = "[No extractable text]";
+      }
+    }
+
+    results.push({
+      text: `<file name="${xmlEscapeAttr(safeName)}" mime="${xmlEscapeAttr(mimeType)}">\n${escapeFileBlockContent(blockText)}\n</file>`,
+      mimeType,
+      fileName: safeName,
+    });
   }
-  return blocks;
+  return results;
 }
+
+type FileExtract =
+  | { text: string; mimeType: string; fileName: string }
+  | { text: string; images: InputImageContent[]; mimeType: string; fileName: string };
 
 export async function applyMediaUnderstanding(params: {
   ctx: MsgContext;
@@ -476,13 +490,49 @@ export async function applyMediaUnderstanding(params: {
       .map((value) => extractMediaUserText(value))
       .find((value) => value && value.trim()) ?? undefined;
 
-  const attachments = normalizeMediaAttachments(ctx);
+  let attachments = normalizeMediaAttachments(ctx);
   const providerRegistry = buildProviderRegistry(params.providers);
-  const cache = createMediaAttachmentCache(attachments, {
+  let cache = createMediaAttachmentCache(attachments, {
     localPathRoots: resolveMediaAttachmentLocalRoots({ cfg, ctx }),
   });
 
   try {
+    const fileLimits = resolveFileLimits(cfg);
+    const fileExtractsRaw = (await extractFileBlocks({
+      attachments,
+      cache,
+      limits: fileLimits,
+    })) as unknown as FileExtract[];
+
+    const pdfImages: MediaAttachment[] = [];
+    const fileBlocks: string[] = [];
+
+    for (const extract of fileExtractsRaw) {
+      if (extract.text) {
+        fileBlocks.push(extract.text);
+      }
+      if ("images" in extract && extract.images) {
+        for (let i = 0; i < extract.images.length; i++) {
+          const img = extract.images[i]!;
+          pdfImages.push({
+            index: attachments.length + pdfImages.length,
+            mime: img.mimeType,
+            data: img.data,
+            name: `${extract.fileName} (p${i + 1})`,
+          });
+        }
+      }
+    }
+
+    if (pdfImages.length > 0) {
+      const combinedAttachments = [...attachments, ...pdfImages];
+      await cache.cleanup();
+      attachments = combinedAttachments;
+      cache = createMediaAttachmentCache(attachments, {
+        localPathRoots: resolveMediaAttachmentLocalRoots({ cfg, ctx }),
+      });
+    }
+
     const tasks = CAPABILITY_ORDER.map((capability) => async () => {
       const config = cfg.tools?.media?.[capability];
       return await runCapability({
@@ -534,20 +584,12 @@ export async function applyMediaUnderstanding(params: {
       }
       ctx.MediaUnderstanding = [...(ctx.MediaUnderstanding ?? []), ...outputs];
     }
-    const audioAttachmentIndexes = new Set(
-      outputs
-        .filter((output) => output.kind === "audio.transcription")
-        .map((output) => output.attachmentIndex),
-    );
-    const fileBlocks = await extractFileBlocks({
-      attachments,
-      cache,
-      limits: resolveFileLimits(cfg),
-      skipAttachmentIndexes: audioAttachmentIndexes.size > 0 ? audioAttachmentIndexes : undefined,
-    });
+
     if (fileBlocks.length > 0) {
       ctx.Body = appendFileBlocks(ctx.Body, fileBlocks);
     }
+
+
     if (outputs.length > 0 || fileBlocks.length > 0) {
       finalizeInboundContext(ctx, {
         forceBodyForAgent: true,
