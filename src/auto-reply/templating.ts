@@ -12,10 +12,12 @@ export type OriginatingChannelType = ChannelId | InternalMessageChannel;
 
 export type MsgContext = {
   Body?: string;
+  BodyStripped?: string;
   /**
    * Agent prompt body (may include envelope/history/context). Prefer this for prompt shaping.
    * Should use real newlines (`\n`), not escaped `\\n`.
    */
+
   BodyForAgent?: string;
   /**
    * Recent chat history for context (untrusted user content). Prefer passing this

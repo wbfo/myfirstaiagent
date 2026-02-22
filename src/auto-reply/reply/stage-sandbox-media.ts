@@ -150,7 +150,7 @@ export async function stageSandboxMedia(params: {
         if (sandbox) {
           const rootDest = path.join(effectiveWorkspaceDir, fileName);
           try {
-            await fs.unlink(rootDest).catch(() => { });
+            await fs.unlink(rootDest).catch(() => {});
             await fs.symlink(path.join("media", "inbound", fileName), rootDest);
           } catch (err) {
             logVerbose(`Failed to create workspace symlink for ${fileName}: ${String(err)}`);

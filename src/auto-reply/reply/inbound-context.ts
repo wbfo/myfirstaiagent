@@ -77,6 +77,13 @@ export function finalizeInboundContext<T extends Record<string, unknown>>(
       normalized.Body);
   normalized.BodyForCommands = normalizeInboundTextNewlines(bodyForCommandsSource);
 
+  // If forceBodyForAgent is true (used by apply.ts after media extraction),
+  // we must also update BodyStripped so that derived sessions (sessionCtx)
+  // don't use the stale, pre-extraction version of the body.
+  if (opts.forceBodyForAgent) {
+    normalized.BodyStripped = normalized.BodyForAgent;
+  }
+
   const explicitLabel = normalized.ConversationLabel?.trim();
   if (opts.forceConversationLabel || !explicitLabel) {
     const resolved = resolveConversationLabel(normalized)?.trim();
