@@ -57,9 +57,6 @@ ENV NODE_ENV=production
 USER node
 
 # Start gateway server with default config.
-# Binds to loopback (127.0.0.1) by default for security.
-#
-# For container platforms requiring external health checks:
-#   1. Set OPENCLAW_GATEWAY_TOKEN or OPENCLAW_GATEWAY_PASSWORD env var
-#   2. Override CMD: ["node","openclaw.mjs","gateway","--allow-unconfigured","--bind","lan"]
-CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan"]
+# Binds LAN for container platforms and resolves port from env:
+# OPENCLAW_GATEWAY_PORT (preferred) -> PORT (Cloud Run) -> 18789.
+CMD ["sh", "-lc", "node openclaw.mjs gateway --allow-unconfigured --bind lan --port ${OPENCLAW_GATEWAY_PORT:-${PORT:-18789}}"]
