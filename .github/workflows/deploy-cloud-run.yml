@@ -35,7 +35,7 @@ jobs:
         with:
           service: myfirstaiagent
           region: europe-west1
-          image: ghcr.io/${{ github.repository }}:main
+          image: europe-west1-docker.pkg.dev/gen-lang-client-0520127179/myfirstaiagent/myfirstaiagent:main
           flags: >-
             --allow-unauthenticated
             --port 8080

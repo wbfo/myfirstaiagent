@@ -14,6 +14,8 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
+  GCP_REGISTRY: europe-west1-docker.pkg.dev
+  GCP_PROJECT: gen-lang-client-0520127179
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -59,21 +61,37 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Login to Google Artifact Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GCP_REGISTRY }}
+          username: _json_key
+          password: ${{ secrets.GCP_SA_KEY }}
+
       - name: Resolve image tags
         id: tags
         shell: bash
         env:
           IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          GCP_IMAGE: ${{ env.GCP_REGISTRY }}/${{ env.GCP_PROJECT }}/myfirstaiagent/myfirstaiagent
         run: |
           set -euo pipefail
           tags=()
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
             tags+=("${IMAGE}:main")
             tags+=("${IMAGE}:latest")
+            tags+=("${GCP_IMAGE}:main")
+            tags+=("${GCP_IMAGE}:latest")
           fi
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             version="${GITHUB_REF#refs/tags/v}"
             tags+=("${IMAGE}:${version}")
+            tags+=("${GCP_IMAGE}:${version}")
           fi
           if [[ ${#tags[@]} -eq 0 ]]; then
             echo "::error::No tags resolved for ref ${GITHUB_REF}"
