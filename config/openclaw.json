@@ -1,0 +1,160 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.2.22",
+    "lastTouchedAt": "2026-02-23T17:40:36Z"
+  },
+  "env": {
+    "vars": {
+      "OLLAMA_API_KEY": "ollama"
+    }
+  },
+  "agents": {
+    "list": [
+      {
+        "id": "main",
+        "name": "Main Assistant",
+        "default": true,
+        "subagents": {
+          "allowAgents": [
+            "*"
+          ]
+        }
+      },
+      {
+        "id": "security-auditor",
+        "name": "Security Auditor",
+        "workspace": "/Users/wbfoclaw/OPENopenclaw",
+        "skills": [
+          "code-auditor"
+        ],
+        "tools": {
+          "profile": "full"
+        },
+        "subagents": {
+          "allowAgents": [
+            "*"
+          ]
+        }
+      },
+      {
+        "id": "code-specialist",
+        "name": "Code Specialist",
+        "workspace": "/Users/wbfoclaw/OPENopenclaw",
+        "tools": {
+          "profile": "coding"
+        },
+        "subagents": {
+          "allowAgents": [
+            "*"
+          ]
+        }
+      }
+    ],
+    "defaults": {
+      "model": {
+        "primary": "google/gemini-2.0-flash",
+        "fallbacks": [
+          "ollama/qwen2.5:14b",
+          "ollama/llama3.1:8b",
+          "openai/gpt-4o",
+          "anthropic/claude-3-5-sonnet-20240620"
+        ]
+      },
+      "imageModel": {
+        "primary": "google/gemini-2.0-flash",
+        "fallbacks": [
+          "ollama/llama3.2-vision",
+          "ollama/qwen2.5vl",
+          "ollama/llava",
+          "openai/gpt-4o",
+          "anthropic/claude-3-5-sonnet-20240620"
+        ]
+      },
+      "workspace": "/Users/wbfoclaw/.openclaw/workspace",
+      "contextTokens": 65536,
+      "memorySearch": {
+        "enabled": true,
+        "extraPaths": [
+          "IDEAS.md",
+          "SOUL.md",
+          "IDENTITY.md",
+          "USER.md"
+        ],
+        "provider": "gemini"
+      },
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 3,
+        "maxSpawnDepth": 3,
+        "model": {
+          "primary": "ollama/qwen2.5:14b",
+          "fallbacks": [
+            "ollama/llama3.1:8b"
+          ]
+        }
+      },
+      "sandbox": {
+        "mode": "off"
+      }
+    }
+  },
+  "tools": {
+    "deny": [
+      "group:web",
+      "browser"
+    ],
+    "exec": {
+      "pathPrepend": [
+        "/Users/wbfoclaw/OPENopenclaw/bin"
+      ]
+    }
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "channels": {
+    "telegram": {
+      "dmPolicy": "pairing",
+      "groupPolicy": "allowlist",
+      "voice": {
+        "enabled": true,
+        "voice": "en-US-AndrewNeural",
+        "mode": "always"
+      },
+      "streaming": "off"
+    }
+  },
+  "gateway": {
+    "mode": "local",
+    "trustedProxies": [],
+    "http": {
+      "endpoints": {
+        "responses": {
+          "files": {
+            "pdf": {
+              "maxPages": 10,
+              "minTextChars": 100
+            }
+          }
+        }
+      }
+    }
+  },
+  "costOptStack": true,
+  "plugins": {
+    "entries": {
+      "telegram": {
+        "enabled": true
+      }
+    }
+  }
+}
