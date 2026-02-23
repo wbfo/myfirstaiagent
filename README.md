@@ -81,6 +81,32 @@ openclaw agent --message "Ship checklist" --thinking high
 
 Upgrading? [Updating guide](https://docs.openclaw.ai/install/updating) (and run `openclaw doctor`).
 
+## Project operations workflow (local)
+
+This repo also uses a lightweight 3-layer operating pattern for reliability:
+
+- `directives/` — SOPs (what to do)
+- `execution/` — deterministic scripts (do the work)
+- `skills/` — orchestration-facing skill instructions
+
+Primary readiness check:
+
+```bash
+python3 execution/startup_readiness.py
+```
+
+Telegram no-reply triage entrypoint:
+
+- `directives/telegram_no_reply.md`
+
+Deployment/rollback SOP:
+
+- `directives/cloudrun_deploy_and_rollback.md`
+
+Skill organization/governance SOP:
+
+- `directives/skills_governance.md`
+
 ## Development channels
 
 - **stable**: tagged releases (`vYYYY.M.D` or `vYYYY.M.D-<patch>`), npm dist-tag `latest`.

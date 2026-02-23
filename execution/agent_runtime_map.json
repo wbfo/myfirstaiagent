@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "agents": {
+    "architect": {
+      "runtime": "zeroclaw",
+      "provider": "openrouter",
+      "model_env": "HB_ARCHITECT_MODEL",
+      "default_model": "google/gemini-2.5-pro"
+    },
+    "researcher": {
+      "runtime": "zeroclaw",
+      "provider": "openrouter",
+      "model_env": "HB_RESEARCHER_MODEL",
+      "default_model": "google/gemini-2.5-pro"
+    },
+    "deal-closer": {
+      "runtime": "zeroclaw",
+      "provider": "openrouter",
+      "model_env": "HB_DEAL_CLOSER_MODEL",
+      "default_model": "google/gemini-2.5-flash"
+    },
+    "market-advisory": {
+      "runtime": "nanobot",
+      "model_env": "HB_MARKET_ADVISORY_MODEL",
+      "default_model": "gpt-4o-mini"
+    }
+  }
+}
