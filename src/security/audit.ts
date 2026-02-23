@@ -9,27 +9,38 @@ import { probeGateway } from "../gateway/probe.js";
 import { resolveGatewayProbeAuth } from "../gateway/probe-auth.js";
 import {
   collectAttackSurfaceSummaryFindings,
-  collectExposureMatrixFindings,
+  collectLoggingFindings,
+  collectMinimalProfileOverrideFindings,
+  collectModelHygieneFindings,
+  collectSmallModelRiskFindings,
+  collectElevatedFindings,
+  collectExecRuntimeFindings,
+} from "./audit-config.js";
+import {
+  collectSandboxDangerousConfigFindings,
+  collectSandboxDockerNoopFindings,
+  collectSandboxBrowserHashLabelFindings,
+} from "./audit-sandbox-checks.js";
+import {
+  collectPluginsTrustFindings,
+  collectPluginsCodeSafetyFindings,
+  collectInstalledSkillsCodeSafetyFindings,
+} from "./audit-plugins.js";
+import {
   collectGatewayHttpNoAuthFindings,
   collectGatewayHttpSessionKeyOverrideFindings,
   collectHooksHardeningFindings,
-  collectIncludeFilePermFindings,
-  collectInstalledSkillsCodeSafetyFindings,
-  collectSandboxBrowserHashLabelFindings,
-  collectMinimalProfileOverrideFindings,
-  collectModelHygieneFindings,
   collectNodeDenyCommandPatternFindings,
-  collectSmallModelRiskFindings,
-  collectSandboxDangerousConfigFindings,
-  collectSandboxDockerNoopFindings,
-  collectPluginsTrustFindings,
-  collectSecretsInConfigFindings,
-  collectPluginsCodeSafetyFindings,
-  collectStateDeepFilesystemFindings,
+  collectExposureMatrixFindings,
+} from "./audit-network.js";
+import {
+  collectFilesystemFindings,
   collectSyncedFolderFindings,
+  collectSecretsInConfigFindings,
   readConfigSnapshotForAudit,
-} from "./audit-extra.js";
-import { collectFilesystemFindings } from "./audit-fs-checks.js";
+  collectIncludeFilePermFindings,
+  collectStateDeepFilesystemFindings,
+} from "./audit-fs-checks.js";
 import {
   collectBrowserControlFindings,
   collectGatewayConfigFindings,
@@ -105,113 +116,6 @@ function countBySeverity(findings: SecurityAuditFinding[]): SecurityAuditSummary
     }
   }
   return { critical, warn, info };
-}
-
-function normalizeAllowFromList(list: Array<string | number> | undefined | null): string[] {
-  if (!Array.isArray(list)) {
-    return [];
-  }
-  return list.map((v) => String(v).trim()).filter(Boolean);
-}
-
-
-function collectLoggingFindings(cfg: OpenClawConfig): SecurityAuditFinding[] {
-  const redact = cfg.logging?.redactSensitive;
-  if (redact !== "off") {
-    return [];
-  }
-  return [
-    {
-      checkId: "logging.redact_off",
-      severity: "warn",
-      title: "Tool summary redaction is disabled",
-      detail: `logging.redactSensitive="off" can leak secrets into logs and status output.`,
-      remediation: `Set logging.redactSensitive="tools".`,
-    },
-  ];
-}
-
-function collectElevatedFindings(cfg: OpenClawConfig): SecurityAuditFinding[] {
-  const findings: SecurityAuditFinding[] = [];
-  const enabled = cfg.tools?.elevated?.enabled;
-  const allowFrom = cfg.tools?.elevated?.allowFrom ?? {};
-  const anyAllowFromKeys = Object.keys(allowFrom).length > 0;
-
-  if (enabled === false) {
-    return findings;
-  }
-  if (!anyAllowFromKeys) {
-    return findings;
-  }
-
-  for (const [provider, list] of Object.entries(allowFrom)) {
-    const normalized = normalizeAllowFromList(list);
-    if (normalized.includes("*")) {
-      findings.push({
-        checkId: `tools.elevated.allowFrom.${provider}.wildcard`,
-        severity: "critical",
-        title: "Elevated exec allowlist contains wildcard",
-        detail: `tools.elevated.allowFrom.${provider} includes "*" which effectively approves everyone on that channel for elevated mode.`,
-      });
-    } else if (normalized.length > 25) {
-      findings.push({
-        checkId: `tools.elevated.allowFrom.${provider}.large`,
-        severity: "warn",
-        title: "Elevated exec allowlist is large",
-        detail: `tools.elevated.allowFrom.${provider} has ${normalized.length} entries; consider tightening elevated access.`,
-      });
-    }
-  }
-
-  return findings;
-}
-
-function collectExecRuntimeFindings(cfg: OpenClawConfig): SecurityAuditFinding[] {
-  const findings: SecurityAuditFinding[] = [];
-  const globalExecHost = cfg.tools?.exec?.host;
-  const defaultSandboxMode = resolveSandboxConfigForAgent(cfg).mode;
-  const defaultHostIsExplicitSandbox = globalExecHost === "sandbox";
-
-  if (defaultHostIsExplicitSandbox && defaultSandboxMode === "off") {
-    findings.push({
-      checkId: "tools.exec.host_sandbox_no_sandbox_defaults",
-      severity: "warn",
-      title: "Exec host is sandbox but sandbox mode is off",
-      detail:
-        "tools.exec.host is explicitly set to sandbox while agents.defaults.sandbox.mode=off. " +
-        "In this mode, exec runs directly on the gateway host.",
-      remediation:
-        'Enable sandbox mode (`agents.defaults.sandbox.mode="non-main"` or `"all"`) or set tools.exec.host to "gateway" with approvals.',
-    });
-  }
-
-  const agents = Array.isArray(cfg.agents?.list) ? cfg.agents.list : [];
-  const riskyAgents = agents
-    .filter(
-      (entry) =>
-        entry &&
-        typeof entry === "object" &&
-        typeof entry.id === "string" &&
-        entry.tools?.exec?.host === "sandbox" &&
-        resolveSandboxConfigForAgent(cfg, entry.id).mode === "off",
-    )
-    .map((entry) => entry.id)
-    .slice(0, 5);
-
-  if (riskyAgents.length > 0) {
-    findings.push({
-      checkId: "tools.exec.host_sandbox_no_sandbox_agents",
-      severity: "warn",
-      title: "Agent exec host uses sandbox while sandbox mode is off",
-      detail:
-        `agents.list.*.tools.exec.host is set to sandbox for: ${riskyAgents.join(", ")}. ` +
-        "With sandbox mode off, exec runs directly on the gateway host.",
-      remediation:
-        'Enable sandbox mode for these agents (`agents.list[].sandbox.mode`) or set their tools.exec.host to "gateway".',
-    });
-  }
-
-  return findings;
 }
 
 async function maybeProbeGateway(params: {
@@ -299,7 +203,7 @@ export async function runSecurityAudit(opts: SecurityAuditOptions): Promise<Secu
     );
     if (configSnapshot) {
       findings.push(
-        ...(await collectIncludeFilePermFindings({ configSnapshot, env, platform, execIcacls })),
+        ...(await collectIncludeFilePermFindings({ snapshot: configSnapshot, env, platform, execIcacls })),
       );
     }
     findings.push(

@@ -717,7 +717,7 @@ export async function runHeartbeatOnce(opts: {
       agentId,
     });
 
-    const heartbeatModelOverride = heartbeat?.model?.trim() || (cfg.costOptStack ? "ollama/gemma3:4b" : undefined);
+    const heartbeatModelOverride = heartbeat?.model?.trim() || (cfg.costOptStack ? "ollama/qwen2.5:3b" : undefined);
     const suppressToolErrorWarnings = heartbeat?.suppressToolErrorWarnings === true;
     const replyOpts = heartbeatModelOverride
       ? { isHeartbeat: true, heartbeatModelOverride, suppressToolErrorWarnings }
