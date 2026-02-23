@@ -69,6 +69,7 @@ export function Dashboard() {
   const [host, setHost] = useState("localhost:18789");
   const [token, setToken] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [gatewayStatus, setGatewayStatus] = useState<GatewayStatus>("disconnected");
   const [gatewayInfo, setGatewayInfo] = useState<{ version?: string; connId?: string } | null>(null);
@@ -987,10 +988,27 @@ export function Dashboard() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-hb-bg text-hb-text">
-      <aside className="relative flex w-52 shrink-0 flex-col border-r border-[#1e1e2d] bg-hb-panel2">
+      <aside
+        className={`relative flex shrink-0 flex-col border-r border-[#1e1e2d] bg-hb-panel2 transition-all ${
+          sidebarCollapsed ? "w-16" : "w-52"
+        }`}
+      >
         <div className="border-b border-[#1e1e2d] px-4 py-5">
-          <p className="text-lg font-black text-hb-amber">HoneyBadger</p>
-          <p className="text-[11px] tracking-[0.2em] text-hb-muted">OS DASHBOARD</p>
+          <div className="mb-2 flex items-center justify-between">
+            {!sidebarCollapsed ? <p className="text-lg font-black text-hb-amber">HoneyBadger</p> : <p className="text-lg">🦡</p>}
+            <button
+              onClick={() => {
+                setSidebarCollapsed((v) => !v);
+                setShowSettings(false);
+              }}
+              className="rounded-md border border-hb-border bg-hb-panel px-2 py-1 text-xs text-hb-muted"
+              aria-label={sidebarCollapsed ? "Expand menu" : "Collapse menu"}
+              title={sidebarCollapsed ? "Expand menu" : "Collapse menu"}
+            >
+              {sidebarCollapsed ? "»" : "«"}
+            </button>
+          </div>
+          {!sidebarCollapsed && <p className="text-[11px] tracking-[0.2em] text-hb-muted">OS DASHBOARD</p>}
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2 py-3">
@@ -1003,29 +1021,33 @@ export function Dashboard() {
                 className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${
                   active ? "bg-hb-amber/15 font-semibold text-hb-amber" : "text-hb-muted hover:bg-white/5"
                 }`}
+                title={item.label}
               >
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
+                <span className={sidebarCollapsed ? "mx-auto" : ""}>{item.icon}</span>
+                {!sidebarCollapsed && <span>{item.label}</span>}
               </button>
             );
           })}
         </nav>
 
         <div className="border-t border-[#1e1e2d] p-3">
-          <div className="mb-2 flex items-center gap-2 text-xs text-hb-muted">
+          <div className={`mb-2 flex items-center text-xs text-hb-muted ${sidebarCollapsed ? "justify-center" : "gap-2"}`}>
             <StatusDot status={gatewayStatus} />
-            <span>{gatewayStatus}</span>
+            {!sidebarCollapsed && <span>{gatewayStatus}</span>}
           </div>
           <button
             onClick={() => setShowSettings((v) => !v)}
-            className="w-full rounded-lg border border-hb-border bg-hb-panel px-3 py-1 text-left text-xs text-hb-muted"
+            className={`w-full rounded-lg border border-hb-border bg-hb-panel px-3 py-1 text-xs text-hb-muted ${
+              sidebarCollapsed ? "text-center" : "text-left"
+            }`}
+            title="Gateway Settings"
           >
-            Gateway Settings
+            {sidebarCollapsed ? "⚙" : "Gateway Settings"}
           </button>
         </div>
 
         {showSettings && (
-          <div className="absolute inset-x-2 bottom-16 z-10 rounded-xl border border-hb-border bg-hb-panel p-3 shadow-xl">
+          <div className={`absolute bottom-16 z-10 rounded-xl border border-hb-border bg-hb-panel p-3 shadow-xl ${sidebarCollapsed ? "left-14 w-72" : "inset-x-2"}`}>
             <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">Gateway Settings</p>
             <label className="mb-1 block text-[11px] text-hb-muted">Host</label>
             <input

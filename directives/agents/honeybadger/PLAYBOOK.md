@@ -23,6 +23,9 @@
    - `artifact_written` (true|false)
    - `artifact_preview` (first line or short summary)
 4. Apply timeouts and retry policies defined in the blueprint if they hang.
+5. Do not do blind retry loops:
+   - max one automatic retry per specialist task
+   - if second attempt fails, escalate with `blocked` + failure reason + fallback plan
 
 ## Phase 4: Quality Gate
 1. Validate specialist artifact retrieval before quality checks:
@@ -33,6 +36,7 @@
    - if specialist returned `artifact_preview` or inline content, continue with that content
    - mark run state `needs_review` and include warning in final report
    - optionally request specialist re-write artifact once
+   - if still missing, fetch latest specialist session summary/history and continue with that payload
 3. Pass generated artifacts or fallback content to `quality-gate`.
 4. `quality-gate` checks against `OUTPUT_SCHEMA` and identifies structural risks.
 5. If `quality-gate` rejects, send back to specialist with rejection reasoning.

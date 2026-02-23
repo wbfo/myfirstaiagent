@@ -52,6 +52,7 @@ Single source of truth for HoneyBadger on which agents exist, what they do, and 
 - Role: Fast code-level implementation support.
 - Use when: a task is explicitly coding-heavy and time-sensitive.
 - Contract: if asked to produce file artifacts, must return artifact contract fields.
+- Not a default replacement for `deal-closer` business outputs.
 
 ## security-auditor
 - Role: Security findings and hardening recommendations.
@@ -63,6 +64,8 @@ Single source of truth for HoneyBadger on which agents exist, what they do, and 
 2. Do not chain specialist-to-specialist blindly; HoneyBadger validates each hop.
 3. Enforce one owner per artifact.
 4. Use `quality-gate` before final Captain-facing delivery when structure/risk matters.
+5. For business/advisory deliverables, prefer `deal-closer`; only use `code-specialist` if explicitly requested by Captain.
+6. If a specialist fails twice, stop auto-retrying and escalate with fallback options.
 
 ## Artifact Rules
 1. Any specialist asked for a file must receive:
