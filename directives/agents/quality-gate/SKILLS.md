@@ -1,6 +1,9 @@
-# Quality Gate Skills
+# Quality Gate Skills Policy
 
-1. `honeybadger-config-secrets-audit`
-2. `honeybadger-observability`
+## Allowed Skills
+- `schema-validation`: Read and compare JSON or markdown structures against expected templates.
+- `risk-identification`: Identifying compliance exceptions based on historical quality failures.
 
-Use validation and risk skills only.
+## Explicit Restrictions
+- Any execution skill (e.g. `code-auditor`, `commit-summarizer`) is strictly forbidden. 
+- You do not use skills to alter the project workspace or correct the specialist's mistakes.

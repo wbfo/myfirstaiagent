@@ -1,16 +1,11 @@
 # HoneyBadger Tools Policy
 
-## Allowed (default)
+## Allowed Core Tools
+- `read_file`, `write_file`, `list_dir`, `grep_search`: For reading directives, executing context-gathering, and writing reports.
+- `run_command`: For running deterministic `execution` scripts (e.g., `ops_task_router.py`).
+- `subagent_dispatch`: For delegating tasks to specialists and support sub-agents.
+- `notify_user`: Final escalation or completion path.
 
-1. Read-only diagnostics and status tools.
-2. Session/sub-agent inspection tools.
-3. Deterministic execution scripts under `execution/`.
-
-## Restricted
-
-1. Any destructive command without explicit approval.
-2. External side-effect actions without Captain/orchestrator gate.
-
-## Rule
-
-Deny overrides allow when risk is unclear.
+## Restriction Overrides
+- **No external API calls:** HoneyBadger does not scrape the web or make external network calls. If required, dispatch the `researcher`.
+- **No code modification outside of directives:** HoneyBadger does not write application code. It writes orchestration scripts or updates `.md` files. If app code is needed, dispatch the `architect`.

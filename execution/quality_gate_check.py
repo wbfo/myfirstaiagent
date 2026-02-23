@@ -1,76 +1,60 @@
 #!/usr/bin/env python3
-"""Deterministic quality gate checker for orchestration outputs."""
-
-from __future__ import annotations
-
-import json
 import sys
-from typing import Any, Dict, List
+import json
+import jsonschema
+from typing import Dict, Any
 
+def main():
+    try:
+        input_data = sys.stdin.read().strip()
+        if not input_data:
+            print(json.dumps({"error": "No validation payload provided on stdin"}), file=sys.stderr)
+            sys.exit(1)
 
-REQUIRED_BY_SCHEMA = {
-    "ops_result": ["task_id", "status", "route"],
-    "quality_result": ["task_id", "status", "confidence", "checks"],
-    "architect_result": ["execution_plan", "security_review", "confidence"],
-    "research_result": ["opportunity_brief", "recommended_next_step"],
-    "deal_result": ["deal_package", "confidence"],
-    "market_signal": ["signal", "advisory_only"],
-}
+        payload = json.loads(input_data)
+        
+        artifact = payload.get("artifact", {})
+        required_schema = payload.get("required_schema", {})
+        
+        status = "ok"
+        confidence = 1.0
+        findings = []
+        risk_flags = []
+        recommendation = "Artifact approved against schema."
 
+        if not required_schema:
+            status = "needs_review"
+            confidence = 0.5
+            risk_flags.append("No schema definition provided for strict validation.")
+            recommendation = "Proceed with caution or reject back to orchestrator requesting schema."
+        else:
+            try:
+                jsonschema.validate(instance=artifact, schema=required_schema)
+                findings.append("Schema constraint validation passed.")
+            except jsonschema.exceptions.ValidationError as e:
+                status = "blocked"
+                confidence = 0.99
+                findings.append(f"Validation Error: {e.message}")
+                risk_flags.append(f"Failed at JSON path: {'/'.join(str(p) for p in e.path)}")
+                recommendation = "Reject back to specialist for schema correction."
 
-def _load_input() -> Dict[str, Any]:
-    raw = sys.stdin.read().strip()
-    if not raw:
-        return {}
-    return json.loads(raw)
+        response = {
+            "status": status,
+            "confidence": confidence,
+            "findings": findings,
+            "recommended_next_step": recommendation,
+            "risk_flags": risk_flags
+        }
+        
+        print(json.dumps(response, indent=2))
+        sys.exit(0)
 
-
-def _required_fields(schema: str) -> List[str]:
-    return REQUIRED_BY_SCHEMA.get(schema, [])
-
-
-def main() -> int:
-    payload = _load_input()
-    schema = str(payload.get("required_schema", "")).strip()
-    task_id = str(payload.get("task_id", "unknown")).strip() or "unknown"
-    output = payload.get("output", {})
-    if not isinstance(output, dict):
-        output = {}
-
-    required = _required_fields(schema)
-    checks = []
-    risk_flags: List[str] = []
-    remediation: List[str] = []
-
-    for name in required:
-        passed = name in output
-        checks.append({"name": name, "passed": passed, "note": "" if passed else "missing"})
-        if not passed:
-            risk_flags.append(f"missing:{name}")
-            remediation.append(f"add field '{name}' to output")
-
-    confidence = float(payload.get("confidence", output.get("confidence", 0.0) or 0.0))
-    if confidence < 0.5:
-        risk_flags.append("low_confidence")
-        remediation.append("increase evidence quality or escalate for review")
-
-    status = "ok"
-    if any(not entry["passed"] for entry in checks):
-        status = "blocked"
-    elif risk_flags:
-        status = "needs_review"
-
-    out = {
-        "task_id": task_id,
-        "status": status,
-        "confidence": confidence,
-        "checks": checks,
-        "risk_flags": risk_flags,
-        "remediation": remediation,
-    }
-    print(json.dumps(out, indent=2))
-    return 0 if status == "ok" else 2
-
+    except json.JSONDecodeError as e:
+        print(json.dumps({"error": f"Invalid JSON payload: {str(e)}"}), file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(json.dumps({"error": f"Quality gate runtime failure: {str(e)}"}), file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

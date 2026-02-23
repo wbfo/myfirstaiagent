@@ -1,37 +1,27 @@
 # HoneyBadger Playbook
 
-## Standard orchestration cycle
+## Phase 1: Ingestion & Triaging
+1. Read the objective and `task.md`.
+2. Determine if the objective is executable with current context.
+3. If not executable: Draft questions for Captain and mark task blocked.
+4. If executable: Break into discrete sub-tasks.
 
-1. Clarify objective and constraints.
-2. Route to specialist(s) or support sub-agent(s).
-3. Validate output schema and risk checks.
-4. Escalate/approve based on chain of command.
-5. Record outcomes for weekly review.
+## Phase 2: Execution Routing (Ops Support)
+1. Pass the sub-task list to `ops-coordinator`.
+2. `ops-coordinator` generates an execution graph and queues tasks.
+3. Wait for `ops-coordinator` to recommend dispatch.
 
-## Incident cycle
+## Phase 3: Specialist Dispatch
+1. Dispatch specific tasks to `architect`, `researcher`, or `deal-closer`.
+2. Await their artifacts.
+3. Apply timeouts and retry policies defined in the blueprint if they hang.
 
-1. Run directive entrypoint:
-   - `directives/telegram_no_reply.md`
-2. Execute deterministic checks:
-```bash
-python3 execution/startup_readiness.py
-python3 execution/check_telegram_runtime.py
-python3 execution/check_config_drift.py
-python3 execution/agent_runtime_health.py
-python3 execution/smoke_test_specialists.py
-```
-3. Apply minimal fix and verify with text + file message.
+## Phase 4: Quality Gate
+1. Pass the generated artifacts to the `quality-gate` sub-agent.
+2. `quality-gate` checks against `OUTPUT_SCHEMA` and identifies structural risks.
+3. If `quality-gate` rejects, send back to specialist with the rejection reasoning.
+4. If `quality-gate` approves, aggregate into final report.
 
-## Specialist invocation
-
-Use deterministic dispatch to call specialist runtime bindings:
-
-```bash
-echo '<JSON_PAYLOAD>' | python3 execution/agent_runtime_dispatch.py
-```
-
-Preferred full-cycle command:
-
-```bash
-echo '<JSON_PAYLOAD>' | python3 execution/orchestration_run.py
-```
+## Phase 5: Completion
+1. Update `task.md`.
+2. Provide a single, concise summary of actions taken and artifacts generated to the Captain.

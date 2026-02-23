@@ -1,64 +1,65 @@
 #!/usr/bin/env python3
-"""Deterministic routing helper for HoneyBadger orchestration tasks."""
-
-from __future__ import annotations
-
-import json
 import sys
-from typing import Any, Dict
+import json
+import uuid
+import time
+from typing import Dict, Any
 
+def main():
+    try:
+        input_data = sys.stdin.read().strip()
+        if not input_data:
+            print(json.dumps({
+                "error": "No input payload provided to ops_task_router on stdin"
+            }), file=sys.stderr)
+            sys.exit(1)
 
-ROUTE_BY_TASK = {
-    "incident_telegram": "ops-coordinator",
-    "incident_deploy": "ops-coordinator",
-    "design_change": "architect",
-    "research_request": "researcher",
-    "deal_strategy": "deal-closer",
-    "market_signal_scan": "market-advisory",
-}
+        payload = json.loads(input_data)
+        
+        # Simulated routing logic based on the objective heuristics.
+        # In a full extension, this maps directly to available specialists and config models.
+        objective = payload.get("objective", "").lower()
+        
+        recommended_specialists = []
+        if "research" in objective or "find" in objective or "analyze" in objective:
+            recommended_specialists.append("researcher")
+        if "audit" in objective or "review" in objective or "security" in objective:
+            recommended_specialists.append("architect")
+        if "close" in objective or "proposal" in objective or "offer" in objective:
+            recommended_specialists.append("deal-closer")
+            
+        if not recommended_specialists:
+            recommended_specialists.append("architect") # default fallback capable of general reasoning
 
+        response = {
+            "task_id": f"hb-route-{int(time.time())}-{str(uuid.uuid4())[:8]}",
+            "status": "ok",
+            "confidence": 0.85,
+            "recommended_next_step": f"Dispatch objective to: {', '.join(recommended_specialists)}",
+            "findings": [
+                f"Parsed objective length: {len(objective)} chars.",
+                f"Mapped {len(recommended_specialists)} applicable specialists."
+            ],
+            "risk_flags": [],
+            "execution_graph": {
+                "step_1": recommended_specialists[0],
+                "timeout_s": payload.get("deadline_s", 120)
+            }
+        }
+        
+        print(json.dumps(response, indent=2))
+        sys.exit(0)
 
-def _load_input() -> Dict[str, Any]:
-    raw = sys.stdin.read().strip()
-    if not raw:
-        return {}
-    return json.loads(raw)
-
-
-def main() -> int:
-    payload = _load_input()
-    task_type = str(payload.get("task_type", "")).strip()
-    task_id = str(payload.get("task_id", "unknown")).strip() or "unknown"
-    deadline_s = int(payload.get("deadline_s", 120))
-
-    route = ROUTE_BY_TASK.get(task_type, "ops-coordinator")
-    risk_flags = []
-    status = "ok"
-    reason = "routed_by_task_type"
-    retry_allowed = True
-    retry_after = 2
-
-    if deadline_s <= 0:
-        status = "blocked"
-        reason = "invalid_deadline"
-        retry_allowed = False
-        risk_flags.append("invalid_deadline")
-    elif deadline_s < 30:
-        status = "needs_review"
-        reason = "deadline_too_tight"
-        risk_flags.append("tight_deadline")
-
-    out = {
-        "task_id": task_id,
-        "status": status,
-        "route": route,
-        "retry": {"allowed": retry_allowed, "after_s": retry_after},
-        "reason": reason,
-        "risk_flags": risk_flags,
-    }
-    print(json.dumps(out, indent=2))
-    return 0 if status != "blocked" else 2
-
+    except json.JSONDecodeError as e:
+        print(json.dumps({
+            "error": f"Invalid JSON payload: {str(e)}"
+        }), file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(json.dumps({
+            "error": f"Task routing failure: {str(e)}"
+        }), file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

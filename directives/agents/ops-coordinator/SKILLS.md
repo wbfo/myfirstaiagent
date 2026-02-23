@@ -1,6 +1,9 @@
-# Ops Coordinator Skills
+# Ops Coordinator Skills Policy
 
-1. `honeybadger-observability`
-2. `honeybadger-cloudrun-ops`
+## Allowed Skills
+- `routing-optimization`: Pre-computed lookup of agent capabilities to match tasks.
+- `state-analysis`: Inspecting metrics from previous executions to gauge task complexity.
 
-Use minimal skills needed for run-state coordination.
+## Explicit Restrictions
+- Any execution skill (e.g. `code-auditor`, `commit-summarizer`) is strictly forbidden. 
+- You do not use skills to alter the project workspace.

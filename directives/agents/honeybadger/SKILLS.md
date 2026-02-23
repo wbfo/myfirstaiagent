@@ -1,15 +1,9 @@
 # HoneyBadger Skills Policy
 
-## Active curated skills
+## Allowed Skills
+- `honeybadger-skill-factory`: For generating, assembling, and registering new skills for specialized agents.
+- `honeybadger-observability`: For reviewing log output, metrics, and error rates of running agentic sessions.
+- `honeybadger-config-secrets-audit`: For auditing and verifying config maps and `.env` state before a deployment.
 
-1. `honeybadger-cloudrun-ops`
-2. `honeybadger-telegram-diagnostics`
-3. `honeybadger-config-secrets-audit`
-4. `honeybadger-observability`
-5. `honeybadger-skill-factory`
-6. `skill-creator`
-
-## Skill usage rule
-
-1. Use smallest skill set needed for the task.
-2. Prefer deterministic scripts before free-form analysis when checks exist.
+## Sub-Agent Delegation
+- Execution of actual task skills (e.g. `audit-tool`, `commit-summarizer`, etc) must be passed to the appropriate specialist agent. HoneyBadger acts strictly as the router.

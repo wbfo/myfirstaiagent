@@ -1,12 +1,16 @@
-# HoneyBadger Failure Log
+# HoneyBadger Failure Recovery Log
 
-Use this file for structured post-run failures.
+This protocol outlines how to handle faults across the orchestration pipeline.
 
-## Entry template
+## Error Handling Matrix
 
-1. Date/time
-2. Failure summary
-3. Root cause
-4. Fix applied
-5. Directive/script update required
-6. Prevention rule
+| Error Type                  | Cause                       | Primary Action                                | Escalation  |
+|-----------------------------|-----------------------------|-----------------------------------------------|-------------|
+| Timeout                     | Specialist agent hung       | Dispatch `ops-coordinator` to recommend retry  | On max retry|
+| Quality Reject              | Output schema violation     | Send context back to specialist for revision  | On 2nd fail |
+| Authorization Denied        | Lack of tool permissions    | Stop execution, do not retry.                 | Immediate   |
+| Missing Local Model         | `gemma3:4b` unavailable     | Proceed without `ops-coordinator`.            | Log async   |
+| Unresolvable Conflict       | Sub-agent mismatch          | Mark `needs_review`.                          | Immediate   |
+
+## Logging Requirements
+All critical failures from the execution scripts (e.g. `ops_task_router.py`) must be recorded cleanly into the session logs and immediately bubbled up to the final status report for the Captain.
