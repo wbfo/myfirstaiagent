@@ -41,7 +41,7 @@ export function createSessionsSendTool(opts?: {
     label: "Session Send",
     name: "sessions_send",
     description:
-      "Send a message into another session. Use sessionKey or label to identify the target.",
+      "Send a message into another session. Use sessionKey or label to identify the target. If the target agent may take a long time to reply, set timeoutSeconds to 120 or 300. Set timeoutSeconds to 0 to send asynchronously without waiting for a reply.",
     parameters: SessionsSendToolSchema,
     execute: async (_toolCallId, args) => {
       const params = args as Record<string, unknown>;

@@ -10,18 +10,22 @@ Use this skill whenever we need to add a new skill quickly and consistently.
 ## Creation contract
 
 1. Name format:
+
 - `honeybadger-<domain>-<purpose>`
 - lowercase + hyphen only
 
 2. Required files:
+
 - `<skill-dir>/SKILL.md` with frontmatter (`name`, `description`)
 
 3. Optional files:
+
 - `references/` for deep docs
 - `scripts/` for deterministic steps
 - `assets/` for templates/artifacts
 
 4. Quality gate before adding:
+
 - clear trigger condition
 - concise workflow
 - explicit output format

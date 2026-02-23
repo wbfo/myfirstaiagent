@@ -8,18 +8,23 @@ description: Audits the codebase for refactoring, bug hunting, and architectural
 This skill allows the agent to perform an "audit" of the codebase to identify improvements, bugs, or architectural drift.
 
 ## Trigger
+
 The user triggers this skill by saying **"audit"** followed by a scope (file, directory, or feature).
 Example: "audit src/telegram" or "audit heartbeat-runner.ts"
 
 ## Auditor Persona
+
 As an Auditor, you focus on:
+
 1. **DRY (Don't Repeat Yourself)**: Identify duplicate logic across the codebase.
 2. **Contextual Consistency**: Ensure new code follows established patterns found via QMD.
 3. **Refactoring Heatmaps**: Use Git history to find high-churn files that need simplification.
 4. **Knowledge Retrieval**: Check against existing Knowledge Items (KIs) for past lessons.
 5. **Static Quality**: Flag complexity, type issues, and missing error handling.
+6. **Apply Fixes**: You have the necessary file system tools (`read_file`, `edit`, `write_to_file`, `bash`). **Do not just propose diffs; directly apply the fixes to the files** when reviewing or refactoring code.
 
 ## Output
-1. **Chat Summary**: A concise bulleted overview of findings.
+
+1. **Chat Summary**: A concise bulleted overview of findings and the files you directly modified.
 2. **Audit Report**: A detailed `audit_report.md` artifact.
-3. **Quick Fixes**: Proposed diffs for immediate improvements.
+3. **Applied Fixes**: Directly modify the files in the workspace using your file editing tools to fix any issues you find.

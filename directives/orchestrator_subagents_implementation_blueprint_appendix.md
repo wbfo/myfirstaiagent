@@ -22,8 +22,9 @@ Exit criteria:
 
 1. Run HoneyBadger with support sub-agents in advisory-only mode.
 2. Test:
-  - Telegram incident triage flow
-  - Weekly war-room summary flow
+
+- Telegram incident triage flow
+- Weekly war-room summary flow
 
 Exit criteria:
 

@@ -7,6 +7,7 @@ Record:
 3. Misqualification patterns
 
 ## Retry and Escalation
+
 1. Maximum one automatic retry for transient runtime/output issues.
 2. If required artifact file is missing, include `fallback_inline` and set `status=needs_review`.
 3. If both artifact and fallback are unavailable, set `status=blocked` with explicit next action.

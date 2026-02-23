@@ -28,6 +28,7 @@ import { resolveTelegramAccount } from "./accounts.js";
 import { registerTelegramHandlers } from "./bot-handlers.js";
 import { createTelegramMessageProcessor } from "./bot-message.js";
 import { registerTelegramNativeCommands } from "./bot-native-commands.js";
+import { createTelegramPreflightMiddleware } from "./bot-preflight.js";
 import {
   buildTelegramUpdateKey,
   createTelegramUpdateDedupe,
@@ -40,7 +41,6 @@ import {
   resolveTelegramStreamMode,
 } from "./bot/helpers.js";
 import { resolveTelegramFetch } from "./fetch.js";
-import { createTelegramPreflightMiddleware } from "./bot-preflight.js";
 
 export type TelegramBotOptions = {
   token: string;
@@ -142,19 +142,21 @@ export function createTelegramBot(opts: TelegramBotOptions) {
   const client: ApiClientOptions | undefined =
     shouldProvideFetch || timeoutSeconds
       ? {
-        ...(shouldProvideFetch && fetchImpl ? { fetch: fetchForClient } : {}),
-        ...(timeoutSeconds ? { timeoutSeconds } : {}),
-      }
+          ...(shouldProvideFetch && fetchImpl ? { fetch: fetchForClient } : {}),
+          ...(timeoutSeconds ? { timeoutSeconds } : {}),
+        }
       : undefined;
 
   const bot = new Bot(opts.token, client ? { client } : undefined);
   bot.api.config.use(apiThrottler());
-  bot.use(createTelegramPreflightMiddleware({
-    token: opts.token,
-    accountId: opts.accountId,
-    config: cfg,
-    runtime,
-  }));
+  bot.use(
+    createTelegramPreflightMiddleware({
+      token: opts.token,
+      accountId: opts.accountId,
+      config: cfg,
+      runtime,
+    }),
+  );
   bot.use(sequentialize(getTelegramSequentialKey));
   // Catch all errors from bot middleware to prevent unhandled rejections
   bot.catch((err) => {
@@ -221,7 +223,10 @@ export function createTelegramBot(opts: TelegramBotOptions) {
   bot.use(async (ctx, next) => {
     const GLOBAL_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Global update processing timeout (10m)")), GLOBAL_TIMEOUT_MS),
+      setTimeout(
+        () => reject(new Error("Global update processing timeout (10m)")),
+        GLOBAL_TIMEOUT_MS,
+      ),
     );
     try {
       await Promise.race([next(), timeoutPromise]);
@@ -253,8 +258,8 @@ export function createTelegramBot(opts: TelegramBotOptions) {
   const historyLimit = Math.max(
     0,
     telegramCfg.historyLimit ??
-    cfg.messages?.groupChat?.historyLimit ??
-    DEFAULT_GROUP_HISTORY_LIMIT,
+      cfg.messages?.groupChat?.historyLimit ??
+      DEFAULT_GROUP_HISTORY_LIMIT,
   );
   const groupHistories = new Map<string, HistoryEntry[]>();
   const textLimit = resolveTextChunkLimit(cfg, "telegram", account.accountId);

@@ -310,7 +310,10 @@ async function extractPdfContent(params: {
   return Promise.race([
     extract(),
     new Promise<{ text: string; images: InputImageContent[] }>((_, reject) =>
-      setTimeout(() => reject(new Error(`PDF extraction timed out after ${timeoutMs}ms`)), timeoutMs),
+      setTimeout(
+        () => reject(new Error(`PDF extraction timed out after ${timeoutMs}ms`)),
+        timeoutMs,
+      ),
     ),
   ]);
 }
@@ -351,7 +354,7 @@ async function extractDocxContent(params: {
 
       return { text: textParts.join("\n\n") };
     } catch (err) {
-      throw new Error(`Failed to extract DOCX content: ${String(err)}`);
+      throw new Error(`Failed to extract DOCX content: ${String(err)}`, { cause: err });
     }
   };
 

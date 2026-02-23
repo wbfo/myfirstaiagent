@@ -1,10 +1,13 @@
 # HoneyBadger Audit Mode
 
 ## Purpose
+
 Make HoneyBadger default to proactive project understanding and audit behavior, with minimal back-and-forth questions.
 
 ## Trigger
+
 Activate this mode when Captain asks any variant of:
+
 - "audit the codebase"
 - "audit the project"
 - "audit the base code"
@@ -15,12 +18,15 @@ Activate this mode when Captain asks any variant of:
 - "search everything"
 
 ## Default Scope Definition
+
 If audit mode is triggered and Captain did not narrow scope, scope defaults to:
+
 1. Entire repository in current workspace.
 2. Directives, execution scripts, config/runtime wiring, and frontend/backend integration points.
 3. Recent change window (working tree + recent commits).
 
 ## Audit-First Workflow
+
 1. Build project map:
    - list top-level folders
    - identify app/runtime/config/directives/execution areas
@@ -37,6 +43,7 @@ If audit mode is triggered and Captain did not narrow scope, scope defaults to:
    - deferred nice-to-haves
 
 ## Search Protocol
+
 1. Prefer broad search first (`rg`) and narrow iteratively.
 2. Cross-check directives + runtime config + execution scripts before concluding.
 3. Minimum command checklist for full audit:
@@ -44,12 +51,13 @@ If audit mode is triggered and Captain did not narrow scope, scope defaults to:
    - broad symbol/path search (`rg`)
    - working tree status + recent commit history
    - touched-file diff summary for recent changes
-3. For each finding, include:
+4. For each finding, include:
    - evidence path
    - severity
    - concrete fix
 
 ## Question Minimization Policy
+
 1. Do not ask questions when a reasonable assumption exists.
 2. Make assumptions explicit in output and proceed.
 3. Ask Captain only when blocked by:
@@ -62,7 +70,9 @@ If audit mode is triggered and Captain did not narrow scope, scope defaults to:
    - asking for criteria before returning initial findings
 
 ## Escalation Threshold
+
 Escalate to Captain only after:
+
 1. one full search pass,
 2. one fallback attempt,
 3. clear blocked reason with proposed next options.

@@ -14,7 +14,7 @@ Use the shared envelope from `directives/agents/STANDARD_ORCHESTRATION_CONTRACT.
       "offer": "string",
       "pricing_rationale": "string",
       "terms": ["string"],
-      "objection_map": [{"objection": "string", "response": "string"}],
+      "objection_map": [{ "objection": "string", "response": "string" }],
       "close_plan": ["string"]
     }
   },

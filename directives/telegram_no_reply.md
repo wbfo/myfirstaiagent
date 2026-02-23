@@ -19,19 +19,26 @@ Restore bot replies in Telegram and validate file ingestion in a repeatable way.
 ## Procedure
 
 1. Run startup readiness:
+
 ```bash
 python3 execution/startup_readiness.py
 ```
+
 2. Run Telegram-specific runtime check:
+
 ```bash
 python3 execution/check_telegram_runtime.py
 ```
+
 3. If replies still fail, run drift audit:
+
 ```bash
 python3 execution/check_config_drift.py
 ```
+
 4. Apply only minimal config/env fixes indicated by failed checks.
 5. Re-test with:
+
 - one plain text Telegram message
 - one file upload (document/image)
 

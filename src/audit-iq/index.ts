@@ -10,11 +10,11 @@ export { AuditBriefSchema } from "./intake/schema.js";
 export { runScoringEngine } from "./scoring/engine.js";
 export { formatFullReport, formatSnippet } from "./report/formatter.js";
 export type {
-    AuditBrief,
-    AuditDimension,
-    AuditFinding,
-    AuditReport,
-    AuditSeverity,
-    AuditSnippet,
-    DimensionScore,
+  AuditBrief,
+  AuditDimension,
+  AuditFinding,
+  AuditReport,
+  AuditSeverity,
+  AuditSnippet,
+  DimensionScore,
 } from "./types.js";

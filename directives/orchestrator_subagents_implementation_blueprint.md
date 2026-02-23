@@ -4,8 +4,8 @@
 
 Concrete implementation plan for adding two **local-model support sub-agents** under HoneyBadger, while preserving chain of command:
 
-1. Captain (human)  
-2. HoneyBadger orchestrator  
+1. Captain (human)
+2. HoneyBadger orchestrator
 3. All specialist agents
 
 This is an internal working spec (not a database artifact).
@@ -144,8 +144,9 @@ Define these explicitly before Phase 1:
 3. Primary local model id for support sub-agents.
 4. Fallback model order when local runtime is unavailable.
 5. Degradation behavior:
-  - If local runtime unhealthy: HoneyBadger continues without support sub-agents.
-  - If fallback unavailable: mark task `blocked` and escalate.
+
+- If local runtime unhealthy: HoneyBadger continues without support sub-agents.
+- If fallback unavailable: mark task `blocked` and escalate.
 
 Health gate must pass before support mode:
 
@@ -229,7 +230,6 @@ If `ops-coordinator` and `quality-gate` recommendations conflict:
 
 1. HoneyBadger marks `needs_review`.
 2. HoneyBadger escalates to Captain with both outputs.
-
 
 ## Appendix
 

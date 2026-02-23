@@ -513,7 +513,7 @@ export async function applyMediaUnderstanding(params: {
       }
       if ("images" in extract && extract.images) {
         for (let i = 0; i < extract.images.length; i++) {
-          const img = extract.images[i]!;
+          const img = extract.images[i];
           pdfImages.push({
             index: attachments.length + pdfImages.length,
             mime: img.mimeType,
@@ -588,7 +588,6 @@ export async function applyMediaUnderstanding(params: {
     if (fileBlocks.length > 0) {
       ctx.Body = appendFileBlocks(ctx.Body, fileBlocks);
     }
-
 
     if (outputs.length > 0 || fileBlocks.length > 0) {
       finalizeInboundContext(ctx, {

@@ -28,5 +28,6 @@
       "default": true
     }
   ],
-  "java.import.gradle.java.home": "/tmp/jdk21/Contents/Home"
+  "java.import.gradle.java.home": "/tmp/jdk21/Contents/Home",
+  "java.import.exclusions": ["**/apps/android/**"]
 }

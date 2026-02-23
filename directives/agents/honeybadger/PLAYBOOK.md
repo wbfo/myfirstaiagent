@@ -1,13 +1,15 @@
 # HoneyBadger Playbook
 
 ## Phase -1: Intent Normalization
+
 1. Normalize natural Captain requests into executable intents.
 2. Map any of:
    - "audit base code", "audit project", "audit everything", "run audit"
-   to intent: `FULL_PROJECT_AUDIT`.
+     to intent: `FULL_PROJECT_AUDIT`.
 3. `FULL_PROJECT_AUDIT` always implies whole-workspace scope unless Captain explicitly narrows scope.
 
 ## Phase 0: Audit Baseline (default before planning)
+
 1. Build current-state baseline using:
    - directives + runtime config + execution scripts
    - repository structure and recent git history
@@ -19,18 +21,21 @@
    - likely high-impact improvements
 
 ## Phase 1: Ingestion & Triaging
+
 1. Read the objective and `task.md`.
 2. Determine if the objective is executable with current context.
 3. If not executable: attempt one assumption-driven path first.
 4. Only if still blocked, draft focused questions for Captain and mark task blocked.
-4. If executable: Break into discrete sub-tasks.
+5. If executable: Break into discrete sub-tasks.
 
 ## Phase 2: Execution Routing (Ops Support)
+
 1. Pass the sub-task list to `ops-coordinator`.
 2. `ops-coordinator` generates an execution graph and queues tasks.
 3. Wait for `ops-coordinator` to recommend dispatch.
 
 ## Phase 3: Specialist Dispatch
+
 1. Dispatch specific tasks to `architect`, `researcher`, or `deal-closer`.
 2. For each dispatch, set a deterministic `artifact_contract`:
    - `artifact_file`: required target filename (example: `deal_closer_report.txt`)
@@ -47,6 +52,7 @@
    - if second attempt fails, escalate with `blocked` + failure reason + fallback plan
 
 ## Phase 4: Quality Gate
+
 1. Validate specialist artifact retrieval before quality checks:
    - attempt read of `artifact_file`
    - if read succeeds: continue
@@ -62,6 +68,7 @@
 6. If `quality-gate` approves, aggregate into final report.
 
 ## Phase 5: Completion
+
 1. Update `task.md`.
 2. Provide a single, concise summary of actions taken and artifacts generated to the Captain.
 3. Always include an artifact table in completion output:

@@ -1,12 +1,13 @@
 import { resolveSandboxConfigForAgent } from "../agents/sandbox.js";
 import { execDockerRaw } from "../agents/sandbox/docker.js";
 import { listChannelPlugins } from "../channels/plugins/index.js";
-import { type OpenClawConfig } from "../config/types.js";
-import { resolveConfigPath, resolveStateDir } from "../config/paths.js";
 import { formatCliCommand } from "../cli/command-format.js";
+import { resolveConfigPath, resolveStateDir } from "../config/paths.js";
+import { type OpenClawConfig } from "../config/types.js";
 import { buildGatewayConnectionDetails } from "../gateway/call.js";
-import { probeGateway } from "../gateway/probe.js";
 import { resolveGatewayProbeAuth } from "../gateway/probe-auth.js";
+import { probeGateway } from "../gateway/probe.js";
+import { collectChannelSecurityFindings } from "./audit-channel.js";
 import {
   collectAttackSurfaceSummaryFindings,
   collectLoggingFindings,
@@ -17,15 +18,14 @@ import {
   collectExecRuntimeFindings,
 } from "./audit-config.js";
 import {
-  collectSandboxDangerousConfigFindings,
-  collectSandboxDockerNoopFindings,
-  collectSandboxBrowserHashLabelFindings,
-} from "./audit-sandbox-checks.js";
-import {
-  collectPluginsTrustFindings,
-  collectPluginsCodeSafetyFindings,
-  collectInstalledSkillsCodeSafetyFindings,
-} from "./audit-plugins.js";
+  collectFilesystemFindings,
+  collectSyncedFolderFindings,
+  collectSecretsInConfigFindings,
+  readConfigSnapshotForAudit,
+  collectIncludeFilePermFindings,
+  collectStateDeepFilesystemFindings,
+} from "./audit-fs-checks.js";
+import { collectBrowserControlFindings, collectGatewayConfigFindings } from "./audit-gateway.js";
 import {
   collectGatewayHttpNoAuthFindings,
   collectGatewayHttpSessionKeyOverrideFindings,
@@ -34,18 +34,15 @@ import {
   collectExposureMatrixFindings,
 } from "./audit-network.js";
 import {
-  collectFilesystemFindings,
-  collectSyncedFolderFindings,
-  collectSecretsInConfigFindings,
-  readConfigSnapshotForAudit,
-  collectIncludeFilePermFindings,
-  collectStateDeepFilesystemFindings,
-} from "./audit-fs-checks.js";
+  collectPluginsTrustFindings,
+  collectPluginsCodeSafetyFindings,
+  collectInstalledSkillsCodeSafetyFindings,
+} from "./audit-plugins.js";
 import {
-  collectBrowserControlFindings,
-  collectGatewayConfigFindings,
-} from "./audit-gateway.js";
-import { collectChannelSecurityFindings } from "./audit-channel.js";
+  collectSandboxDangerousConfigFindings,
+  collectSandboxDockerNoopFindings,
+  collectSandboxBrowserHashLabelFindings,
+} from "./audit-sandbox-checks.js";
 import type { ExecFn } from "./windows-acl.js";
 
 export type SecurityAuditSeverity = "info" | "warn" | "critical";
@@ -203,7 +200,12 @@ export async function runSecurityAudit(opts: SecurityAuditOptions): Promise<Secu
     );
     if (configSnapshot) {
       findings.push(
-        ...(await collectIncludeFilePermFindings({ snapshot: configSnapshot, env, platform, execIcacls })),
+        ...(await collectIncludeFilePermFindings({
+          snapshot: configSnapshot,
+          env,
+          platform,
+          execIcacls,
+        })),
       );
     }
     findings.push(
@@ -229,10 +231,10 @@ export async function runSecurityAudit(opts: SecurityAuditOptions): Promise<Secu
   const deep =
     opts.deep === true
       ? await maybeProbeGateway({
-        cfg,
-        timeoutMs: Math.max(250, opts.deepTimeoutMs ?? 5000),
-        probe: opts.probeGatewayFn ?? probeGateway,
-      })
+          cfg,
+          timeoutMs: Math.max(250, opts.deepTimeoutMs ?? 5000),
+          probe: opts.probeGatewayFn ?? probeGateway,
+        })
       : undefined;
 
   if (deep?.gateway?.attempted && !deep.gateway.ok) {

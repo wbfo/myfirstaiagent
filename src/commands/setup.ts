@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
 import JSON5 from "json5";
+import { detectAndPullLocalModels } from "../agents/setup/env-detect.js";
 import { DEFAULT_AGENT_WORKSPACE_DIR, ensureAgentWorkspace } from "../agents/workspace.js";
 import { type OpenClawConfig, createConfigIO, writeConfigFile } from "../config/config.js";
 import { formatConfigPath, logConfigUpdated } from "../config/logging.js";
 import { resolveSessionTranscriptsDir } from "../config/sessions.js";
-import { detectAndPullLocalModels } from "../agents/setup/env-detect.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { defaultRuntime } from "../runtime.js";
 import { shortenHomePath } from "../utils.js";
@@ -78,6 +78,8 @@ export async function setupCommand(
   try {
     await detectAndPullLocalModels();
   } catch (error) {
-    runtime.log(`Environment Detection Error: ${error instanceof Error ? error.message : String(error)}`);
+    runtime.log(
+      `Environment Detection Error: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }

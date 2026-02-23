@@ -87,10 +87,10 @@ export async function getReplyFromConfig(
       opts.heartbeatModelOverride?.trim() ?? agentCfg?.heartbeat?.model?.trim() ?? "";
     const heartbeatRef = heartbeatRaw
       ? resolveModelRefFromString({
-        raw: heartbeatRaw,
-        defaultProvider,
-        aliasIndex,
-      })
+          raw: heartbeatRaw,
+          defaultProvider,
+          aliasIndex,
+        })
       : null;
     if (heartbeatRef) {
       provider = heartbeatRef.ref.provider;
@@ -145,7 +145,10 @@ export async function getReplyFromConfig(
           runUnderstanding(),
           new Promise<void>((_, reject) =>
             setTimeout(
-              () => reject(new Error(`Media/Link understanding timed out after ${understandingTimeoutMs}ms`)),
+              () =>
+                reject(
+                  new Error(`Media/Link understanding timed out after ${understandingTimeoutMs}ms`),
+                ),
               understandingTimeoutMs,
             ),
           ),

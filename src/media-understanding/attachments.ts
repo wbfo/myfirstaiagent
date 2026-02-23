@@ -390,7 +390,7 @@ export class MediaAttachmentCache {
     await fs.writeFile(tmpPath, bufferResult.buffer);
     entry.tempPath = tmpPath;
     entry.tempCleanup = async () => {
-      await fs.unlink(tmpPath).catch(() => { });
+      await fs.unlink(tmpPath).catch(() => {});
     };
     return { path: tmpPath, cleanup: entry.tempCleanup };
   }

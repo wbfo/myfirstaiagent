@@ -24,6 +24,7 @@ Optional custom workspace:
 ```
 
 Shared specialist response baseline:
+
 - `directives/agents/STANDARD_ORCHESTRATION_CONTRACT.md`
 
 Each agent dossier should contain:

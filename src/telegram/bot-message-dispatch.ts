@@ -21,7 +21,9 @@ import { danger, logVerbose } from "../globals.js";
 import { getAgentScopedMediaLocalRoots } from "../media/local-roots.js";
 import type { RuntimeEnv } from "../runtime.js";
 import type { TelegramMessageContext } from "./bot-message-context.js";
+import { markConversationActive, markConversationIdle } from "./bot-preflight.js";
 import type { TelegramBotOptions } from "./bot.js";
+import { getTelegramSequentialKey } from "./bot.js";
 import { deliverReplies } from "./bot/delivery.js";
 import { buildTelegramThreadParams, type TelegramThreadSpec } from "./bot/helpers.js";
 import type { TelegramStreamMode } from "./bot/types.js";
@@ -34,9 +36,12 @@ import {
 } from "./reasoning-lane-coordinator.js";
 import { editMessageTelegram } from "./send.js";
 import { cacheSticker, describeStickerImage } from "./sticker-cache.js";
-import { synthesizeSpeech, stripMarkdownForTts, DEFAULT_TTS_VOICE, DEFAULT_TTS_TIMEOUT_MS } from "./tts.js";
-import { markConversationActive, markConversationIdle } from "./bot-preflight.js";
-import { getTelegramSequentialKey } from "./bot.js";
+import {
+  synthesizeSpeech,
+  stripMarkdownForTts,
+  DEFAULT_TTS_VOICE,
+  DEFAULT_TTS_TIMEOUT_MS,
+} from "./tts.js";
 
 const EMPTY_RESPONSE_FALLBACK = "No response generated. Please try again.";
 
@@ -166,16 +171,16 @@ export const dispatchTelegramMessage = async ({
     const createDraftLane = (enabled: boolean): DraftLaneState => {
       const stream = enabled
         ? createTelegramDraftStream({
-          api: bot.api,
-          chatId,
-          maxChars: draftMaxChars,
-          thread: threadSpec,
-          replyToMessageId: draftReplyToMessageId,
-          minInitialChars: draftMinInitialChars,
-          renderText: renderDraftPreview,
-          log: logVerbose,
-          warn: logVerbose,
-        })
+            api: bot.api,
+            chatId,
+            maxChars: draftMaxChars,
+            thread: threadSpec,
+            replyToMessageId: draftReplyToMessageId,
+            minInitialChars: draftMinInitialChars,
+            renderText: renderDraftPreview,
+            log: logVerbose,
+            warn: logVerbose,
+          })
         : undefined;
       return {
         stream,
@@ -283,7 +288,10 @@ export const dispatchTelegramMessage = async ({
             agentId: route.agentId,
           }),
           new Promise<null>((_, reject) =>
-            setTimeout(() => reject(new Error("Sticker description timed out (1m)")), STICKER_DESC_TIMEOUT_MS),
+            setTimeout(
+              () => reject(new Error("Sticker description timed out (1m)")),
+              STICKER_DESC_TIMEOUT_MS,
+            ),
           ),
         ]);
       }
@@ -343,7 +351,11 @@ export const dispatchTelegramMessage = async ({
     };
     const clearGroupHistory = () => {
       if (isGroup && historyKey) {
-        clearHistoryEntriesIfEnabled({ historyMap: groupHistories, historyKey, limit: historyLimit });
+        clearHistoryEntriesIfEnabled({
+          historyMap: groupHistories,
+          historyKey,
+          limit: historyLimit,
+        });
       }
     };
     const deliveryBaseOptions = {
@@ -447,7 +459,7 @@ export const dispatchTelegramMessage = async ({
       if (result.delivered) {
         deliveryState.delivered = true;
         // Collect non-empty text for TTS synthesis
-        if (payload.text?.trim() && !payload.mediaUrl && !(payload.mediaUrls?.length)) {
+        if (payload.text?.trim() && !payload.mediaUrl && !payload.mediaUrls?.length) {
           deliveredTexts.push(payload.text.trim());
         }
       }
@@ -577,8 +589,8 @@ export const dispatchTelegramMessage = async ({
               }
               const bufferedButtons = (
                 buffered.payload.channelData?.telegram as
-                | { buttons?: TelegramInlineButtons }
-                | undefined
+                  | { buttons?: TelegramInlineButtons }
+                  | undefined
               )?.buttons;
               await deliverLaneText({
                 laneName: "answer",
@@ -676,48 +688,48 @@ export const dispatchTelegramMessage = async ({
               : undefined,
           onReasoningStream: reasoningLane.stream
             ? (payload) => {
-              // Split between reasoning blocks only when the next reasoning
-              // stream starts. Splitting at reasoning-end can orphan the active
-              // preview and cause duplicate reasoning sends on reasoning final.
-              if (splitReasoningOnNextStream) {
-                reasoningLane.stream?.forceNewMessage();
-                resetDraftLaneState(reasoningLane);
-                splitReasoningOnNextStream = false;
+                // Split between reasoning blocks only when the next reasoning
+                // stream starts. Splitting at reasoning-end can orphan the active
+                // preview and cause duplicate reasoning sends on reasoning final.
+                if (splitReasoningOnNextStream) {
+                  reasoningLane.stream?.forceNewMessage();
+                  resetDraftLaneState(reasoningLane);
+                  splitReasoningOnNextStream = false;
+                }
+                ingestDraftLaneSegments(payload.text);
               }
-              ingestDraftLaneSegments(payload.text);
-            }
             : undefined,
           onAssistantMessageStart: answerLane.stream
             ? async () => {
-              reasoningStepState.resetForNextStep();
-              if (answerLane.hasStreamedMessage) {
-                const previewMessageId = answerLane.stream?.messageId();
-                if (typeof previewMessageId === "number") {
-                  archivedAnswerPreviews.push({
-                    messageId: previewMessageId,
-                    textSnapshot: answerLane.lastPartialText,
-                  });
+                reasoningStepState.resetForNextStep();
+                if (answerLane.hasStreamedMessage) {
+                  const previewMessageId = answerLane.stream?.messageId();
+                  if (typeof previewMessageId === "number") {
+                    archivedAnswerPreviews.push({
+                      messageId: previewMessageId,
+                      textSnapshot: answerLane.lastPartialText,
+                    });
+                  }
+                  answerLane.stream?.forceNewMessage();
                 }
-                answerLane.stream?.forceNewMessage();
+                resetDraftLaneState(answerLane);
               }
-              resetDraftLaneState(answerLane);
-            }
             : undefined,
           onReasoningEnd: reasoningLane.stream
             ? () => {
-              // Split when/if a later reasoning block begins.
-              splitReasoningOnNextStream = reasoningLane.hasStreamedMessage;
-            }
+                // Split when/if a later reasoning block begins.
+                splitReasoningOnNextStream = reasoningLane.hasStreamedMessage;
+              }
             : undefined,
           onToolStart: statusReactionController
             ? async (payload) => {
-              await statusReactionController.setTool(payload.name);
-            }
+                await statusReactionController.setTool(payload.name);
+              }
             : undefined,
           onHeartbeat: statusReactionController
             ? async () => {
-              statusReactionController.pulse();
-            }
+                statusReactionController.pulse();
+              }
             : undefined,
           onModelSelected,
         },
@@ -791,7 +803,9 @@ export const dispatchTelegramMessage = async ({
     const voiceCfg = telegramCfg.voice;
     if (voiceCfg?.enabled && deliveredTexts.length > 0) {
       const voiceMode = voiceCfg.mode ?? "always";
-      const userSentVoice = Boolean(ctxPayload.MediaType?.includes("audio") || msg.voice || msg.audio);
+      const userSentVoice = Boolean(
+        ctxPayload.MediaType?.includes("audio") || msg.voice || msg.audio,
+      );
       const shouldSendVoice = voiceMode === "always" || (voiceMode === "auto" && userSentVoice);
       if (shouldSendVoice) {
         const fullText = deliveredTexts.join(" ");
@@ -809,13 +823,13 @@ export const dispatchTelegramMessage = async ({
               const file = new InputFile(speechResult.buffer, speechResult.fileName);
               try {
                 await bot.api.sendVoice(chatId, file, {
-                  ...buildTelegramThreadParams(threadSpec) ?? {},
+                  ...buildTelegramThreadParams(threadSpec),
                 });
               } catch (voiceErr) {
                 // If sendVoice is blocked (privacy settings), try sendAudio as fallback
                 if (String(voiceErr).includes("VOICE_MESSAGES_FORBIDDEN")) {
                   await bot.api.sendAudio(chatId, file, {
-                    ...buildTelegramThreadParams(threadSpec) ?? {},
+                    ...buildTelegramThreadParams(threadSpec),
                   });
                 } else {
                   logVerbose(`telegram: TTS sendVoice failed: ${String(voiceErr)}`);
@@ -823,7 +837,9 @@ export const dispatchTelegramMessage = async ({
               }
             }
           } catch (ttsErr) {
-            logVerbose(`telegram: TTS synthesis failed (continuing without voice): ${String(ttsErr)}`);
+            logVerbose(
+              `telegram: TTS synthesis failed (continuing without voice): ${String(ttsErr)}`,
+            );
           }
         }
       }

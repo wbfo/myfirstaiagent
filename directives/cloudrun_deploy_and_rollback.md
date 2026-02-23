@@ -18,13 +18,17 @@ Deploy safely to Cloud Run, verify message path health, and rollback fast on reg
 ## Procedure
 
 1. Validate readiness locally before deploy:
+
 ```bash
 python3 execution/startup_readiness.py
 ```
+
 2. Validate config/env mapping:
+
 ```bash
 python3 execution/check_config_drift.py
 ```
+
 3. Deploy revision.
 4. Observe startup logs and first inbound/outbound Telegram cycle.
 5. If critical regression is confirmed, rollback immediately to last known-good revision.

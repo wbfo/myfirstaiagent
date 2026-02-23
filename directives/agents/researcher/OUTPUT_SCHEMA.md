@@ -12,7 +12,7 @@ Use the shared envelope from `directives/agents/STANDARD_ORCHESTRATION_CONTRACT.
   "payload": {
     "opportunity_brief": {
       "thesis": "string",
-      "evidence": [{"source": "string", "note": "string"}],
+      "evidence": [{ "source": "string", "note": "string" }],
       "risks": ["string"],
       "confidence": 0.0
     }

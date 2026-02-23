@@ -158,12 +158,12 @@ export class QmdMemoryManager implements MemorySearchManager {
     };
     this.sessionExporter = this.qmd.sessions.enabled
       ? {
-        dir: this.qmd.sessions.exportDir ?? path.join(this.qmdDir, "sessions"),
-        retentionMs: this.qmd.sessions.retentionDays
-          ? this.qmd.sessions.retentionDays * 24 * 60 * 60 * 1000
-          : undefined,
-        collectionName: this.pickSessionCollectionName(),
-      }
+          dir: this.qmd.sessions.exportDir ?? path.join(this.qmdDir, "sessions"),
+          retentionMs: this.qmd.sessions.retentionDays
+            ? this.qmd.sessions.retentionDays * 24 * 60 * 60 * 1000
+            : undefined,
+          collectionName: this.pickSessionCollectionName(),
+        }
       : null;
     if (this.sessionExporter) {
       this.qmd.collections = [
@@ -858,9 +858,9 @@ export class QmdMemoryManager implements MemorySearchManager {
       let stderrTruncated = false;
       const timer = opts?.timeoutMs
         ? setTimeout(() => {
-          child.kill("SIGKILL");
-          reject(new Error(`qmd ${args.join(" ")} timed out after ${opts.timeoutMs}ms`));
-        }, opts.timeoutMs)
+            child.kill("SIGKILL");
+            reject(new Error(`qmd ${args.join(" ")} timed out after ${opts.timeoutMs}ms`));
+          }, opts.timeoutMs)
         : null;
       child.stdout.on("data", (data) => {
         const next = appendOutputWithCap(stdout, data.toString("utf8"), this.maxQmdOutputChars);
@@ -950,9 +950,9 @@ export class QmdMemoryManager implements MemorySearchManager {
       let stderrTruncated = false;
       const timer = opts?.timeoutMs
         ? setTimeout(() => {
-          child.kill("SIGKILL");
-          reject(new Error(`mcporter ${args.join(" ")} timed out after ${opts.timeoutMs}ms`));
-        }, opts.timeoutMs)
+            child.kill("SIGKILL");
+            reject(new Error(`mcporter ${args.join(" ")} timed out after ${opts.timeoutMs}ms`));
+          }, opts.timeoutMs)
         : null;
       child.stdout.on("data", (data) => {
         const next = appendOutputWithCap(stdout, data.toString("utf8"), this.maxQmdOutputChars);

@@ -183,9 +183,9 @@ export function resolveHeartbeatSummaryForAgent(
   const ackMaxChars = Math.max(
     0,
     merged?.ackMaxChars ??
-    defaults?.ackMaxChars ??
-    overrides?.ackMaxChars ??
-    DEFAULT_HEARTBEAT_ACK_MAX_CHARS,
+      defaults?.ackMaxChars ??
+      overrides?.ackMaxChars ??
+      DEFAULT_HEARTBEAT_ACK_MAX_CHARS,
   );
 
   return {
@@ -251,8 +251,8 @@ function resolveHeartbeatAckMaxChars(cfg: OpenClawConfig, heartbeat?: HeartbeatC
   return Math.max(
     0,
     heartbeat?.ackMaxChars ??
-    cfg.agents?.defaults?.heartbeat?.ackMaxChars ??
-    DEFAULT_HEARTBEAT_ACK_MAX_CHARS,
+      cfg.agents?.defaults?.heartbeat?.ackMaxChars ??
+      DEFAULT_HEARTBEAT_ACK_MAX_CHARS,
   );
 }
 
@@ -627,10 +627,10 @@ export async function runHeartbeatOnce(opts: {
   const visibility =
     delivery.channel !== "none"
       ? resolveHeartbeatVisibility({
-        cfg,
-        channel: delivery.channel,
-        accountId: delivery.accountId,
-      })
+          cfg,
+          channel: delivery.channel,
+          accountId: delivery.accountId,
+        })
       : { showOk: false, showAlerts: true, useIndicator: true };
   const { sender } = resolveHeartbeatSenderContext({ cfg, entry, delivery });
   const responsePrefix = resolveEffectiveMessagesConfig(cfg, agentId, {
@@ -717,7 +717,8 @@ export async function runHeartbeatOnce(opts: {
       agentId,
     });
 
-    const heartbeatModelOverride = heartbeat?.model?.trim() || (cfg.costOptStack ? "ollama/qwen2.5:3b" : undefined);
+    const heartbeatModelOverride =
+      heartbeat?.model?.trim() || (cfg.costOptStack ? "ollama/qwen2.5:3b" : undefined);
     const suppressToolErrorWarnings = heartbeat?.suppressToolErrorWarnings === true;
     const replyOpts = heartbeatModelOverride
       ? { isHeartbeat: true, heartbeatModelOverride, suppressToolErrorWarnings }
@@ -829,9 +830,9 @@ export async function runHeartbeatOnce(opts: {
     // Reasoning payloads are text-only; any attachments stay on the main reply.
     const previewText = shouldSkipMain
       ? reasoningPayloads
-        .map((payload) => payload.text)
-        .filter((text): text is string => Boolean(text?.trim()))
-        .join("\n")
+          .map((payload) => payload.text)
+          .filter((text): text is string => Boolean(text?.trim()))
+          .join("\n")
       : normalized.text;
 
     if (delivery.channel === "none" || !delivery.to) {
@@ -903,11 +904,11 @@ export async function runHeartbeatOnce(opts: {
         ...(shouldSkipMain
           ? []
           : [
-            {
-              text: normalized.text,
-              mediaUrls,
-            },
-          ]),
+              {
+                text: normalized.text,
+                mediaUrls,
+              },
+            ]),
       ],
       deps: opts.deps,
     });

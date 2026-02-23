@@ -56,8 +56,8 @@ export type TelegramStreamingMode = "off" | "partial" | "block" | "progress";
 export type TelegramCapabilitiesConfig =
   | string[]
   | {
-    inlineButtons?: TelegramInlineButtonsScope;
-  };
+      inlineButtons?: TelegramInlineButtonsScope;
+    };
 
 /** Custom command definition for Telegram bot menu. */
 export type TelegramCustomCommand = {

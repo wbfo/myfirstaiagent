@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AGENTS, CHANNELS, NAV_ITEMS, SKILL_META } from "@/lib/dashboard-data";
-import type { Agent, ChatMessage, GatewayStatus, Screen, SessionEntry, SubagentRun } from "@/lib/types";
+import type {
+  Agent,
+  ChatMessage,
+  GatewayStatus,
+  Screen,
+  SessionEntry,
+  SubagentRun,
+} from "@/lib/types";
 
 type RpcPending = {
   resolve: (value: unknown) => void;
@@ -45,7 +52,12 @@ function AgentAvatar({ agent, size = 42 }: { agent: Agent; size?: number }) {
   return (
     <div
       className="grid place-items-center rounded-xl border"
-      style={{ width: size, height: size, borderColor: `${agent.color}55`, background: `${agent.color}1a` }}
+      style={{
+        width: size,
+        height: size,
+        borderColor: `${agent.color}55`,
+        background: `${agent.color}1a`,
+      }}
     >
       <span style={{ fontSize: Math.round(size * 0.48) }}>{agent.emoji}</span>
     </div>
@@ -53,7 +65,11 @@ function AgentAvatar({ agent, size = 42 }: { agent: Agent; size?: number }) {
 }
 
 function ModelTag({ model }: { model: string }) {
-  return <code className="rounded bg-hb-bg px-2 py-1 text-xs text-hb-cyan">{model.replace("google/", "")}</code>;
+  return (
+    <code className="rounded bg-hb-bg px-2 py-1 text-xs text-hb-cyan">
+      {model.replace("google/", "")}
+    </code>
+  );
 }
 
 export function Dashboard() {
@@ -66,18 +82,22 @@ export function Dashboard() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [chatAgent, setChatAgent] = useState("honeybadger");
 
-  const [host, setHost] = useState("localhost:18789");
+  const [host, setHost] = useState("127.0.0.1:18789");
   const [token, setToken] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [gatewayStatus, setGatewayStatus] = useState<GatewayStatus>("disconnected");
-  const [gatewayInfo, setGatewayInfo] = useState<{ version?: string; connId?: string } | null>(null);
+  const [gatewayInfo, setGatewayInfo] = useState<{ version?: string; connId?: string } | null>(
+    null,
+  );
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
-  const [chatRunState, setChatRunState] = useState<"streaming" | "done" | "error" | "aborted" | null>(null);
+  const [chatRunState, setChatRunState] = useState<
+    "streaming" | "done" | "error" | "aborted" | null
+  >(null);
   const [chatRunId, setChatRunId] = useState<string | null>(null);
 
   const [sessions, setSessions] = useState<SessionEntry[]>([]);
@@ -97,33 +117,36 @@ export function Dashboard() {
   const [configEditMode, setConfigEditMode] = useState(false);
   const [configEditText, setConfigEditText] = useState("");
   const [configLoading, setConfigLoading] = useState(false);
-  const [configToast, setConfigToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [configToast, setConfigToast] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
-  const currentChatAgent = useMemo(() => AGENTS.find((a) => a.id === chatAgent) ?? AGENTS[0], [chatAgent]);
-
-  const rpc = useCallback(
-    (method: string, params: Record<string, unknown> = {}) => {
-      return new Promise<unknown>((resolve, reject) => {
-        const ws = wsRef.current;
-        if (!ws || ws.readyState !== WebSocket.OPEN) {
-          reject(new Error("Gateway is not connected"));
-          return;
-        }
-
-        const id = String(rpcCounterRef.current++);
-        const timer = setTimeout(() => {
-          const pending = pendingRef.current.get(id);
-          if (!pending) return;
-          pendingRef.current.delete(id);
-          reject(new Error(`Timeout: ${method}`));
-        }, 15000);
-
-        pendingRef.current.set(id, { resolve, reject, timer });
-        ws.send(JSON.stringify({ id, method, params }));
-      });
-    },
-    []
+  const currentChatAgent = useMemo(
+    () => AGENTS.find((a) => a.id === chatAgent) ?? AGENTS[0],
+    [chatAgent],
   );
+
+  const rpc = useCallback((method: string, params: Record<string, unknown> = {}) => {
+    return new Promise<unknown>((resolve, reject) => {
+      const ws = wsRef.current;
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        reject(new Error("Gateway is not connected"));
+        return;
+      }
+
+      const id = String(rpcCounterRef.current++);
+      const timer = setTimeout(() => {
+        const pending = pendingRef.current.get(id);
+        if (!pending) {return;}
+        pendingRef.current.delete(id);
+        reject(new Error(`Timeout: ${method}`));
+      }, 15000);
+
+      pendingRef.current.set(id, { resolve, reject, timer });
+      ws.send(JSON.stringify({ type: "req", id, method, params }));
+    });
+  }, []);
 
   const applySessionsFallback = useCallback(() => {
     setSessions(
@@ -131,8 +154,8 @@ export function Dashboard() {
         key: `agent:${a.id}:main`,
         agentId: a.id,
         label: a.name,
-        status: "idle"
-      }))
+        status: "idle",
+      })),
     );
   }, []);
 
@@ -146,8 +169,10 @@ export function Dashboard() {
     setSessionsError(null);
 
     try {
-      const result = (await rpc("sessions.list", {})) as { sessions?: SessionEntry[] } | SessionEntry[];
-      const list = Array.isArray(result) ? result : result.sessions ?? [];
+      const result = (await rpc("sessions.list", {})) as
+        | { sessions?: SessionEntry[] }
+        | SessionEntry[];
+      const list = Array.isArray(result) ? result : (result.sessions ?? []);
       setSessions(list);
     } catch (err) {
       setSessionsError(err instanceof Error ? err.message : String(err));
@@ -158,7 +183,7 @@ export function Dashboard() {
   }, [applySessionsFallback, gatewayStatus, rpc]);
 
   const loadChannels = useCallback(async () => {
-    if (gatewayStatus !== "connected") return;
+    if (gatewayStatus !== "connected") {return;}
     try {
       const result = (await rpc("channels.status", {})) as Record<string, unknown>;
       setChannelsHealth(result);
@@ -168,10 +193,14 @@ export function Dashboard() {
   }, [gatewayStatus, rpc]);
 
   const loadConfig = useCallback(async () => {
-    if (gatewayStatus !== "connected") return;
+    if (gatewayStatus !== "connected") {return;}
     setConfigLoading(true);
     try {
-      const result = (await rpc("config.get", {})) as { config?: unknown; baseHash?: string; hash?: string };
+      const result = (await rpc("config.get", {})) as {
+        config?: unknown;
+        baseHash?: string;
+        hash?: string;
+      };
       const config = result?.config ?? result;
       setConfigData(config);
       setConfigBaseHash(result.baseHash ?? result.hash ?? null);
@@ -199,21 +228,22 @@ export function Dashboard() {
     ws.onopen = () => {
       ws.send(
         JSON.stringify({
+          type: "req",
           method: "connect",
           id: "handshake",
           params: {
             minProtocol: 1,
             maxProtocol: 10,
             client: {
-              id: "honeybadger-os-next",
+              id: "openclaw-control-ui",
               displayName: "HoneyBadger OS",
               version: "1.0.0",
               platform: "web",
-              mode: "interactive"
+              mode: "webchat",
             },
-            ...(token ? { auth: { token } } : {})
-          }
-        })
+            ...(token ? { auth: { token } } : {}),
+          },
+        }),
       );
     };
 
@@ -225,28 +255,37 @@ export function Dashboard() {
         return;
       }
 
-      if (msg.type === "hello-ok" || (msg.id === "handshake" && msg.result)) {
-        const result = msg.result as { server?: { version?: string; connId?: string } } | undefined;
-        setGatewayInfo(msg.server ?? result?.server ?? null);
+      // Handle hello-ok (handshake success)
+      if (msg.type === "hello-ok") {
+        const helloOk = msg as unknown as { server?: { version?: string; connId?: string } };
+        setGatewayInfo(helloOk.server ?? null);
         setGatewayStatus("connected");
         return;
       }
 
-      if (msg.id && pendingRef.current.has(msg.id)) {
+      // Handle response frames (type: "res")
+      if (msg.type === "res" && msg.id && pendingRef.current.has(msg.id)) {
         const pending = pendingRef.current.get(msg.id);
-        if (!pending) return;
+        if (!pending) {return;}
         clearTimeout(pending.timer);
         pendingRef.current.delete(msg.id);
-        if (msg.error) {
-          pending.reject(new Error(msg.error.message ?? "RPC error"));
+        const resMsg = msg as unknown as {
+          ok?: boolean;
+          payload?: unknown;
+          error?: { message?: string };
+        };
+        if (resMsg.ok === false || resMsg.error) {
+          pending.reject(new Error(resMsg.error?.message ?? "RPC error"));
         } else {
-          pending.resolve(msg.result);
+          pending.resolve(resMsg.payload);
         }
         return;
       }
 
-      const evt = msg.event ?? msg.type;
-      if (evt !== "chat") return;
+      // Handle event frames (type: "event")
+      if (msg.type !== "event") {return;}
+      const evt = msg.event;
+      if (evt !== "chat") {return;}
 
       const data = (msg.data ?? msg) as {
         runId?: string;
@@ -255,7 +294,7 @@ export function Dashboard() {
         sessionKey?: string;
       };
 
-      if (data.sessionKey && data.sessionKey !== `agent:${chatAgent}:main`) return;
+      if (data.sessionKey && data.sessionKey !== `agent:${chatAgent}:main`) {return;}
 
       if (data.state === "delta" || data.state === "delta-text") {
         chatBufferRef.current += data.text ?? "";
@@ -268,7 +307,7 @@ export function Dashboard() {
         const finalText = data.text ?? chatBufferRef.current;
         setChatMessages((prevMsgs) => [
           ...prevMsgs,
-          { id: randomKey("assistant"), role: "assistant", content: finalText, ts: Date.now() }
+          { id: randomKey("assistant"), role: "assistant", content: finalText, ts: Date.now() },
         ]);
         chatBufferRef.current = "";
         setChatRunId(null);
@@ -286,8 +325,8 @@ export function Dashboard() {
             role: "assistant",
             content: `${output}\n\n[${(data.state ?? "error").toUpperCase()}]`,
             ts: Date.now(),
-            isError: true
-          }
+            isError: true,
+          },
         ]);
         chatBufferRef.current = "";
         setChatRunId(null);
@@ -314,16 +353,19 @@ export function Dashboard() {
   }, [connectGateway]);
 
   useEffect(() => {
-    if (screen === "sessions") void loadSessions();
-    if (screen === "channels") void loadChannels();
-    if (screen === "config") void loadConfig();
+    if (screen === "sessions") {void loadSessions();}
+    if (screen === "channels") {void loadChannels();}
+    if (screen === "config") {void loadConfig();}
   }, [screen, loadChannels, loadConfig, loadSessions]);
 
   const sendChat = useCallback(async () => {
     const text = chatInput.trim();
-    if (!text || chatRunState === "streaming") return;
+    if (!text || chatRunState === "streaming") {return;}
 
-    setChatMessages((prevMsgs) => [...prevMsgs, { id: randomKey("user"), role: "user", content: text, ts: Date.now() }]);
+    setChatMessages((prevMsgs) => [
+      ...prevMsgs,
+      { id: randomKey("user"), role: "user", content: text, ts: Date.now() },
+    ]);
     setChatInput("");
     setChatRunState("streaming");
 
@@ -331,7 +373,7 @@ export function Dashboard() {
       await rpc("chat.send", {
         sessionKey: `agent:${chatAgent}:main`,
         message: text,
-        idempotencyKey: randomKey("ui")
+        idempotencyKey: randomKey("ui"),
       });
     } catch (err) {
       setChatMessages((prevMsgs) => [
@@ -341,8 +383,8 @@ export function Dashboard() {
           role: "system",
           content: `Error: ${err instanceof Error ? err.message : String(err)}`,
           ts: Date.now(),
-          isError: true
-        }
+          isError: true,
+        },
       ]);
       setChatRunState("error");
       setTimeout(() => setChatRunState(null), 1500);
@@ -350,7 +392,7 @@ export function Dashboard() {
   }, [chatAgent, chatInput, chatRunState, rpc]);
 
   const abortChat = useCallback(async () => {
-    if (!chatRunId) return;
+    if (!chatRunId) {return;}
     try {
       await rpc("chat.abort", { runId: chatRunId, sessionKey: `agent:${chatAgent}:main` });
     } catch {
@@ -360,28 +402,32 @@ export function Dashboard() {
 
   const spawnSubagent = useCallback(async () => {
     const task = subagentTask.trim();
-    if (!task || gatewayStatus !== "connected" || subagentBusy) return;
+    if (!task || gatewayStatus !== "connected" || subagentBusy) {return;}
 
     setSubagentBusy(true);
     setSubagentTask("");
     const runId = randomKey("run");
     setSubagentRuns((prev) => [
       { runId, agentId: subagentTargetId, task, status: "started", ts: Date.now() },
-      ...prev
+      ...prev,
     ]);
 
     try {
       await rpc("chat.send", {
         sessionKey: "agent:honeybadger:main",
         message: `[DELEGATE -> ${subagentTargetId}] ${task}`,
-        idempotencyKey: randomKey("spawn")
+        idempotencyKey: randomKey("spawn"),
       });
-      setSubagentRuns((prev) => prev.map((r) => (r.runId === runId ? { ...r, status: "delegated" } : r)));
+      setSubagentRuns((prev) =>
+        prev.map((r) => (r.runId === runId ? { ...r, status: "delegated" } : r)),
+      );
     } catch (err) {
       setSubagentRuns((prev) =>
         prev.map((r) =>
-          r.runId === runId ? { ...r, status: "error", output: err instanceof Error ? err.message : String(err) } : r
-        )
+          r.runId === runId
+            ? { ...r, status: "error", output: err instanceof Error ? err.message : String(err) }
+            : r,
+        ),
       );
     } finally {
       setSubagentBusy(false);
@@ -403,15 +449,17 @@ export function Dashboard() {
   const filteredSessions = useMemo(
     () =>
       sessions.filter((s) => {
-        if (!sessionsFilter) return true;
-        return `${s.key ?? ""}${s.agentId ?? ""}${s.label ?? ""}`.toLowerCase().includes(sessionsFilter.toLowerCase());
+        if (!sessionsFilter) {return true;}
+        return `${s.key ?? ""}${s.agentId ?? ""}${s.label ?? ""}`
+          .toLowerCase()
+          .includes(sessionsFilter.toLowerCase());
       }),
-    [sessions, sessionsFilter]
+    [sessions, sessionsFilter],
   );
 
   const navigate = (next: Screen, opts?: { agentId?: string; chatAgent?: string }) => {
     setScreen(next);
-    if (opts?.agentId) setSelectedAgent(opts.agentId);
+    if (opts?.agentId) {setSelectedAgent(opts.agentId);}
     if (opts?.chatAgent) {
       setChatAgent(opts.chatAgent);
       setChatMessages([]);
@@ -426,7 +474,9 @@ export function Dashboard() {
       <div className="space-y-4 p-4 pt-12 sm:space-y-6 sm:p-7 md:pt-7">
         <header>
           <h1 className="text-2xl font-black text-hb-amber sm:text-3xl">HoneyBadger OS</h1>
-          <p className="mt-1 text-xs text-hb-muted sm:text-sm">{AGENTS.length} agents configured, maxConcurrent 4, maxSpawnDepth 3</p>
+          <p className="mt-1 text-xs text-hb-muted sm:text-sm">
+            {AGENTS.length} agents configured, maxConcurrent 4, maxSpawnDepth 3
+          </p>
         </header>
 
         <section className={cardClass("p-4")}>
@@ -435,7 +485,9 @@ export function Dashboard() {
             <div>
               <p className="font-semibold">Gateway {gatewayStatus}</p>
               <p className="text-xs text-hb-muted">
-                {gatewayInfo ? `v${gatewayInfo.version ?? "?"} · connId ${gatewayInfo.connId ?? "?"}` : "No handshake metadata yet"}
+                {gatewayInfo
+                  ? `v${gatewayInfo.version ?? "?"} · connId ${gatewayInfo.connId ?? "?"}`
+                  : "No handshake metadata yet"}
               </p>
             </div>
           </div>
@@ -444,9 +496,21 @@ export function Dashboard() {
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
             { label: "Total Agents", value: AGENTS.length, color: "text-hb-amber" },
-            { label: "Orchestrators", value: AGENTS.filter((a) => a.isDefault).length, color: "text-hb-purple" },
-            { label: "Specialists", value: AGENTS.filter((a) => !a.isDefault).length, color: "text-hb-blue" },
-            { label: "Unique Skills", value: Object.keys(SKILL_META).length, color: "text-hb-green" }
+            {
+              label: "Orchestrators",
+              value: AGENTS.filter((a) => a.isDefault).length,
+              color: "text-hb-purple",
+            },
+            {
+              label: "Specialists",
+              value: AGENTS.filter((a) => !a.isDefault).length,
+              color: "text-hb-blue",
+            },
+            {
+              label: "Unique Skills",
+              value: Object.keys(SKILL_META).length,
+              color: "text-hb-green",
+            },
           ].map((item) => (
             <div key={item.label} className={cardClass("p-3 sm:p-4")}>
               <p className={`text-2xl font-black sm:text-3xl ${item.color}`}>{item.value}</p>
@@ -457,12 +521,20 @@ export function Dashboard() {
 
         <section className="grid gap-3 sm:gap-4 md:grid-cols-2">
           {AGENTS.map((agent) => (
-            <div key={agent.id} className={cardClass("p-3 transition hover:-translate-y-0.5 sm:p-4")}>
+            <div
+              key={agent.id}
+              className={cardClass("p-3 transition hover:-translate-y-0.5 sm:p-4")}
+            >
               <div className="mb-2 flex items-start gap-2 sm:mb-3 sm:gap-3">
                 <AgentAvatar agent={agent} size={36} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold sm:text-base">
-                    {agent.name} {agent.isDefault && <span className="ml-1 rounded-full bg-hb-amber/20 px-1.5 py-0.5 text-[9px] text-hb-amber sm:ml-2 sm:px-2 sm:text-[10px]">DEFAULT</span>}
+                    {agent.name}{" "}
+                    {agent.isDefault && (
+                      <span className="ml-1 rounded-full bg-hb-amber/20 px-1.5 py-0.5 text-[9px] text-hb-amber sm:ml-2 sm:px-2 sm:text-[10px]">
+                        DEFAULT
+                      </span>
+                    )}
                   </p>
                   <p className="text-xs text-hb-muted sm:text-sm">{agent.role}</p>
                 </div>
@@ -481,7 +553,10 @@ export function Dashboard() {
                   <span
                     key={s}
                     className="rounded-full border px-1.5 py-0.5 text-[10px] sm:px-2 sm:text-[11px]"
-                    style={{ borderColor: `${SKILL_META[s]?.color ?? "#64748b"}66`, color: SKILL_META[s]?.color ?? "#64748b" }}
+                    style={{
+                      borderColor: `${SKILL_META[s]?.color ?? "#64748b"}66`,
+                      color: SKILL_META[s]?.color ?? "#64748b",
+                    }}
                   >
                     {s}
                   </span>
@@ -517,11 +592,16 @@ export function Dashboard() {
               </div>
               <div className="mb-2 flex gap-2">
                 <ModelTag model={agent.model} />
-                {agent.fallbacks.length > 0 && <span className="text-xs text-hb-muted">+{agent.fallbacks.length} fallback</span>}
+                {agent.fallbacks.length > 0 && (
+                  <span className="text-xs text-hb-muted">+{agent.fallbacks.length} fallback</span>
+                )}
               </div>
               <div className="flex flex-wrap gap-2">
                 {agent.skills.map((s) => (
-                  <span key={s} className="rounded-full border border-hb-border px-2 py-0.5 text-[11px] text-hb-muted">
+                  <span
+                    key={s}
+                    className="rounded-full border border-hb-border px-2 py-0.5 text-[11px] text-hb-muted"
+                  >
                     {s}
                   </span>
                 ))}
@@ -535,7 +615,7 @@ export function Dashboard() {
 
   const renderAgentDetail = () => {
     const agent = AGENTS.find((a) => a.id === selectedAgent);
-    if (!agent) return <div className="p-7">Agent not found.</div>;
+    if (!agent) {return <div className="p-7">Agent not found.</div>;}
 
     return (
       <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
@@ -575,9 +655,15 @@ export function Dashboard() {
             </div>
             <div className={cardClass("p-4")}>
               <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">Session</p>
-              <code className="rounded bg-hb-bg px-2 py-1 text-xs text-hb-blue">agent:{agent.id}:main</code>
-              {agent.maxConcurrent && <p className="mt-2 text-sm text-hb-muted">maxConcurrent {agent.maxConcurrent}</p>}
-              {agent.maxSpawnDepth != null && <p className="text-sm text-hb-muted">maxSpawnDepth {agent.maxSpawnDepth}</p>}
+              <code className="rounded bg-hb-bg px-2 py-1 text-xs text-hb-blue">
+                agent:{agent.id}:main
+              </code>
+              {agent.maxConcurrent && (
+                <p className="mt-2 text-sm text-hb-muted">maxConcurrent {agent.maxConcurrent}</p>
+              )}
+              {agent.maxSpawnDepth != null && (
+                <p className="text-sm text-hb-muted">maxSpawnDepth {agent.maxSpawnDepth}</p>
+              )}
             </div>
           </div>
         </div>
@@ -609,7 +695,9 @@ export function Dashboard() {
               </option>
             ))}
           </select>
-          <code className="rounded bg-hb-panel px-2 py-1 text-xs text-hb-muted">agent:{chatAgent}:main</code>
+          <code className="rounded bg-hb-panel px-2 py-1 text-xs text-hb-muted">
+            agent:{chatAgent}:main
+          </code>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto p-6">
@@ -624,17 +712,31 @@ export function Dashboard() {
           )}
 
           {chatMessages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              key={msg.id}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            >
               <div
                 className="max-w-[75%] rounded-xl border px-4 py-3 text-sm leading-6"
                 style={{
                   background:
-                    msg.role === "user" ? "rgba(245,158,11,0.12)" : msg.isError ? "rgba(239,68,68,0.12)" : "#1c1c28",
-                  borderColor: msg.role === "user" ? "rgba(245,158,11,0.35)" : msg.isError ? "rgba(239,68,68,0.35)" : "#2a2a3d"
+                    msg.role === "user"
+                      ? "rgba(245,158,11,0.12)"
+                      : msg.isError
+                        ? "rgba(239,68,68,0.12)"
+                        : "#1c1c28",
+                  borderColor:
+                    msg.role === "user"
+                      ? "rgba(245,158,11,0.35)"
+                      : msg.isError
+                        ? "rgba(239,68,68,0.35)"
+                        : "#2a2a3d",
                 }}
               >
                 <p className="whitespace-pre-wrap">{msg.content}</p>
-                <p className="mt-1 text-xs text-hb-muted">{new Date(msg.ts).toLocaleTimeString()}</p>
+                <p className="mt-1 text-xs text-hb-muted">
+                  {new Date(msg.ts).toLocaleTimeString()}
+                </p>
               </div>
             </div>
           ))}
@@ -655,7 +757,10 @@ export function Dashboard() {
               {chatRunState ? `Run: ${chatRunState}` : "Idle"} {chatRunId ? `(${chatRunId})` : ""}
             </span>
             {chatRunState === "streaming" && (
-              <button className="rounded border border-hb-red/40 px-2 py-1 text-hb-red" onClick={abortChat}>
+              <button
+                className="rounded border border-hb-red/40 px-2 py-1 text-hb-red"
+                onClick={abortChat}
+              >
                 Abort
               </button>
             )}
@@ -698,31 +803,50 @@ export function Dashboard() {
             value={sessionsFilter}
             onChange={(e) => setSessionsFilter(e.target.value)}
           />
-          <button className="rounded-lg border border-hb-border bg-hb-panel px-3 py-2 text-sm" onClick={() => void loadSessions()}>
+          <button
+            className="rounded-lg border border-hb-border bg-hb-panel px-3 py-2 text-sm"
+            onClick={() => void loadSessions()}
+          >
             Reload
           </button>
         </div>
 
-        {sessionsError && <div className="rounded-lg border border-hb-red/30 bg-hb-red/10 p-3 text-sm text-hb-red">{sessionsError}</div>}
+        {sessionsError && (
+          <div className="rounded-lg border border-hb-red/30 bg-hb-red/10 p-3 text-sm text-hb-red">
+            {sessionsError}
+          </div>
+        )}
 
         {sessionsLoading ? (
-          <div className="rounded-xl border border-hb-border bg-hb-panel p-6 text-sm text-hb-muted">Loading sessions...</div>
+          <div className="rounded-xl border border-hb-border bg-hb-panel p-6 text-sm text-hb-muted">
+            Loading sessions...
+          </div>
         ) : filteredSessions.length === 0 ? (
-          <div className="rounded-xl border border-hb-border bg-hb-panel p-6 text-sm text-hb-muted">No sessions found.</div>
+          <div className="rounded-xl border border-hb-border bg-hb-panel p-6 text-sm text-hb-muted">
+            No sessions found.
+          </div>
         ) : (
           <div className="space-y-2">
             {filteredSessions.map((session) => {
-              const agent = AGENTS.find((a) => a.id === (session.agentId ?? session.key.split(":")[1]));
+              const agent = AGENTS.find(
+                (a) => a.id === (session.agentId ?? session.key.split(":")[1]),
+              );
               return (
                 <div key={session.key} className={cardClass("p-4")}>
                   <div className="flex items-center gap-3">
                     {agent && <AgentAvatar agent={agent} size={36} />}
                     <div className="min-w-0 flex-1">
                       <code className="text-xs text-hb-amber">{session.key}</code>
-                      <p className="truncate text-xs text-hb-muted">{session.lastMessage ?? session.label ?? "No recent messages"}</p>
+                      <p className="truncate text-xs text-hb-muted">
+                        {session.lastMessage ?? session.label ?? "No recent messages"}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-hb-muted">
-                      <StatusDot status={(session.status === "active" ? "active" : "idle") as "active" | "idle"} />
+                      <StatusDot
+                        status={
+                          (session.status === "active" ? "active" : "idle") as "active" | "idle"
+                        }
+                      />
                       {session.status ?? "idle"}
                     </div>
                   </div>
@@ -756,7 +880,7 @@ export function Dashboard() {
                   style={{
                     borderColor: active ? (agent?.color ?? "#64748b") : "#2a2a3d",
                     color: active ? (agent?.color ?? "#64748b") : "#94a3b8",
-                    background: active ? `${agent?.color ?? "#64748b"}20` : "#13131c"
+                    background: active ? `${agent?.color ?? "#64748b"}20` : "#13131c",
                   }}
                 >
                   {agent?.emoji} {agent?.name ?? agentId}
@@ -804,7 +928,9 @@ export function Dashboard() {
                       <p className="text-xs text-hb-muted">{run.status}</p>
                       {!!run.output && <p className="mt-1 text-xs text-hb-red">{run.output}</p>}
                     </div>
-                    <code className="text-[11px] text-hb-muted">{new Date(run.ts).toLocaleTimeString()}</code>
+                    <code className="text-[11px] text-hb-muted">
+                      {new Date(run.ts).toLocaleTimeString()}
+                    </code>
                   </div>
                 </div>
               );
@@ -825,7 +951,11 @@ export function Dashboard() {
               <tr className="border-b border-hb-border text-xs uppercase tracking-wide text-hb-muted">
                 <th className="py-2 pr-4">Agent</th>
                 {Object.keys(SKILL_META).map((skill) => (
-                  <th key={skill} className="px-2 py-2 text-center" style={{ color: SKILL_META[skill].color }}>
+                  <th
+                    key={skill}
+                    className="px-2 py-2 text-center"
+                    style={{ color: SKILL_META[skill].color }}
+                  >
                     {skill}
                   </th>
                 ))}
@@ -842,7 +972,11 @@ export function Dashboard() {
                   </td>
                   {Object.keys(SKILL_META).map((skill) => (
                     <td key={skill} className="px-2 py-3 text-center">
-                      {agent.skills.includes(skill) ? <span style={{ color: SKILL_META[skill].color }}>✓</span> : <span className="text-hb-muted">·</span>}
+                      {agent.skills.includes(skill) ? (
+                        <span style={{ color: SKILL_META[skill].color }}>✓</span>
+                      ) : (
+                        <span className="text-hb-muted">·</span>
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -859,18 +993,33 @@ export function Dashboard() {
       <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Channels Health</h2>
-          <button className="rounded-lg border border-hb-border bg-hb-panel px-3 py-2 text-sm" onClick={() => void loadChannels()}>
+          <button
+            className="rounded-lg border border-hb-border bg-hb-panel px-3 py-2 text-sm"
+            onClick={() => void loadChannels()}
+          >
             Refresh
           </button>
         </div>
 
         <div className="grid gap-4 xl:grid-cols-2">
           {CHANNELS.map((channel) => {
-            const live = Boolean(channelsHealth?.[channel.id] ?? (channelsHealth as { channels?: Record<string, unknown> } | null)?.channels?.[channel.id]);
+            const live = Boolean(
+              channelsHealth?.[channel.id] ??
+              (channelsHealth as { channels?: Record<string, unknown> } | null)?.channels?.[
+                channel.id
+              ],
+            );
             return (
-              <div key={channel.id} className={`${cardClass("p-4")} border-l-4`} style={{ borderLeftColor: live ? channel.color : "#2a2a3d" }}>
+              <div
+                key={channel.id}
+                className={`${cardClass("p-4")} border-l-4`}
+                style={{ borderLeftColor: live ? channel.color : "#2a2a3d" }}
+              >
                 <div className="mb-2 flex items-center gap-3">
-                  <div className="grid size-10 place-items-center rounded-lg" style={{ background: `${channel.color}22` }}>
+                  <div
+                    className="grid size-10 place-items-center rounded-lg"
+                    style={{ background: `${channel.color}22` }}
+                  >
                     {channel.emoji}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -879,15 +1028,23 @@ export function Dashboard() {
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <StatusDot status={live ? "connected" : "disconnected"} />
-                    <span className={live ? "text-hb-green" : "text-hb-muted"}>{live ? "active" : "no data"}</span>
+                    <span className={live ? "text-hb-green" : "text-hb-muted"}>
+                      {live ? "active" : "no data"}
+                    </span>
                   </div>
                 </div>
 
                 {channel.policy && (
                   <div className="grid grid-cols-3 gap-2 rounded-lg bg-hb-bg p-2 text-xs">
-                    <p className="text-hb-muted">DM: <span className="text-hb-amber">{channel.policy.dm}</span></p>
-                    <p className="text-hb-muted">Group: <span className="text-hb-amber">{channel.policy.group}</span></p>
-                    <p className="text-hb-muted">Mention: <span className="text-hb-green">{channel.policy.mention}</span></p>
+                    <p className="text-hb-muted">
+                      DM: <span className="text-hb-amber">{channel.policy.dm}</span>
+                    </p>
+                    <p className="text-hb-muted">
+                      Group: <span className="text-hb-amber">{channel.policy.group}</span>
+                    </p>
+                    <p className="text-hb-muted">
+                      Mention: <span className="text-hb-green">{channel.policy.mention}</span>
+                    </p>
                   </div>
                 )}
               </div>
@@ -909,12 +1066,20 @@ export function Dashboard() {
       <div className="flex h-full flex-col pt-12 md:pt-0">
         <div className="flex items-center gap-2 border-b border-[#1e1e2d] p-4">
           <h2 className="flex-1 text-lg font-bold">Config Editor</h2>
-          {configBaseHash && <code className="text-xs text-hb-muted">{configBaseHash.slice(0, 12)}...</code>}
-          <button className="rounded-lg border border-hb-border bg-hb-panel px-3 py-1 text-sm" onClick={() => void loadConfig()}>
+          {configBaseHash && (
+            <code className="text-xs text-hb-muted">{configBaseHash.slice(0, 12)}...</code>
+          )}
+          <button
+            className="rounded-lg border border-hb-border bg-hb-panel px-3 py-1 text-sm"
+            onClick={() => void loadConfig()}
+          >
             Reload
           </button>
           {!configEditMode ? (
-            <button className="rounded-lg border border-hb-blue/30 bg-hb-blue/10 px-3 py-1 text-sm text-hb-blue" onClick={() => setConfigEditMode(true)}>
+            <button
+              className="rounded-lg border border-hb-blue/30 bg-hb-blue/10 px-3 py-1 text-sm text-hb-blue"
+              onClick={() => setConfigEditMode(true)}
+            >
               Edit
             </button>
           ) : (
@@ -928,7 +1093,10 @@ export function Dashboard() {
               >
                 Cancel
               </button>
-              <button className="rounded-lg bg-hb-green px-3 py-1 text-sm font-semibold text-black" onClick={() => void saveConfig()}>
+              <button
+                className="rounded-lg bg-hb-green px-3 py-1 text-sm font-semibold text-black"
+                onClick={() => void saveConfig()}
+              >
                 Save
               </button>
             </>
@@ -995,22 +1163,33 @@ export function Dashboard() {
         className="fixed left-3 top-3 z-50 rounded-lg border border-hb-border bg-hb-panel2 p-2 text-hb-amber shadow-lg md:hidden"
         aria-label="Open menu"
       >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><rect y="3" width="20" height="2" rx="1" /><rect y="9" width="20" height="2" rx="1" /><rect y="15" width="20" height="2" rx="1" /></svg>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <rect y="3" width="20" height="2" rx="1" />
+          <rect y="9" width="20" height="2" rx="1" />
+          <rect y="15" width="20" height="2" rx="1" />
+        </svg>
       </button>
 
       {/* Mobile overlay */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => setMobileMenuOpen(false)} />
+        <div
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
       )}
 
       <aside
-        className={`relative z-50 flex shrink-0 flex-col border-r border-[#1e1e2d] bg-hb-panel2 transition-all ${sidebarCollapsed ? "w-16" : "w-52"
-          } ${mobileMenuOpen ? "fixed inset-y-0 left-0" : "hidden md:flex"
-          }`}
+        className={`relative z-50 flex shrink-0 flex-col border-r border-[#1e1e2d] bg-hb-panel2 transition-all ${
+          sidebarCollapsed ? "w-16" : "w-52"
+        } ${mobileMenuOpen ? "fixed inset-y-0 left-0" : "hidden md:flex"}`}
       >
         <div className="border-b border-[#1e1e2d] px-4 py-5">
           <div className="mb-2 flex items-center justify-between">
-            {!sidebarCollapsed ? <p className="text-lg font-black text-hb-amber">HoneyBadger</p> : <p className="text-lg">🦡</p>}
+            {!sidebarCollapsed ? (
+              <p className="text-lg font-black text-hb-amber">HoneyBadger</p>
+            ) : (
+              <p className="text-lg">🦡</p>
+            )}
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setMobileMenuOpen(false)}
@@ -1032,12 +1211,15 @@ export function Dashboard() {
               </button>
             </div>
           </div>
-          {!sidebarCollapsed && <p className="text-[11px] tracking-[0.2em] text-hb-muted">OS DASHBOARD</p>}
+          {!sidebarCollapsed && (
+            <p className="text-[11px] tracking-[0.2em] text-hb-muted">OS DASHBOARD</p>
+          )}
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2 py-3">
           {NAV_ITEMS.map((item) => {
-            const active = screen === item.id || (item.id === "agents" && screen === "agent-detail");
+            const active =
+              screen === item.id || (item.id === "agents" && screen === "agent-detail");
             return (
               <button
                 key={item.id}
@@ -1045,8 +1227,11 @@ export function Dashboard() {
                   navigate(item.id);
                   setMobileMenuOpen(false);
                 }}
-                className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${active ? "bg-hb-amber/15 font-semibold text-hb-amber" : "text-hb-muted hover:bg-white/5"
-                  }`}
+                className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+                  active
+                    ? "bg-hb-amber/15 font-semibold text-hb-amber"
+                    : "text-hb-muted hover:bg-white/5"
+                }`}
                 title={item.label}
               >
                 <span className={sidebarCollapsed ? "mx-auto" : ""}>{item.icon}</span>
@@ -1057,14 +1242,17 @@ export function Dashboard() {
         </nav>
 
         <div className="border-t border-[#1e1e2d] p-3">
-          <div className={`mb-2 flex items-center text-xs text-hb-muted ${sidebarCollapsed ? "justify-center" : "gap-2"}`}>
+          <div
+            className={`mb-2 flex items-center text-xs text-hb-muted ${sidebarCollapsed ? "justify-center" : "gap-2"}`}
+          >
             <StatusDot status={gatewayStatus} />
             {!sidebarCollapsed && <span>{gatewayStatus}</span>}
           </div>
           <button
             onClick={() => setShowSettings((v) => !v)}
-            className={`w-full rounded-lg border border-hb-border bg-hb-panel px-3 py-1 text-xs text-hb-muted ${sidebarCollapsed ? "text-center" : "text-left"
-              }`}
+            className={`w-full rounded-lg border border-hb-border bg-hb-panel px-3 py-1 text-xs text-hb-muted ${
+              sidebarCollapsed ? "text-center" : "text-left"
+            }`}
             title="Gateway Settings"
           >
             {sidebarCollapsed ? "⚙" : "Gateway Settings"}
@@ -1072,7 +1260,9 @@ export function Dashboard() {
         </div>
 
         {showSettings && (
-          <div className={`absolute bottom-16 z-10 rounded-xl border border-hb-border bg-hb-panel p-3 shadow-xl ${sidebarCollapsed ? "left-14 w-72" : "inset-x-2"}`}>
+          <div
+            className={`absolute bottom-16 z-10 rounded-xl border border-hb-border bg-hb-panel p-3 shadow-xl ${sidebarCollapsed ? "left-14 w-72" : "inset-x-2"}`}
+          >
             <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">Gateway Settings</p>
             <label className="mb-1 block text-[11px] text-hb-muted">Host</label>
             <input

@@ -8,10 +8,10 @@
 
 ## 📊 Overview & Metrics
 
--   **Files Analyzed:** 24 files (`src/security/*.ts`)
--   **Git Churn (All Time):** 24 commits
--   **Last Modified:** Sun Feb 22 03:40:05 2026 -0500
--   **Core Responsibility:** Defining and executing security checks across the OpenClaw architecture (Gateway, Sandboxing, Plugins, Filesystem, auth models).
+- **Files Analyzed:** 24 files (`src/security/*.ts`)
+- **Git Churn (All Time):** 24 commits
+- **Last Modified:** Sun Feb 22 03:40:05 2026 -0500
+- **Core Responsibility:** Defining and executing security checks across the OpenClaw architecture (Gateway, Sandboxing, Plugins, Filesystem, auth models).
 
 ## 🧐 Architectural Observations
 
@@ -23,18 +23,18 @@
 
 ### 1. File Size & Responsibility in `audit.ts`
 
--   **Finding:** `audit.ts` handles orchestration but also includes inline definitions for several extensive checks.
--   **Recommendation:** Consider moving `collectGatewayConfigFindings`, `collectBrowserControlFindings`, and `collectFilesystemFindings` out of `audit.ts` into a dedicated `audit-gateway.ts` and `audit-fs-checks.ts` (matching the pattern you've used for `audit-extra.ts` and `audit-channel.ts`). This would make `audit.ts` strictly a pure orchestrator.
+- **Finding:** `audit.ts` handles orchestration but also includes inline definitions for several extensive checks.
+- **Recommendation:** Consider moving `collectGatewayConfigFindings`, `collectBrowserControlFindings`, and `collectFilesystemFindings` out of `audit.ts` into a dedicated `audit-gateway.ts` and `audit-fs-checks.ts` (matching the pattern you've used for `audit-extra.ts` and `audit-channel.ts`). This would make `audit.ts` strictly a pure orchestrator.
 
 ### 2. Duplication with `audit-fs.ts` vs `audit.ts`
 
--   **Finding:** You have a mature `audit-fs.ts` file handling lower-level permissions operations (`inspectPathPermissions`), but the actual logic generating the Findings (`collectFilesystemFindings`) lives in `audit.ts`.
--   **Recommendation:** Move `collectFilesystemFindings` into `audit-fs.ts` to colocate the business rules (warning generation) with the inspection primitives, keeping the fs concerns tightly bound.
+- **Finding:** You have a mature `audit-fs.ts` file handling lower-level permissions operations (`inspectPathPermissions`), but the actual logic generating the Findings (`collectFilesystemFindings`) lives in `audit.ts`.
+- **Recommendation:** Move `collectFilesystemFindings` into `audit-fs.ts` to colocate the business rules (warning generation) with the inspection primitives, keeping the fs concerns tightly bound.
 
 ### 3. KI Pattern Matching
 
--   **Finding:** Based on QMD insights across the codebase, OpenClaw heavily prefers schema validation near the configuration roots.
--   **Recommendation:** Some custom property checks inside the audit (like determining if certain `tools.deny` configurations exist or comparing threshold configurations) might overlap with responsibilities that `zod-schema.*.ts` validation schemas could enforce natively on boot instead of deferring to the CLI auditor.
+- **Finding:** Based on QMD insights across the codebase, OpenClaw heavily prefers schema validation near the configuration roots.
+- **Recommendation:** Some custom property checks inside the audit (like determining if certain `tools.deny` configurations exist or comparing threshold configurations) might overlap with responsibilities that `zod-schema.*.ts` validation schemas could enforce natively on boot instead of deferring to the CLI auditor.
 
 ## 💡 Auditor Tip
 

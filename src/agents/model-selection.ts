@@ -304,20 +304,20 @@ export function resolveDefaultModelForAgent(params: {
   const cfg =
     agentModelOverride && agentModelOverride.length > 0
       ? {
-        ...params.cfg,
-        agents: {
-          ...params.cfg.agents,
-          defaults: {
-            ...params.cfg.agents?.defaults,
-            model: {
-              ...(typeof params.cfg.agents?.defaults?.model === "object"
-                ? params.cfg.agents.defaults.model
-                : undefined),
-              primary: agentModelOverride,
+          ...params.cfg,
+          agents: {
+            ...params.cfg.agents,
+            defaults: {
+              ...params.cfg.agents?.defaults,
+              model: {
+                ...(typeof params.cfg.agents?.defaults?.model === "object"
+                  ? params.cfg.agents.defaults.model
+                  : undefined),
+                primary: agentModelOverride,
+              },
             },
           },
-        },
-      }
+        }
       : params.cfg;
   return resolveConfiguredModelRef({
     cfg,
@@ -472,8 +472,8 @@ export function resolveAllowedModelRef(params: {
 }):
   | { ref: ModelRef; key: string }
   | {
-    error: string;
-  } {
+      error: string;
+    } {
   const trimmed = params.raw.trim();
   if (!trimmed) {
     return { error: "invalid model: empty" };

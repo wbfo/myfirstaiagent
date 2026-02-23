@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "HoneyBadger OS Dashboard",
-  description: "Live agent dashboard for OpenClaw HoneyBadger stack"
+  description: "Live agent dashboard for OpenClaw HoneyBadger stack",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

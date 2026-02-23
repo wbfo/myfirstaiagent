@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-export const DEFAULT_WEBHOOK_MAX_BODY_BYTES = 1024 * 1024;
-export const DEFAULT_WEBHOOK_BODY_TIMEOUT_MS = 30_000;
+export const DEFAULT_WEBHOOK_MAX_BODY_BYTES = 10 * 1024 * 1024;
+export const DEFAULT_WEBHOOK_BODY_TIMEOUT_MS = 60_000;
 
 export type RequestBodyLimitErrorCode =
   | "PAYLOAD_TOO_LARGE"

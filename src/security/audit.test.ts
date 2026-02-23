@@ -5,8 +5,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import type { ChannelPlugin } from "../channels/plugins/types.js";
 import type { OpenClawConfig } from "../config/config.js";
 import { captureEnv, withEnvAsync } from "../test-utils/env.js";
-import { collectPluginsCodeSafetyFindings } from "./audit-extra.js";
-import type { SecurityAuditOptions, SecurityAuditReport } from "./audit.js";
+import { collectPluginsCodeSafetyFindings } from "./audit-plugins.js";
+import type { SecurityAuditOptions, SecurityAuditReport, SecurityAuditFinding } from "./audit.js";
 import { runSecurityAudit } from "./audit.js";
 import * as skillScanner from "./skill-scanner.js";
 
@@ -2104,7 +2104,9 @@ description: test skill
     await fs.writeFile(path.join(pluginDir, "index.js"), "export {};");
 
     const findings = await collectPluginsCodeSafetyFindings({ stateDir: tmpDir });
-    expect(findings.some((f) => f.checkId === "plugins.code_safety.entry_escape")).toBe(true);
+    expect(
+      findings.some((f: SecurityAuditFinding) => f.checkId === "plugins.code_safety.entry_escape"),
+    ).toBe(true);
   });
 
   it("reports scan_failed when plugin code scanner throws during deep audit", async () => {
@@ -2126,7 +2128,9 @@ description: test skill
       await fs.writeFile(path.join(pluginDir, "index.js"), "export {};");
 
       const findings = await collectPluginsCodeSafetyFindings({ stateDir: tmpDir });
-      expect(findings.some((f) => f.checkId === "plugins.code_safety.scan_failed")).toBe(true);
+      expect(
+        findings.some((f: SecurityAuditFinding) => f.checkId === "plugins.code_safety.scan_failed"),
+      ).toBe(true);
     } finally {
       scanSpy.mockRestore();
     }

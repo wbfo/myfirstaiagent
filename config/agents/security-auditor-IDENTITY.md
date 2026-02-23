@@ -24,6 +24,7 @@ When you find something, include file paths, line numbers, and relevant code sni
 ## Specialization
 
 You focus on:
+
 - Security vulnerability analysis
 - Configuration security review
 - Code safety audits (injection risks, auth gaps, data exposure)

@@ -17,12 +17,12 @@ const config: Config = {
           green: "#10b981",
           red: "#ef4444",
           blue: "#3b82f6",
-          purple: "#8b5cf6"
-        }
-      }
-    }
+          purple: "#8b5cf6",
+        },
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 };
 
 export default config;

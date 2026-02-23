@@ -282,8 +282,9 @@ export const buildTelegramMessageContext = async ({
         senderId: candidate,
         senderUsername,
       });
-      const allowMatchMeta = `matchKey=${allowMatch.matchKey ?? "none"} matchSource=${allowMatch.matchSource ?? "none"
-        }`;
+      const allowMatchMeta = `matchKey=${allowMatch.matchKey ?? "none"} matchSource=${
+        allowMatch.matchSource ?? "none"
+      }`;
       const allowed =
         effectiveDmAllow.hasWildcard || (effectiveDmAllow.hasEntries && allowMatch.allowed);
       if (!allowed) {
@@ -291,11 +292,11 @@ export const buildTelegramMessageContext = async ({
           try {
             const from = msg.from as
               | {
-                first_name?: string;
-                last_name?: string;
-                username?: string;
-                id?: number;
-              }
+                  first_name?: string;
+                  last_name?: string;
+                  username?: string;
+                  id?: number;
+                }
               | undefined;
             const telegramUserId = from?.id ? String(from.id) : candidate;
             const { code, created } = await upsertChannelPairingRequest({
@@ -424,7 +425,10 @@ export const buildTelegramMessageContext = async ({
           agentDir: undefined,
         }),
         new Promise<undefined>((_, reject) =>
-          setTimeout(() => reject(new Error("Audio preflight transcription timed out (2m)")), PREFLIGHT_TIMEOUT_MS),
+          setTimeout(
+            () => reject(new Error("Audio preflight transcription timed out (2m)")),
+            PREFLIGHT_TIMEOUT_MS,
+          ),
         ),
       ]);
     } catch (err) {
@@ -497,11 +501,11 @@ export const buildTelegramMessageContext = async ({
         limit: historyLimit,
         entry: historyKey
           ? {
-            sender: buildSenderLabel(msg, senderId || chatId),
-            body: rawBody,
-            timestamp: msg.date ? msg.date * 1000 : undefined,
-            messageId: typeof msg.message_id === "number" ? String(msg.message_id) : undefined,
-          }
+              sender: buildSenderLabel(msg, senderId || chatId),
+              body: rawBody,
+              timestamp: msg.date ? msg.date * 1000 : undefined,
+              messageId: typeof msg.message_id === "number" ? String(msg.message_id) : undefined,
+            }
           : null,
       });
       return null;
@@ -555,80 +559,83 @@ export const buildTelegramMessageContext = async ({
   const statusReactionController: StatusReactionController | null =
     statusReactionsEnabled && msg.message_id
       ? createStatusReactionController({
-        enabled: true,
-        adapter: {
-          setReaction: async (emoji: string) => {
-            if (reactionApi) {
-              if (!allowedStatusReactionEmojisPromise) {
-                allowedStatusReactionEmojisPromise = resolveTelegramAllowedEmojiReactions({
-                  chat: msg.chat,
-                  chatId,
-                  getChat: getChatApi ?? undefined,
-                }).catch((err) => {
-                  logVerbose(
-                    `telegram status-reaction available_reactions lookup failed for chat ${chatId}: ${String(err)}`,
-                  );
-                  return null;
+          enabled: true,
+          adapter: {
+            setReaction: async (emoji: string) => {
+              if (reactionApi) {
+                if (!allowedStatusReactionEmojisPromise) {
+                  allowedStatusReactionEmojisPromise = resolveTelegramAllowedEmojiReactions({
+                    chat: msg.chat,
+                    chatId,
+                    getChat: getChatApi ?? undefined,
+                  }).catch((err) => {
+                    logVerbose(
+                      `telegram status-reaction available_reactions lookup failed for chat ${chatId}: ${String(err)}`,
+                    );
+                    return null;
+                  });
+                }
+                const allowedStatusReactionEmojis = await allowedStatusReactionEmojisPromise;
+                const resolvedEmoji = resolveTelegramReactionVariant({
+                  requestedEmoji: emoji,
+                  variantsByRequestedEmoji: statusReactionVariantsByEmoji,
+                  allowedEmojiReactions: allowedStatusReactionEmojis,
                 });
+                if (!resolvedEmoji) {
+                  return;
+                }
+                await reactionApi(chatId, msg.message_id, [
+                  { type: "emoji", emoji: resolvedEmoji },
+                ]);
               }
-              const allowedStatusReactionEmojis = await allowedStatusReactionEmojisPromise;
-              const resolvedEmoji = resolveTelegramReactionVariant({
-                requestedEmoji: emoji,
-                variantsByRequestedEmoji: statusReactionVariantsByEmoji,
-                allowedEmojiReactions: allowedStatusReactionEmojis,
-              });
-              if (!resolvedEmoji) {
-                return;
-              }
-              await reactionApi(chatId, msg.message_id, [
-                { type: "emoji", emoji: resolvedEmoji },
-              ]);
-            }
+            },
+            // Telegram replaces atomically — no removeReaction needed
           },
-          // Telegram replaces atomically — no removeReaction needed
-        },
-        initialEmoji: ackReaction,
-        emojis: resolvedStatusReactionEmojis,
-        timing: statusReactionsConfig?.timing,
-        onError: (err) => {
-          logVerbose(`telegram status-reaction error for chat ${chatId}: ${String(err)}`);
-        },
-      })
+          initialEmoji: ackReaction,
+          emojis: resolvedStatusReactionEmojis,
+          timing: statusReactionsConfig?.timing,
+          onError: (err) => {
+            logVerbose(`telegram status-reaction error for chat ${chatId}: ${String(err)}`);
+          },
+        })
       : null;
 
   // When status reactions are enabled, setQueued() replaces the simple ack reaction
   const ackReactionPromise = statusReactionController
     ? shouldAckReaction()
       ? Promise.resolve(statusReactionController.setQueued()).then(
-        () => true,
-        () => false,
-      )
+          () => true,
+          () => false,
+        )
       : null
     : shouldAckReaction() && msg.message_id && reactionApi
       ? withTelegramApiErrorLogging({
-        operation: "setMessageReaction",
-        fn: () => reactionApi(chatId, msg.message_id, [{ type: "emoji", emoji: ackReaction }]),
-      }).then(
-        () => true,
-        (err) => {
-          logVerbose(`telegram react failed for chat ${chatId}: ${String(err)}`);
-          return false;
-        },
-      )
+          operation: "setMessageReaction",
+          fn: () => reactionApi(chatId, msg.message_id, [{ type: "emoji", emoji: ackReaction }]),
+        }).then(
+          () => true,
+          (err) => {
+            logVerbose(`telegram react failed for chat ${chatId}: ${String(err)}`);
+            return false;
+          },
+        )
       : null;
 
   const replyTarget = describeReplyTarget(msg);
   const forwardOrigin = normalizeForwardedContext(msg);
   const replySuffix = replyTarget
     ? replyTarget.kind === "quote"
-      ? `\n\n[Quoting ${replyTarget.sender}${replyTarget.id ? ` id:${replyTarget.id}` : ""
-      }]\n"${replyTarget.body}"\n[/Quoting]`
-      : `\n\n[Replying to ${replyTarget.sender}${replyTarget.id ? ` id:${replyTarget.id}` : ""
-      }]\n${replyTarget.body}\n[/Replying]`
+      ? `\n\n[Quoting ${replyTarget.sender}${
+          replyTarget.id ? ` id:${replyTarget.id}` : ""
+        }]\n"${replyTarget.body}"\n[/Quoting]`
+      : `\n\n[Replying to ${replyTarget.sender}${
+          replyTarget.id ? ` id:${replyTarget.id}` : ""
+        }]\n${replyTarget.body}\n[/Replying]`
     : "";
   const forwardPrefix = forwardOrigin
-    ? `[Forwarded from ${forwardOrigin.from}${forwardOrigin.date ? ` at ${new Date(forwardOrigin.date * 1000).toISOString()}` : ""
-    }]\n`
+    ? `[Forwarded from ${forwardOrigin.from}${
+        forwardOrigin.date ? ` at ${new Date(forwardOrigin.date * 1000).toISOString()}` : ""
+      }]\n`
     : "";
   const groupLabel = isGroup ? buildGroupLabel(msg, chatId, resolvedThreadId) : undefined;
   const senderName = buildSenderName(msg);
@@ -688,10 +695,10 @@ export const buildTelegramMessageContext = async ({
   const inboundHistory =
     isGroup && historyKey && historyLimit > 0
       ? (groupHistories.get(historyKey) ?? []).map((entry) => ({
-        sender: entry.sender,
-        body: entry.body,
-        timestamp: entry.timestamp,
-      }))
+          sender: entry.sender,
+          body: entry.body,
+          timestamp: entry.timestamp,
+        }))
       : undefined;
   const ctxPayload = finalizeInboundContext({
     Body: combinedBody,
@@ -765,13 +772,13 @@ export const buildTelegramMessageContext = async ({
     ctx: ctxPayload,
     updateLastRoute: !isGroup
       ? {
-        sessionKey: route.mainSessionKey,
-        channel: "telegram",
-        to: String(chatId),
-        accountId: route.accountId,
-        // Preserve DM topic threadId for replies (fixes #8891)
-        threadId: dmThreadId != null ? String(dmThreadId) : undefined,
-      }
+          sessionKey: route.mainSessionKey,
+          channel: "telegram",
+          to: String(chatId),
+          accountId: route.accountId,
+          // Preserve DM topic threadId for replies (fixes #8891)
+          threadId: dmThreadId != null ? String(dmThreadId) : undefined,
+        }
       : undefined,
     onRecordError: (err) => {
       logVerbose(`telegram: failed updating session meta: ${String(err)}`);
