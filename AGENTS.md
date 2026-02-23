@@ -3,6 +3,16 @@
 - Repo: https://github.com/openclaw/openclaw
 - GitHub issues/comments/PR comments: use literal multiline strings or `-F - <<'EOF'` (or $'...') for real newlines; never embed "\\n".
 
+## Workspace Root Guardrail (Audit Reliability)
+
+- For any "audit base code / audit project / audit everything" request, treat this repository root as the default scope.
+- Before reporting missing directive files, first verify you are running inside this git worktree:
+  - `git rev-parse --is-inside-work-tree` must be `true`
+  - `git rev-parse --show-toplevel` should resolve to this repo root
+- HoneyBadger directive path is repository-relative:
+  - `directives/agents/honeybadger/`
+- If those files appear missing, assume wrong working directory first; correct the workspace root and retry before escalating.
+
 ## Project Structure & Module Organization
 
 - Source code: `src/` (CLI wiring in `src/cli`, commands in `src/commands`, web provider in `src/provider-web.ts`, infra in `src/infra`, media pipeline in `src/media`).
