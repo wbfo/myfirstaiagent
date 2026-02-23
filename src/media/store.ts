@@ -13,7 +13,7 @@ import { detectMime, extensionForMime } from "./mime.js";
 const resolveMediaDir = () => path.join(resolveConfigDir(), "media");
 export const MEDIA_MAX_BYTES = 5 * 1024 * 1024; // 5MB default
 const MAX_BYTES = MEDIA_MAX_BYTES;
-const DEFAULT_TTL_MS = 2 * 60 * 1000; // 2 minutes
+const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 type RequestImpl = typeof httpRequest;
 type ResolvePinnedHostnameImpl = typeof resolvePinnedHostname;
 
@@ -99,7 +99,7 @@ export async function cleanOldMedia(ttlMs = DEFAULT_TTL_MS) {
           return;
         }
         if (now - stat.mtimeMs > ttlMs) {
-          await fs.rm(full).catch(() => {});
+          await fs.rm(full).catch(() => { });
         }
       }),
     );
@@ -117,7 +117,7 @@ export async function cleanOldMedia(ttlMs = DEFAULT_TTL_MS) {
         return;
       }
       if (stat.isFile() && now - stat.mtimeMs > ttlMs) {
-        await fs.rm(full).catch(() => {});
+        await fs.rm(full).catch(() => { });
       }
     }),
   );
