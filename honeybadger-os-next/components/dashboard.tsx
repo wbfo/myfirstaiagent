@@ -70,6 +70,7 @@ export function Dashboard() {
   const [token, setToken] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [gatewayStatus, setGatewayStatus] = useState<GatewayStatus>("disconnected");
   const [gatewayInfo, setGatewayInfo] = useState<{ version?: string; connId?: string } | null>(null);
@@ -422,13 +423,13 @@ export function Dashboard() {
 
   const renderOverview = () => {
     return (
-      <div className="space-y-6 p-7">
+      <div className="space-y-4 p-4 pt-12 sm:space-y-6 sm:p-7 md:pt-7">
         <header>
-          <h1 className="text-3xl font-black text-hb-amber">HoneyBadger OS</h1>
-          <p className="mt-1 text-sm text-hb-muted">{AGENTS.length} agents configured, maxConcurrent 4, maxSpawnDepth 1</p>
+          <h1 className="text-2xl font-black text-hb-amber sm:text-3xl">HoneyBadger OS</h1>
+          <p className="mt-1 text-xs text-hb-muted sm:text-sm">{AGENTS.length} agents configured, maxConcurrent 4, maxSpawnDepth 3</p>
         </header>
 
-        <section className={cardClass("p-4")}> 
+        <section className={cardClass("p-4")}>
           <div className="flex items-center gap-3">
             <StatusDot status={gatewayStatus} />
             <div>
@@ -440,34 +441,34 @@ export function Dashboard() {
           </div>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
             { label: "Total Agents", value: AGENTS.length, color: "text-hb-amber" },
             { label: "Orchestrators", value: AGENTS.filter((a) => a.isDefault).length, color: "text-hb-purple" },
             { label: "Specialists", value: AGENTS.filter((a) => !a.isDefault).length, color: "text-hb-blue" },
             { label: "Unique Skills", value: Object.keys(SKILL_META).length, color: "text-hb-green" }
           ].map((item) => (
-            <div key={item.label} className={cardClass("p-4")}> 
-              <p className={`text-3xl font-black ${item.color}`}>{item.value}</p>
-              <p className="text-xs text-hb-muted">{item.label}</p>
+            <div key={item.label} className={cardClass("p-3 sm:p-4")}>
+              <p className={`text-2xl font-black sm:text-3xl ${item.color}`}>{item.value}</p>
+              <p className="text-[11px] text-hb-muted sm:text-xs">{item.label}</p>
             </div>
           ))}
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-2">
+        <section className="grid gap-3 sm:gap-4 md:grid-cols-2">
           {AGENTS.map((agent) => (
-            <div key={agent.id} className={cardClass("p-4 transition hover:-translate-y-0.5")}>
-              <div className="mb-3 flex items-start gap-3">
-                <AgentAvatar agent={agent} />
+            <div key={agent.id} className={cardClass("p-3 transition hover:-translate-y-0.5 sm:p-4")}>
+              <div className="mb-2 flex items-start gap-2 sm:mb-3 sm:gap-3">
+                <AgentAvatar agent={agent} size={36} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-base font-bold">
-                    {agent.name} {agent.isDefault && <span className="ml-2 rounded-full bg-hb-amber/20 px-2 py-0.5 text-[10px] text-hb-amber">DEFAULT</span>}
+                  <p className="truncate text-sm font-bold sm:text-base">
+                    {agent.name} {agent.isDefault && <span className="ml-1 rounded-full bg-hb-amber/20 px-1.5 py-0.5 text-[9px] text-hb-amber sm:ml-2 sm:px-2 sm:text-[10px]">DEFAULT</span>}
                   </p>
-                  <p className="text-sm text-hb-muted">{agent.role}</p>
+                  <p className="text-xs text-hb-muted sm:text-sm">{agent.role}</p>
                 </div>
                 <button
                   onClick={() => navigate("chat", { chatAgent: agent.id })}
-                  className="rounded-lg border border-hb-border bg-hb-panel2 px-3 py-1 text-xs text-hb-text"
+                  className="rounded-lg border border-hb-border bg-hb-panel2 px-2 py-1 text-[11px] text-hb-text sm:px-3 sm:text-xs"
                 >
                   Chat
                 </button>
@@ -475,11 +476,11 @@ export function Dashboard() {
               <div className="mb-2">
                 <ModelTag model={agent.model} />
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {agent.skills.slice(0, 4).map((s) => (
                   <span
                     key={s}
-                    className="rounded-full border px-2 py-0.5 text-[11px]"
+                    className="rounded-full border px-1.5 py-0.5 text-[10px] sm:px-2 sm:text-[11px]"
                     style={{ borderColor: `${SKILL_META[s]?.color ?? "#64748b"}66`, color: SKILL_META[s]?.color ?? "#64748b" }}
                   >
                     {s}
@@ -514,7 +515,7 @@ export function Dashboard() {
                   <p className="mt-1 text-sm text-hb-muted">{agent.role}</p>
                 </div>
               </div>
-              <div className="mb-2 flex gap-2"> 
+              <div className="mb-2 flex gap-2">
                 <ModelTag model={agent.model} />
                 {agent.fallbacks.length > 0 && <span className="text-xs text-hb-muted">+{agent.fallbacks.length} fallback</span>}
               </div>
@@ -561,7 +562,7 @@ export function Dashboard() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div className={cardClass("p-4")}> 
+            <div className={cardClass("p-4")}>
               <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">Model</p>
               <ModelTag model={agent.model} />
               {!!agent.fallbacks.length && (
@@ -572,7 +573,7 @@ export function Dashboard() {
                 </div>
               )}
             </div>
-            <div className={cardClass("p-4")}> 
+            <div className={cardClass("p-4")}>
               <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">Session</p>
               <code className="rounded bg-hb-bg px-2 py-1 text-xs text-hb-blue">agent:{agent.id}:main</code>
               {agent.maxConcurrent && <p className="mt-2 text-sm text-hb-muted">maxConcurrent {agent.maxConcurrent}</p>}
@@ -713,7 +714,7 @@ export function Dashboard() {
             {filteredSessions.map((session) => {
               const agent = AGENTS.find((a) => a.id === (session.agentId ?? session.key.split(":")[1]));
               return (
-                <div key={session.key} className={cardClass("p-4")}> 
+                <div key={session.key} className={cardClass("p-4")}>
                   <div className="flex items-center gap-3">
                     {agent && <AgentAvatar agent={agent} size={36} />}
                     <div className="min-w-0 flex-1">
@@ -741,7 +742,7 @@ export function Dashboard() {
     return (
       <div className="space-y-4 p-7">
         <h2 className="text-2xl font-bold">Subagent Monitor</h2>
-        <div className={cardClass("p-4")}> 
+        <div className={cardClass("p-4")}>
           <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">Spawn New Task</p>
           <div className="mb-3 flex flex-wrap gap-2">
             {allowed.map((agentId) => {
@@ -794,7 +795,7 @@ export function Dashboard() {
             subagentRuns.map((run) => {
               const agent = AGENTS.find((a) => a.id === run.agentId);
               return (
-                <div key={run.runId} className={cardClass("p-4")}> 
+                <div key={run.runId} className={cardClass("p-4")}>
                   <div className="flex items-start gap-3">
                     {agent && <AgentAvatar agent={agent} size={36} />}
                     <div className="min-w-0 flex-1">
@@ -818,7 +819,7 @@ export function Dashboard() {
     return (
       <div className="space-y-4 p-7">
         <h2 className="text-2xl font-bold">Skills Status</h2>
-        <div className={cardClass("overflow-x-auto p-4")}> 
+        <div className={cardClass("overflow-x-auto p-4")}>
           <table className="w-full min-w-[920px] text-left text-sm">
             <thead>
               <tr className="border-b border-hb-border text-xs uppercase tracking-wide text-hb-muted">
@@ -988,25 +989,48 @@ export function Dashboard() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-hb-bg text-hb-text">
+      {/* Mobile hamburger button */}
+      <button
+        onClick={() => setMobileMenuOpen(true)}
+        className="fixed left-3 top-3 z-50 rounded-lg border border-hb-border bg-hb-panel2 p-2 text-hb-amber shadow-lg md:hidden"
+        aria-label="Open menu"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><rect y="3" width="20" height="2" rx="1" /><rect y="9" width="20" height="2" rx="1" /><rect y="15" width="20" height="2" rx="1" /></svg>
+      </button>
+
+      {/* Mobile overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => setMobileMenuOpen(false)} />
+      )}
+
       <aside
-        className={`relative flex shrink-0 flex-col border-r border-[#1e1e2d] bg-hb-panel2 transition-all ${
-          sidebarCollapsed ? "w-16" : "w-52"
-        }`}
+        className={`relative z-50 flex shrink-0 flex-col border-r border-[#1e1e2d] bg-hb-panel2 transition-all ${sidebarCollapsed ? "w-16" : "w-52"
+          } ${mobileMenuOpen ? "fixed inset-y-0 left-0" : "hidden md:flex"
+          }`}
       >
         <div className="border-b border-[#1e1e2d] px-4 py-5">
           <div className="mb-2 flex items-center justify-between">
             {!sidebarCollapsed ? <p className="text-lg font-black text-hb-amber">HoneyBadger</p> : <p className="text-lg">🦡</p>}
-            <button
-              onClick={() => {
-                setSidebarCollapsed((v) => !v);
-                setShowSettings(false);
-              }}
-              className="rounded-md border border-hb-border bg-hb-panel px-2 py-1 text-xs text-hb-muted"
-              aria-label={sidebarCollapsed ? "Expand menu" : "Collapse menu"}
-              title={sidebarCollapsed ? "Expand menu" : "Collapse menu"}
-            >
-              {sidebarCollapsed ? "»" : "«"}
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-md border border-hb-border bg-hb-panel px-2 py-1 text-xs text-hb-muted md:hidden"
+                aria-label="Close menu"
+              >
+                ✕
+              </button>
+              <button
+                onClick={() => {
+                  setSidebarCollapsed((v) => !v);
+                  setShowSettings(false);
+                }}
+                className="hidden rounded-md border border-hb-border bg-hb-panel px-2 py-1 text-xs text-hb-muted md:block"
+                aria-label={sidebarCollapsed ? "Expand menu" : "Collapse menu"}
+                title={sidebarCollapsed ? "Expand menu" : "Collapse menu"}
+              >
+                {sidebarCollapsed ? "»" : "«"}
+              </button>
+            </div>
           </div>
           {!sidebarCollapsed && <p className="text-[11px] tracking-[0.2em] text-hb-muted">OS DASHBOARD</p>}
         </div>
@@ -1017,10 +1041,12 @@ export function Dashboard() {
             return (
               <button
                 key={item.id}
-                onClick={() => navigate(item.id)}
-                className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${
-                  active ? "bg-hb-amber/15 font-semibold text-hb-amber" : "text-hb-muted hover:bg-white/5"
-                }`}
+                onClick={() => {
+                  navigate(item.id);
+                  setMobileMenuOpen(false);
+                }}
+                className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${active ? "bg-hb-amber/15 font-semibold text-hb-amber" : "text-hb-muted hover:bg-white/5"
+                  }`}
                 title={item.label}
               >
                 <span className={sidebarCollapsed ? "mx-auto" : ""}>{item.icon}</span>
@@ -1037,9 +1063,8 @@ export function Dashboard() {
           </div>
           <button
             onClick={() => setShowSettings((v) => !v)}
-            className={`w-full rounded-lg border border-hb-border bg-hb-panel px-3 py-1 text-xs text-hb-muted ${
-              sidebarCollapsed ? "text-center" : "text-left"
-            }`}
+            className={`w-full rounded-lg border border-hb-border bg-hb-panel px-3 py-1 text-xs text-hb-muted ${sidebarCollapsed ? "text-center" : "text-left"
+              }`}
             title="Gateway Settings"
           >
             {sidebarCollapsed ? "⚙" : "Gateway Settings"}
@@ -1077,7 +1102,7 @@ export function Dashboard() {
         )}
       </aside>
 
-      <main className="min-w-0 flex-1 overflow-hidden">{main}</main>
+      <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden">{main}</main>
     </div>
   );
 }
