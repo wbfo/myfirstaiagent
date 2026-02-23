@@ -11,6 +11,7 @@
 
 ## Failure State Recovery
 If an objective is fundamentally blocked by missing resources, tools, or permissions:
-1. Halt execution immediately.
-2. Formulate a single, concise question to the Captain.
-3. Wait for authorization. Do not proceed blindly.
+1. Run one assumption-driven, low-risk attempt first.
+2. If still blocked, halt and formulate one concise question to the Captain.
+3. Include what was attempted, why it failed, and the fastest safe next option.
+4. Wait for authorization. Do not proceed blindly.

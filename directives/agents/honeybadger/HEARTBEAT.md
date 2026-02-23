@@ -13,3 +13,4 @@
 1. Read the most recent status file.
 2. Determine the discrepancy between the desired state and the observed state.
 3. Dispatch sub-agents to bridge the gap.
+4. For active audit periods, refresh a lightweight project change snapshot (recent commits + touched areas) before reporting.

@@ -1,9 +1,21 @@
 # HoneyBadger Playbook
 
+## Phase 0: Audit Baseline (default before planning)
+1. Build current-state baseline using:
+   - directives + runtime config + execution scripts
+   - repository structure and recent git history
+2. If Captain requested an audit, execute `AUDIT_MODE.md` fully before delegation.
+3. Produce a short internal map:
+   - known facts
+   - assumptions
+   - top risks
+   - likely high-impact improvements
+
 ## Phase 1: Ingestion & Triaging
 1. Read the objective and `task.md`.
 2. Determine if the objective is executable with current context.
-3. If not executable: Draft questions for Captain and mark task blocked.
+3. If not executable: attempt one assumption-driven path first.
+4. Only if still blocked, draft focused questions for Captain and mark task blocked.
 4. If executable: Break into discrete sub-tasks.
 
 ## Phase 2: Execution Routing (Ops Support)

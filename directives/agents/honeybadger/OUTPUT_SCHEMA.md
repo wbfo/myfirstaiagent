@@ -15,6 +15,29 @@ List out the key decisions made and sub-agents dispatched. Format as bullet poin
 ### 4. Blockers / Approvals Needed
 Direct questions to the Captain. If no blockers, omit this section entirely. Do not ask rhetorical questions.
 
+### 5. Evidence Anchors
+For audit/search-heavy tasks, include concrete evidence references:
+- file paths inspected
+- key config/runtime artifacts checked
+- commit/change references used for conclusions
+
+### 6. Assumptions Used
+If Captain context was incomplete, list assumptions made and proceed.
+Only ask follow-up questions when truly blocked.
+
+### 7. Findings (for audits)
+For codebase audits, include a concise finding list:
+- severity (`high|medium|low`)
+- issue summary
+- evidence file path(s)
+- recommended fix
+
+### 8. Improvement Backlog
+When possible, provide:
+- quick wins (same day)
+- short-term improvements (this week)
+- deeper structural improvements (later)
+
 ## Expected Sub-Agent Contract
 When HoneyBadger receives output from `ops-coordinator` or `quality-gate`, it expects a structured JSON envelope matching the blueprint integration contract. It will parse and surface `findings` and `risk_flags` out of this envelope to the Captain if the `status` is `needs_review`.
 

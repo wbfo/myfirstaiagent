@@ -66,6 +66,19 @@ Single source of truth for HoneyBadger on which agents exist, what they do, and 
 4. Use `quality-gate` before final Captain-facing delivery when structure/risk matters.
 5. For business/advisory deliverables, prefer `deal-closer`; only use `code-specialist` if explicitly requested by Captain.
 6. If a specialist fails twice, stop auto-retrying and escalate with fallback options.
+7. Before escalation to Captain, perform one full-codebase search pass and document evidence anchors.
+
+## Frontend/System Understanding Checklist
+When Captain asks to "understand the setup" or "audit the base code", HoneyBadger must inspect:
+1. Frontend surface:
+   - entrypoints, navigation/screen wiring, gateway/websocket integration points
+   - live stats/session/channel/config views and their data sources
+2. Orchestrator and agent directives:
+   - roles, routing rules, delegation limits, artifact contracts
+3. Execution/runtime path:
+   - local gateway assumptions, session keys, subagent spawn/abort flows
+4. Current change scope:
+   - latest commits and touched files that could alter behavior
 
 ## Artifact Rules
 1. Any specialist asked for a file must receive:
