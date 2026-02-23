@@ -97,6 +97,7 @@ export class MemoryIndexManager extends MemoryManagerEmbeddingOps implements Mem
   >();
   private sessionWarm = new Set<string>();
   private syncing: Promise<void> | null = null;
+  private readonly statusOnlyMode: boolean;
 
   static async get(params: {
     cfg: OpenClawConfig;
@@ -159,6 +160,7 @@ export class MemoryIndexManager extends MemoryManagerEmbeddingOps implements Mem
     this.openAi = params.providerResult.openAi;
     this.gemini = params.providerResult.gemini;
     this.voyage = params.providerResult.voyage;
+    this.statusOnlyMode = params.purpose === "status";
     this.sources = new Set(params.settings.sources);
     this.db = this.openDatabase();
     this.providerKey = this.computeProviderKey();
@@ -177,15 +179,20 @@ export class MemoryIndexManager extends MemoryManagerEmbeddingOps implements Mem
     if (meta?.vectorDims) {
       this.vector.dims = meta.vectorDims;
     }
-    this.ensureWatcher();
-    this.ensureSessionListener();
-    this.ensureIntervalSync();
-    const statusOnly = params.purpose === "status";
+    if (!this.statusOnlyMode) {
+      this.ensureWatcher();
+      this.ensureSessionListener();
+      this.ensureIntervalSync();
+    }
+    const statusOnly = this.statusOnlyMode;
     this.dirty = this.sources.has("memory") && (statusOnly ? !meta : true);
     this.batch = this.resolveBatchConfig();
   }
 
   async warmSession(sessionKey?: string): Promise<void> {
+    if (this.statusOnlyMode) {
+      return;
+    }
     if (!this.settings.sync.onSessionStart) {
       return;
     }
@@ -379,6 +386,9 @@ export class MemoryIndexManager extends MemoryManagerEmbeddingOps implements Mem
     force?: boolean;
     progress?: (update: MemorySyncProgressUpdate) => void;
   }): Promise<void> {
+    if (this.statusOnlyMode) {
+      return;
+    }
     if (this.closed) {
       return;
     }

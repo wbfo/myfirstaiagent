@@ -4,6 +4,24 @@
       "model": {
         "primary": "google/gemini-3-flash-preview"
       },
+      "memorySearch": {
+        "enabled": true,
+        "experimental": {
+          "sessionMemory": true
+        },
+        "sources": ["memory", "sessions"],
+        "store": {
+          "path": "./.tmp/memory/{agentId}.sqlite",
+          "vector": {
+            "enabled": false
+          }
+        },
+        "sync": {
+          "watch": false,
+          "onSessionStart": true,
+          "onSearch": true
+        }
+      },
       "subagents": {
         "maxConcurrent": 4,
         "maxSpawnDepth": 1,
