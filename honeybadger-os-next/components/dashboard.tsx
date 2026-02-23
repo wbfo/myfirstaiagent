@@ -497,7 +497,7 @@ export function Dashboard() {
   const renderAgents = () => {
     const list = AGENTS;
     return (
-      <div className="space-y-4 p-7">
+      <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
         <h2 className="text-2xl font-bold">Agent Directory</h2>
         <div className="grid gap-4 xl:grid-cols-2">
           {list.map((agent) => (
@@ -538,7 +538,7 @@ export function Dashboard() {
     if (!agent) return <div className="p-7">Agent not found.</div>;
 
     return (
-      <div className="space-y-4 p-7">
+      <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
         <button className="text-sm text-hb-muted" onClick={() => navigate("agents")}>
           Back to directory
         </button>
@@ -589,7 +589,7 @@ export function Dashboard() {
     const stream = chatBufferRef.current;
 
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col pt-12 md:pt-0">
         <div className="flex items-center gap-3 border-b border-[#1e1e2d] p-4">
           <h2 className="flex-1 text-lg font-bold">Chat Console</h2>
           <select
@@ -689,7 +689,7 @@ export function Dashboard() {
 
   const renderSessions = () => {
     return (
-      <div className="space-y-4 p-7">
+      <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
         <div className="flex items-center gap-2">
           <h2 className="flex-1 text-2xl font-bold">Session Explorer</h2>
           <input
@@ -740,7 +740,7 @@ export function Dashboard() {
     const allowed = honeybadger?.allowAgents ?? [];
 
     return (
-      <div className="space-y-4 p-7">
+      <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
         <h2 className="text-2xl font-bold">Subagent Monitor</h2>
         <div className={cardClass("p-4")}>
           <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">Spawn New Task</p>
@@ -817,7 +817,7 @@ export function Dashboard() {
 
   const renderSkills = () => {
     return (
-      <div className="space-y-4 p-7">
+      <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
         <h2 className="text-2xl font-bold">Skills Status</h2>
         <div className={cardClass("overflow-x-auto p-4")}>
           <table className="w-full min-w-[920px] text-left text-sm">
@@ -856,7 +856,7 @@ export function Dashboard() {
 
   const renderChannels = () => {
     return (
-      <div className="space-y-4 p-7">
+      <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Channels Health</h2>
           <button className="rounded-lg border border-hb-border bg-hb-panel px-3 py-2 text-sm" onClick={() => void loadChannels()}>
@@ -906,7 +906,7 @@ export function Dashboard() {
 
   const renderConfig = () => {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col pt-12 md:pt-0">
         <div className="flex items-center gap-2 border-b border-[#1e1e2d] p-4">
           <h2 className="flex-1 text-lg font-bold">Config Editor</h2>
           {configBaseHash && <code className="text-xs text-hb-muted">{configBaseHash.slice(0, 12)}...</code>}
