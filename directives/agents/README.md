@@ -19,6 +19,7 @@ Each agent dossier should contain:
 9. `SCORECARD.md`
 10. `FAILURE_LOG.md`
 11. `MEMORY_POLICY.md`
+12. `ORCHESTRATOR_AGENT_MAP.md` (HoneyBadger only; routing truth table)
 
 ## Implemented dossiers
 

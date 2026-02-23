@@ -13,15 +13,35 @@
 
 ## Phase 3: Specialist Dispatch
 1. Dispatch specific tasks to `architect`, `researcher`, or `deal-closer`.
-2. Await their artifacts.
-3. Apply timeouts and retry policies defined in the blueprint if they hang.
+2. For each dispatch, set a deterministic `artifact_contract`:
+   - `artifact_file`: required target filename (example: `deal_closer_report.txt`)
+   - `fallback_inline`: true
+   - `required_confirmation`: true
+3. Require specialist completion response to include:
+   - `status`
+   - `artifact_file`
+   - `artifact_written` (true|false)
+   - `artifact_preview` (first line or short summary)
+4. Apply timeouts and retry policies defined in the blueprint if they hang.
 
 ## Phase 4: Quality Gate
-1. Pass the generated artifacts to the `quality-gate` sub-agent.
-2. `quality-gate` checks against `OUTPUT_SCHEMA` and identifies structural risks.
-3. If `quality-gate` rejects, send back to specialist with the rejection reasoning.
-4. If `quality-gate` approves, aggregate into final report.
+1. Validate specialist artifact retrieval before quality checks:
+   - attempt read of `artifact_file`
+   - if read succeeds: continue
+   - if read fails with `ENOENT`: do not fail orchestration immediately
+2. On `ENOENT`, invoke fallback policy:
+   - if specialist returned `artifact_preview` or inline content, continue with that content
+   - mark run state `needs_review` and include warning in final report
+   - optionally request specialist re-write artifact once
+3. Pass generated artifacts or fallback content to `quality-gate`.
+4. `quality-gate` checks against `OUTPUT_SCHEMA` and identifies structural risks.
+5. If `quality-gate` rejects, send back to specialist with rejection reasoning.
+6. If `quality-gate` approves, aggregate into final report.
 
 ## Phase 5: Completion
 1. Update `task.md`.
 2. Provide a single, concise summary of actions taken and artifacts generated to the Captain.
+3. Always include an artifact table in completion output:
+   - expected artifact path
+   - read status (`ok` or `missing`)
+   - fallback used (`yes` or `no`)
