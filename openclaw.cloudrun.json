@@ -1,20 +1,14 @@
 {
   "agents": {
     "defaults": {
-      "model": "google/gemini-3-flash-preview",
+      "model": {
+        "primary": "google/gemini-3-flash-preview"
+      },
       "subagents": {
         "maxConcurrent": 4,
         "maxSpawnDepth": 1,
         "model": "google/gemini-3-flash-preview"
-      },
-      "skills": [
-        "honeybadger-cloudrun-ops",
-        "honeybadger-telegram-diagnostics",
-        "honeybadger-config-secrets-audit",
-        "honeybadger-observability",
-        "honeybadger-skill-factory",
-        "skill-creator"
-      ]
+      }
     },
     "list": [
       {

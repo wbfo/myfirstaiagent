@@ -14,6 +14,7 @@ DEFAULT_ZEROCLAW_BIN = pathlib.Path.home() / ".cargo" / "bin" / "zeroclaw"
 DEFAULT_NANOBOT_BIN = (
     pathlib.Path(__file__).resolve().parents[2] / "agent_runtimes" / "NanoBot" / ".venv" / "bin" / "nanobot"
 )
+DEFAULT_NANOBOT_ROOT = pathlib.Path(__file__).resolve().parents[2] / "agent_runtimes" / "NanoBot"
 DEFAULT_ZEROCLAW_CONFIG_DIR = pathlib.Path(__file__).resolve().parents[1] / ".tmp" / "zeroclaw"
 SUPPORTED_AGENTS = {"architect", "researcher", "deal-closer", "market-advisory"}
 
@@ -79,6 +80,16 @@ def build_command(agent_cfg: Dict[str, Any], prompt: str) -> list[str]:
 
     if runtime == "nanobot":
         binary = pathlib.Path(os.environ.get("HB_NANOBOT_BIN", str(DEFAULT_NANOBOT_BIN))).expanduser()
+        python_bin = binary.with_name("python")
+        if python_bin.exists():
+            return [
+                str(python_bin),
+                "-m",
+                "nanobot.cli.commands",
+                "agent",
+                "--message",
+                prompt,
+            ]
         return [str(binary), "agent", "--message", prompt]
 
     raise ValueError(f"unsupported runtime: {runtime}")
@@ -94,7 +105,7 @@ def timeout_s(payload: Dict[str, Any]) -> int:
 def redacted_command(cmd: list[str]) -> list[str]:
     redacted = list(cmd)
     for i, part in enumerate(redacted[:-1]):
-        if part in {"--message", "-m"}:
+        if part == "--message":
             redacted[i + 1] = "<PROMPT>"
             break
     return redacted

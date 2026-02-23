@@ -7,13 +7,14 @@ import json
 import pathlib
 import subprocess
 import sys
+import argparse
 from typing import Any, Dict, List
 
 
 ROOT = pathlib.Path(__file__).resolve().parent
 
 
-def _run(script_name: str) -> Dict[str, Any]:
+def _run(script_name: str, extra_args: List[str] | None = None) -> Dict[str, Any]:
     script = ROOT / script_name
     if not script.exists():
         return {
@@ -22,8 +23,11 @@ def _run(script_name: str) -> Dict[str, Any]:
             "exitCode": 127,
             "result": {"errors": [f"missing script: {script_name}"]},
         }
+    cmd = [sys.executable, str(script)]
+    if extra_args:
+        cmd.extend(extra_args)
     proc = subprocess.run(
-        [sys.executable, str(script)],
+        cmd,
         capture_output=True,
         text=True,
     )
@@ -45,18 +49,49 @@ def _run(script_name: str) -> Dict[str, Any]:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Run startup readiness checks")
+    parser.add_argument(
+        "--live-specialists",
+        action="store_true",
+        help="Run specialist smoke tests with real model calls (consumes API credits)",
+    )
+    parser.add_argument(
+        "--dry-run-specialists",
+        action="store_true",
+        help="Force specialist smoke tests to run in dry-run mode",
+    )
+    args = parser.parse_args()
+
+    specialist_args: List[str] = []
+    if args.dry_run_specialists:
+        specialist_args = []
+    elif args.live_specialists:
+        specialist_args = ["--live"]
+
     checks = [
         _run("check_telegram_runtime.py"),
         _run("check_config_drift.py"),
         _run("agent_runtime_health.py"),
-        _run("smoke_test_specialists.py"),
+        _run("smoke_test_specialists.py", specialist_args),
     ]
     failures: List[Dict[str, Any]] = [c for c in checks if not c["ok"]]
+    warnings: List[str] = []
+    smoke_check = next((item for item in checks if item.get("script") == "smoke_test_specialists.py"), None)
+    smoke_mode = (
+        (smoke_check or {}).get("result", {}).get("mode")
+        if isinstance((smoke_check or {}).get("result"), dict)
+        else None
+    )
+    if smoke_mode == "dry-run":
+        warnings.append(
+            "specialist smoke check ran in dry-run mode; use --live-specialists for functional runtime verification"
+        )
     out = {
         "check": "startup-readiness",
         "ok": len(failures) == 0,
         "checks": checks,
         "failedCount": len(failures),
+        "warnings": warnings,
     }
     print(json.dumps(out, indent=2))
     return 0 if out["ok"] else 2

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -12,6 +13,7 @@ import time
 from typing import Any, Dict
 
 from specialist_runtime import (
+    DEFAULT_NANOBOT_ROOT,
     MAP_PATH,
     SUPPORTED_AGENTS,
     build_command,
@@ -89,6 +91,17 @@ def main() -> int:
         print(json.dumps(out, indent=2))
         return 0
 
+    runtime_env = None
+    if runtime == "nanobot":
+        nanobot_root = pathlib.Path(
+            str(cfg.get("root_dir", "")) or os.environ.get("HB_NANOBOT_ROOT", str(DEFAULT_NANOBOT_ROOT))
+        ).expanduser()
+        runtime_env = dict(os.environ)
+        current_pythonpath = runtime_env.get("PYTHONPATH", "").strip()
+        runtime_env["PYTHONPATH"] = (
+            f"{nanobot_root}:{current_pythonpath}" if current_pythonpath else str(nanobot_root)
+        )
+
     start = time.time()
     try:
         proc = subprocess.run(
@@ -96,6 +109,7 @@ def main() -> int:
             capture_output=True,
             text=True,
             timeout=timeout_s(payload),
+            env=runtime_env,
         )
         out["duration_ms"] = int((time.time() - start) * 1000)
         stdout = (proc.stdout or "").strip()

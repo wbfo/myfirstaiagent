@@ -9,6 +9,7 @@ import pathlib
 import subprocess
 import sys
 from typing import Any, Dict, List
+from specialist_runtime import MAP_PATH, DEFAULT_NANOBOT_ROOT, load_json
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DEFAULT_ZEROCLAW_BIN = pathlib.Path.home() / ".cargo" / "bin" / "zeroclaw"
@@ -21,9 +22,21 @@ def _has_any(*env_names: str) -> bool:
     return any(os.environ.get(name, "").strip() for name in env_names)
 
 
-def _cmd_ok(cmd: List[str], timeout: int = 15) -> Dict[str, Any]:
+def _cmd_ok(
+    cmd: List[str],
+    timeout: int = 15,
+    cwd: pathlib.Path | None = None,
+    env: Dict[str, str] | None = None,
+) -> Dict[str, Any]:
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=str(cwd) if cwd else None,
+            env=env,
+        )
     except FileNotFoundError:
         return {"ok": False, "exitCode": 127, "stdout": "", "stderr": "binary not found"}
     except subprocess.TimeoutExpired:
@@ -65,10 +78,34 @@ def main() -> int:
     zeroclaw_bin = pathlib.Path(os.environ.get("HB_ZEROCLAW_BIN", str(DEFAULT_ZEROCLAW_BIN))).expanduser()
     nanobot_bin = pathlib.Path(os.environ.get("HB_NANOBOT_BIN", str(DEFAULT_NANOBOT_BIN))).expanduser()
 
-    checks = [
-        _runtime_check("zeroclaw", zeroclaw_bin, [str(zeroclaw_bin), "--version"]),
-        _runtime_check("nanobot", nanobot_bin, [str(nanobot_bin), "--version"]),
-    ]
+    checks = [_runtime_check("zeroclaw", zeroclaw_bin, [str(zeroclaw_bin), "--version"])]
+
+    nanobot_root = pathlib.Path(os.environ.get("HB_NANOBOT_ROOT", str(DEFAULT_NANOBOT_ROOT))).expanduser()
+    nanobot_python = nanobot_bin.with_name("python")
+    if nanobot_python.exists():
+        nanobot_env = os.environ.copy()
+        current_pythonpath = nanobot_env.get("PYTHONPATH", "").strip()
+        if current_pythonpath:
+            nanobot_env["PYTHONPATH"] = f"{nanobot_root}:{current_pythonpath}"
+        else:
+            nanobot_env["PYTHONPATH"] = str(nanobot_root)
+        nanobot_version = _cmd_ok(
+            [str(nanobot_python), "-m", "nanobot.cli.commands", "--version"],
+            env=nanobot_env,
+            cwd=nanobot_root,
+        )
+        checks.append(
+            {
+                "runtime": "nanobot",
+                "binary": str(nanobot_bin),
+                "binaryExists": nanobot_bin.exists(),
+                "ok": nanobot_version["ok"],
+                "version": nanobot_version["stdout"] if nanobot_version["ok"] else None,
+                "errors": [] if nanobot_version["ok"] else [nanobot_version["stderr"] or "version command failed"],
+            }
+        )
+    else:
+        checks.append(_runtime_check("nanobot", nanobot_bin, [str(nanobot_bin), "--version"]))
 
     credentials = {
         "OPENROUTER_API_KEY": _has_any("OPENROUTER_API_KEY"),
@@ -78,7 +115,15 @@ def main() -> int:
         "GEMINI_API_KEY": _has_any("GEMINI_API_KEY"),
     }
 
-    if not credentials["OPENROUTER_API_KEY"]:
+    runtime_map = load_json(MAP_PATH) if MAP_PATH.exists() else {}
+    agents = ((runtime_map.get("agents") or {}) if isinstance(runtime_map, dict) else {}) or {}
+    zeroclaw_providers = {
+        str(cfg.get("provider", "")).strip().lower()
+        for cfg in agents.values()
+        if isinstance(cfg, dict) and str(cfg.get("runtime", "")).strip().lower() == "zeroclaw"
+    }
+
+    if "openrouter" in zeroclaw_providers and not credentials["OPENROUTER_API_KEY"]:
         checks[0]["ok"] = False
         checks[0]["errors"].append("missing OPENROUTER_API_KEY for configured ZeroClaw provider")
 
