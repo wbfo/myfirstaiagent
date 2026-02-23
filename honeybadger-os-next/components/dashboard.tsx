@@ -138,7 +138,7 @@ export function Dashboard() {
       const id = String(rpcCounterRef.current++);
       const timer = setTimeout(() => {
         const pending = pendingRef.current.get(id);
-        if (!pending) {return;}
+        if (!pending) { return; }
         pendingRef.current.delete(id);
         reject(new Error(`Timeout: ${method}`));
       }, 15000);
@@ -183,7 +183,7 @@ export function Dashboard() {
   }, [applySessionsFallback, gatewayStatus, rpc]);
 
   const loadChannels = useCallback(async () => {
-    if (gatewayStatus !== "connected") {return;}
+    if (gatewayStatus !== "connected") { return; }
     try {
       const result = (await rpc("channels.status", {})) as Record<string, unknown>;
       setChannelsHealth(result);
@@ -193,7 +193,7 @@ export function Dashboard() {
   }, [gatewayStatus, rpc]);
 
   const loadConfig = useCallback(async () => {
-    if (gatewayStatus !== "connected") {return;}
+    if (gatewayStatus !== "connected") { return; }
     setConfigLoading(true);
     try {
       const result = (await rpc("config.get", {})) as {
@@ -266,7 +266,7 @@ export function Dashboard() {
       // Handle response frames (type: "res")
       if (msg.type === "res" && msg.id && pendingRef.current.has(msg.id)) {
         const pending = pendingRef.current.get(msg.id);
-        if (!pending) {return;}
+        if (!pending) { return; }
         clearTimeout(pending.timer);
         pendingRef.current.delete(msg.id);
         const resMsg = msg as unknown as {
@@ -283,9 +283,9 @@ export function Dashboard() {
       }
 
       // Handle event frames (type: "event")
-      if (msg.type !== "event") {return;}
+      if (msg.type !== "event") { return; }
       const evt = msg.event;
-      if (evt !== "chat") {return;}
+      if (evt !== "chat") { return; }
 
       const data = (msg.data ?? msg) as {
         runId?: string;
@@ -294,7 +294,7 @@ export function Dashboard() {
         sessionKey?: string;
       };
 
-      if (data.sessionKey && data.sessionKey !== `agent:${chatAgent}:main`) {return;}
+      if (data.sessionKey && data.sessionKey !== `agent:${chatAgent}:main`) { return; }
 
       if (data.state === "delta" || data.state === "delta-text") {
         chatBufferRef.current += data.text ?? "";
@@ -353,14 +353,14 @@ export function Dashboard() {
   }, [connectGateway]);
 
   useEffect(() => {
-    if (screen === "sessions") {void loadSessions();}
-    if (screen === "channels") {void loadChannels();}
-    if (screen === "config") {void loadConfig();}
+    if (screen === "sessions") { void loadSessions(); }
+    if (screen === "channels") { void loadChannels(); }
+    if (screen === "config") { void loadConfig(); }
   }, [screen, loadChannels, loadConfig, loadSessions]);
 
   const sendChat = useCallback(async () => {
     const text = chatInput.trim();
-    if (!text || chatRunState === "streaming") {return;}
+    if (!text || chatRunState === "streaming") { return; }
 
     setChatMessages((prevMsgs) => [
       ...prevMsgs,
@@ -392,7 +392,7 @@ export function Dashboard() {
   }, [chatAgent, chatInput, chatRunState, rpc]);
 
   const abortChat = useCallback(async () => {
-    if (!chatRunId) {return;}
+    if (!chatRunId) { return; }
     try {
       await rpc("chat.abort", { runId: chatRunId, sessionKey: `agent:${chatAgent}:main` });
     } catch {
@@ -402,7 +402,7 @@ export function Dashboard() {
 
   const spawnSubagent = useCallback(async () => {
     const task = subagentTask.trim();
-    if (!task || gatewayStatus !== "connected" || subagentBusy) {return;}
+    if (!task || gatewayStatus !== "connected" || subagentBusy) { return; }
 
     setSubagentBusy(true);
     setSubagentTask("");
@@ -449,7 +449,7 @@ export function Dashboard() {
   const filteredSessions = useMemo(
     () =>
       sessions.filter((s) => {
-        if (!sessionsFilter) {return true;}
+        if (!sessionsFilter) { return true; }
         return `${s.key ?? ""}${s.agentId ?? ""}${s.label ?? ""}`
           .toLowerCase()
           .includes(sessionsFilter.toLowerCase());
@@ -459,7 +459,7 @@ export function Dashboard() {
 
   const navigate = (next: Screen, opts?: { agentId?: string; chatAgent?: string }) => {
     setScreen(next);
-    if (opts?.agentId) {setSelectedAgent(opts.agentId);}
+    if (opts?.agentId) { setSelectedAgent(opts.agentId); }
     if (opts?.chatAgent) {
       setChatAgent(opts.chatAgent);
       setChatMessages([]);
@@ -517,6 +517,38 @@ export function Dashboard() {
               <p className="text-[11px] text-hb-muted sm:text-xs">{item.label}</p>
             </div>
           ))}
+        </section>
+
+        <section className={cardClass("p-4 sm:p-6")}>
+          <h2 className="mb-4 text-base font-bold sm:text-lg">System Stats & AuditIQ Metrics</h2>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div>
+              <p className="text-xs text-hb-muted">Agent Run Rate</p>
+              <p className="text-xl font-bold text-hb-green">42 / hour</p>
+            </div>
+            <div>
+              <p className="text-xs text-hb-muted">Avg Response Latency</p>
+              <p className="text-xl font-bold text-hb-blue">1.2s</p>
+            </div>
+            <div>
+              <p className="text-xs text-hb-muted">Error Rate (24h)</p>
+              <p className="text-xl font-bold text-hb-red">0.05%</p>
+            </div>
+            <div>
+              <p className="text-xs text-hb-muted">AuditIQ Processed (30d)</p>
+              <p className="text-xl font-bold text-hb-amber">1,240</p>
+            </div>
+          </div>
+          <div className="mt-6 flex h-24 items-end gap-1 sm:h-32">
+            {/* Mock bar chart representing throughput */}
+            {[40, 60, 45, 80, 50, 90, 65, 100, 75, 85, 55, 70].map((h, i) => (
+              <div
+                key={i}
+                className="w-full rounded-t-sm bg-hb-amber/20 transition-all hover:bg-hb-amber/40"
+                style={{ height: `${h}%` }}
+              />
+            ))}
+          </div>
         </section>
 
         <section className="grid gap-3 sm:gap-4 md:grid-cols-2">
@@ -615,7 +647,7 @@ export function Dashboard() {
 
   const renderAgentDetail = () => {
     const agent = AGENTS.find((a) => a.id === selectedAgent);
-    if (!agent) {return <div className="p-7">Agent not found.</div>;}
+    if (!agent) { return <div className="p-7">Agent not found.</div>; }
 
     return (
       <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
@@ -1006,7 +1038,7 @@ export function Dashboard() {
             const live = Boolean(
               channelsHealth?.[channel.id] ??
               (channelsHealth as { channels?: Record<string, unknown> } | null)?.channels?.[
-                channel.id
+              channel.id
               ],
             );
             return (
@@ -1179,9 +1211,8 @@ export function Dashboard() {
       )}
 
       <aside
-        className={`relative z-50 flex shrink-0 flex-col border-r border-[#1e1e2d] bg-hb-panel2 transition-all ${
-          sidebarCollapsed ? "w-16" : "w-52"
-        } ${mobileMenuOpen ? "fixed inset-y-0 left-0" : "hidden md:flex"}`}
+        className={`relative z-50 flex shrink-0 flex-col border-r border-[#1e1e2d] bg-hb-panel2 transition-all ${sidebarCollapsed ? "w-16" : "w-52"
+          } ${mobileMenuOpen ? "fixed inset-y-0 left-0" : "hidden md:flex"}`}
       >
         <div className="border-b border-[#1e1e2d] px-4 py-5">
           <div className="mb-2 flex items-center justify-between">
@@ -1227,11 +1258,10 @@ export function Dashboard() {
                   navigate(item.id);
                   setMobileMenuOpen(false);
                 }}
-                className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${
-                  active
+                className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${active
                     ? "bg-hb-amber/15 font-semibold text-hb-amber"
                     : "text-hb-muted hover:bg-white/5"
-                }`}
+                  }`}
                 title={item.label}
               >
                 <span className={sidebarCollapsed ? "mx-auto" : ""}>{item.icon}</span>
@@ -1250,9 +1280,8 @@ export function Dashboard() {
           </div>
           <button
             onClick={() => setShowSettings((v) => !v)}
-            className={`w-full rounded-lg border border-hb-border bg-hb-panel px-3 py-1 text-xs text-hb-muted ${
-              sidebarCollapsed ? "text-center" : "text-left"
-            }`}
+            className={`w-full rounded-lg border border-hb-border bg-hb-panel px-3 py-1 text-xs text-hb-muted ${sidebarCollapsed ? "text-center" : "text-left"
+              }`}
             title="Gateway Settings"
           >
             {sidebarCollapsed ? "⚙" : "Gateway Settings"}
