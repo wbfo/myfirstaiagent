@@ -6,6 +6,23 @@ Runtime truth still lives in config files (`~/.openclaw/openclaw.json` and `open
 Specialist runtime bindings live in `execution/agent_runtime_map.json` and are invoked via
 `execution/agent_runtime_dispatch.py`.
 
+## Runtime Sync Requirement
+
+Agent dossiers in `directives/agents/*` do not auto-register runtime agents.
+You must sync runtime config so `agents.list` includes HoneyBadger + specialists.
+
+Use:
+
+```bash
+./scripts/sync-honeybadger-agents.sh
+```
+
+Optional custom workspace:
+
+```bash
+./scripts/sync-honeybadger-agents.sh /absolute/path/to/workspace
+```
+
 Shared specialist response baseline:
 - `directives/agents/STANDARD_ORCHESTRATION_CONTRACT.md`
 
