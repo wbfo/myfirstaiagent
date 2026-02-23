@@ -4,6 +4,7 @@ import { DEFAULT_AGENT_WORKSPACE_DIR, ensureAgentWorkspace } from "../agents/wor
 import { type OpenClawConfig, createConfigIO, writeConfigFile } from "../config/config.js";
 import { formatConfigPath, logConfigUpdated } from "../config/logging.js";
 import { resolveSessionTranscriptsDir } from "../config/sessions.js";
+import { detectAndPullLocalModels } from "./env-detect.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { defaultRuntime } from "../runtime.js";
 import { shortenHomePath } from "../utils.js";
@@ -72,4 +73,11 @@ export async function setupCommand(
   const sessionsDir = resolveSessionTranscriptsDir();
   await fs.mkdir(sessionsDir, { recursive: true });
   runtime.log(`Sessions OK: ${shortenHomePath(sessionsDir)}`);
+
+  // Run the Cost-Optimization Stack environment checks if enabled
+  try {
+    await detectAndPullLocalModels();
+  } catch (error) {
+    runtime.log(`Environment Detection Error: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
