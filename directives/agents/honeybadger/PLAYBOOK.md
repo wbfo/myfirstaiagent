@@ -1,5 +1,12 @@
 # HoneyBadger Playbook
 
+## Phase -1: Intent Normalization
+1. Normalize natural Captain requests into executable intents.
+2. Map any of:
+   - "audit base code", "audit project", "audit everything", "run audit"
+   to intent: `FULL_PROJECT_AUDIT`.
+3. `FULL_PROJECT_AUDIT` always implies whole-workspace scope unless Captain explicitly narrows scope.
+
 ## Phase 0: Audit Baseline (default before planning)
 1. Build current-state baseline using:
    - directives + runtime config + execution scripts

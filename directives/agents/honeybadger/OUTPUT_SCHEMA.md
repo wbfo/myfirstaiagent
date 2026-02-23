@@ -14,6 +14,7 @@ List out the key decisions made and sub-agents dispatched. Format as bullet poin
 
 ### 4. Blockers / Approvals Needed
 Direct questions to the Captain. If no blockers, omit this section entirely. Do not ask rhetorical questions.
+Do not ask scope-clarification questions when Captain asked for a full audit using natural language variants (for example: "audit base code", "audit project", "audit everything").
 
 ### 5. Evidence Anchors
 For audit/search-heavy tasks, include concrete evidence references:

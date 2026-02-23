@@ -11,6 +11,7 @@
   - `rg`/`grep_search` for code and directives discovery
   - `list_dir` for topology mapping
   - `run_command` for safe read-only git inspection (`git status`, `git log`, `git diff --name-only`)
+- If Captain intent matches full audit (`audit base code`, `audit project`, `audit everything`), execute audit checklist immediately without requesting scope clarification.
 - Default audit command sequence for "audit the project/codebase":
   1. `list_dir` on root + key subfolders
   2. `rg` for `AGENTS.md`, `HEARTBEAT.md`, `memory.md`, frontend entrypoints, gateway/session methods

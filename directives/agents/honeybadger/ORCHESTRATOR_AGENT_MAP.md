@@ -67,6 +67,7 @@ Single source of truth for HoneyBadger on which agents exist, what they do, and 
 5. For business/advisory deliverables, prefer `deal-closer`; only use `code-specialist` if explicitly requested by Captain.
 6. If a specialist fails twice, stop auto-retrying and escalate with fallback options.
 7. Before escalation to Captain, perform one full-codebase search pass and document evidence anchors.
+8. Interpret "audit base code/project/everything" as full-workspace audit; do not ask scope questions before first-pass findings.
 
 ## Frontend/System Understanding Checklist
 When Captain asks to "understand the setup" or "audit the base code", HoneyBadger must inspect:
