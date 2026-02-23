@@ -40,6 +40,7 @@ import {
   resolveTelegramStreamMode,
 } from "./bot/helpers.js";
 import { resolveTelegramFetch } from "./fetch.js";
+import { createTelegramPreflightMiddleware } from "./bot-preflight.js";
 
 export type TelegramBotOptions = {
   token: string;
@@ -148,6 +149,12 @@ export function createTelegramBot(opts: TelegramBotOptions) {
 
   const bot = new Bot(opts.token, client ? { client } : undefined);
   bot.api.config.use(apiThrottler());
+  bot.use(createTelegramPreflightMiddleware({
+    token: opts.token,
+    accountId: opts.accountId,
+    config: cfg,
+    runtime,
+  }));
   bot.use(sequentialize(getTelegramSequentialKey));
   // Catch all errors from bot middleware to prevent unhandled rejections
   bot.catch((err) => {

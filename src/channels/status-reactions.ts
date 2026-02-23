@@ -42,6 +42,8 @@ export type StatusReactionController = {
   setError: () => Promise<void>;
   clear: () => Promise<void>;
   restoreInitial: () => Promise<void>;
+  /** Pulse the current reaction to show activity and reset stall timers. */
+  pulse: () => void;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -378,6 +380,17 @@ export function createStatusReactionController(params: {
     });
   }
 
+  function pulse(): void {
+    if (!enabled || finished) {
+      return;
+    }
+    // Re-apply current emoji (or thinking as default) to keep it fresh and reset stall timers.
+    void enqueue(async () => {
+      await applyEmoji(currentEmoji || emojis.thinking);
+    });
+    resetStallTimers();
+  }
+
   return {
     setQueued,
     setThinking,
@@ -386,5 +399,6 @@ export function createStatusReactionController(params: {
     setError,
     clear,
     restoreInitial,
+    pulse,
   };
 }

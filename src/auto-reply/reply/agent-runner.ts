@@ -164,6 +164,14 @@ export async function runReplyAgent(params: {
     isHeartbeat,
   });
 
+  const heartbeatIntervalMs = 15_000;
+  let heartbeatTimer: NodeJS.Timeout | null = null;
+  if (opts?.onHeartbeat) {
+    heartbeatTimer = setInterval(() => {
+      void Promise.resolve(opts.onHeartbeat?.()).catch(() => { });
+    }, heartbeatIntervalMs);
+  }
+
   const shouldEmitToolResult = createShouldEmitToolResult({
     sessionKey,
     storePath,
@@ -194,20 +202,20 @@ export async function runReplyAgent(params: {
   const blockReplyCoalescing =
     blockStreamingEnabled && opts?.onBlockReply
       ? resolveBlockStreamingCoalescing(
-          cfg,
-          sessionCtx.Provider,
-          sessionCtx.AccountId,
-          blockReplyChunking,
-        )
+        cfg,
+        sessionCtx.Provider,
+        sessionCtx.AccountId,
+        blockReplyChunking,
+      )
       : undefined;
   const blockReplyPipeline =
     blockStreamingEnabled && opts?.onBlockReply
       ? createBlockReplyPipeline({
-          onBlockReply: opts.onBlockReply,
-          timeoutMs: blockReplyTimeoutMs,
-          coalescing: blockReplyCoalescing,
-          buffer: createAudioAsVoiceBuffer({ isAudioPayload }),
-        })
+        onBlockReply: opts.onBlockReply,
+        timeoutMs: blockReplyTimeoutMs,
+        coalescing: blockReplyCoalescing,
+        buffer: createAudioAsVoiceBuffer({ isAudioPayload }),
+      })
       : null;
   const touchActiveSessionEntry = async () => {
     if (!activeSessionEntry || !activeSessionStore || !sessionKey) {
@@ -580,10 +588,10 @@ export async function runReplyAgent(params: {
       const showCost = authMode === "api-key";
       const costConfig = showCost
         ? resolveModelCostConfig({
-            provider: providerUsed,
-            model: modelUsed,
-            config: cfg,
-          })
+          provider: providerUsed,
+          model: modelUsed,
+          config: cfg,
+        })
         : undefined;
       let formatted = formatResponseUsageLine({
         usage,
@@ -724,6 +732,9 @@ export async function runReplyAgent(params: {
       runFollowupTurn,
     );
   } finally {
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+    }
     blockReplyPipeline?.stop();
     typing.markRunComplete();
   }

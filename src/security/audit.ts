@@ -1,5 +1,12 @@
 import { resolveSandboxConfigForAgent } from "../agents/sandbox.js";
 import { execDockerRaw } from "../agents/sandbox/docker.js";
+import { listChannelPlugins } from "../channels/plugins/index.js";
+import { type OpenClawConfig } from "../config/types.js";
+import { resolveConfigPath, resolveStateDir } from "../config/paths.js";
+import { formatCliCommand } from "../cli/command-format.js";
+import { buildGatewayConnectionDetails } from "../gateway/call.js";
+import { probeGateway } from "../gateway/probe.js";
+import { resolveGatewayProbeAuth } from "../gateway/probe-auth.js";
 import {
   collectAttackSurfaceSummaryFindings,
   collectExposureMatrixFindings,
@@ -27,6 +34,7 @@ import {
   collectBrowserControlFindings,
   collectGatewayConfigFindings,
 } from "./audit-gateway.js";
+import { collectChannelSecurityFindings } from "./audit-channel.js";
 import type { ExecFn } from "./windows-acl.js";
 
 export type SecurityAuditSeverity = "info" | "warn" | "critical";
