@@ -6,6 +6,9 @@ Runtime truth still lives in config files (`~/.openclaw/openclaw.json` and `open
 Specialist runtime bindings live in `execution/agent_runtime_map.json` and are invoked via
 `execution/agent_runtime_dispatch.py`.
 
+Shared specialist response baseline:
+- `directives/agents/STANDARD_ORCHESTRATION_CONTRACT.md`
+
 Each agent dossier should contain:
 
 1. `CHARTER.md`

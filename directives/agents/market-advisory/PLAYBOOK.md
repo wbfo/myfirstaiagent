@@ -4,5 +4,7 @@
 2. Generate candidate opportunities.
 3. Score by thesis strength and risk profile.
 4. Publish advisory output for review.
+5. Keep advisory-only posture and include invalidation conditions in `payload.signal`.
+6. If confidence < 0.5, set `status=needs_review` and recommend defer/no-go.
 
 Runtime: `NanoBot` via `execution/agent_runtime_dispatch.py` (`agent_id=market-advisory`).
