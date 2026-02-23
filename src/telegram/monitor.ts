@@ -182,6 +182,15 @@ export async function monitorTelegramProvider(opts: MonitorTelegramOpts = {}) {
       try {
         // runner.task() returns a promise that resolves when the runner stops
         await runner.task();
+        if (!opts.abortSignal?.aborted) {
+          (opts.runtime?.error ?? console.error)(
+            `Telegram runner stopped unexpectedly; restarting in ${formatDurationPrecise(TELEGRAM_POLL_RESTART_POLICY.initialMs)}.`,
+          );
+          restartAttempts += 1;
+          const delayMs = computeBackoff(TELEGRAM_POLL_RESTART_POLICY, restartAttempts);
+          await sleepWithAbort(delayMs, opts.abortSignal);
+          continue;
+        }
         return;
       } catch (err) {
         if (opts.abortSignal?.aborted) {

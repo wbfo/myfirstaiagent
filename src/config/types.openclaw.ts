@@ -44,10 +44,10 @@ export type OpenClawConfig = {
     vars?: Record<string, string>;
     /** Sugar: allow env vars directly under env (string values only). */
     [key: string]:
-      | string
-      | Record<string, string>
-      | { enabled?: boolean; timeoutMs?: number }
-      | undefined;
+    | string
+    | Record<string, string>
+    | { enabled?: boolean; timeoutMs?: number }
+    | undefined;
   };
   wizard?: {
     lastRunAt?: string;
@@ -97,6 +97,8 @@ export type OpenClawConfig = {
   talk?: TalkConfig;
   gateway?: GatewayConfig;
   memory?: MemoryConfig;
+  /** Enable the "97% cost-cut stack" (local heartbeats, hybrid search, auto-routing). */
+  costOptStack?: boolean;
 };
 
 export type ConfigValidationIssue = {

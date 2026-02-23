@@ -65,10 +65,10 @@ export function getHistoryLimitFromSessionKey(
     providerId: string,
   ):
     | {
-        historyLimit?: number;
-        dmHistoryLimit?: number;
-        dms?: Record<string, { historyLimit?: number }>;
-      }
+      historyLimit?: number;
+      dmHistoryLimit?: number;
+      dms?: Record<string, { historyLimit?: number }>;
+    }
     | undefined => {
     const channels = cfg?.channels;
     if (!channels || typeof channels !== "object") {
@@ -106,6 +106,39 @@ export function getHistoryLimitFromSessionKey(
   }
 
   return undefined;
+}
+
+/**
+ * Limits conversation history to a maximum character count (budget).
+ * Preserves the most recent messages first.
+ */
+export function limitHistoryBySize(
+  messages: AgentMessage[],
+  maxChars: number,
+): AgentMessage[] {
+  if (maxChars <= 0 || messages.length === 0) {
+    return messages;
+  }
+
+  let currentChars = 0;
+  let splitIndex = messages.length;
+
+  // Iterate backwards to keep most recent messages
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    const contentPayload = (msg as { content?: unknown }).content;
+    const content =
+      typeof contentPayload === "string" ? contentPayload : JSON.stringify(contentPayload ?? "");
+    const chars = content.length;
+
+    if (currentChars + chars > maxChars && currentChars > 0) {
+      break;
+    }
+    currentChars += chars;
+    splitIndex = i;
+  }
+
+  return messages.slice(splitIndex);
 }
 
 /**

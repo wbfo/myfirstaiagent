@@ -11,6 +11,29 @@ import type { ChannelHeartbeatVisibilityConfig } from "./types.channels.js";
 import type { DmConfig, ProviderCommandsConfig } from "./types.messages.js";
 import type { GroupToolPolicyBySenderConfig, GroupToolPolicyConfig } from "./types.tools.js";
 
+export type TelegramVoiceConfig = {
+  /**
+   * Enable automatic TTS voice replies.
+   * Requires `edge-tts` Python package to be installed (`pip3 install edge-tts`).
+   * Default: false.
+   */
+  enabled?: boolean;
+  /**
+   * edge-tts voice name. Default: "en-US-GuyNeural" (male, American English).
+   * Run `python3 -m edge_tts --list-voices` for available voices.
+   */
+  voice?: string;
+  /**
+   * When to send voice replies:
+   * - "always": every reply also gets a voice message
+   * - "auto": only reply with voice when the user sent a voice message
+   * Default: "always".
+   */
+  mode?: "always" | "auto";
+  /** TTS synthesis timeout in ms. Default: 30000. */
+  timeoutMs?: number;
+};
+
 export type TelegramActionConfig = {
   reactions?: boolean;
   sendMessage?: boolean;
@@ -33,8 +56,8 @@ export type TelegramStreamingMode = "off" | "partial" | "block" | "progress";
 export type TelegramCapabilitiesConfig =
   | string[]
   | {
-      inlineButtons?: TelegramInlineButtonsScope;
-    };
+    inlineButtons?: TelegramInlineButtonsScope;
+  };
 
 /** Custom command definition for Telegram bot menu. */
 export type TelegramCustomCommand = {
@@ -161,6 +184,8 @@ export type TelegramAccountConfig = {
    * Telegram expects unicode emoji (e.g., "👀") rather than shortcodes.
    */
   ackReaction?: string;
+  /** Text-to-speech voice reply configuration. Uses edge-tts (free, no API key). */
+  voice?: TelegramVoiceConfig;
 };
 
 export type TelegramTopicConfig = {

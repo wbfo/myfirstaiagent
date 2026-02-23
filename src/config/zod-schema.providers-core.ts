@@ -43,6 +43,16 @@ const DiscordIdListSchema = z.array(DiscordIdSchema);
 
 const TelegramInlineButtonsScopeSchema = z.enum(["off", "dm", "group", "all", "allowlist"]);
 
+export const TelegramVoiceSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    voice: z.string().optional(),
+    mode: z.enum(["always", "auto"]).optional(),
+    timeoutMs: z.number().int().min(1000).max(120000).optional(),
+  })
+  .strict()
+  .optional();
+
 const TelegramCapabilitiesSchema = z.union([
   z.array(z.string()),
   z
@@ -183,6 +193,7 @@ export const TelegramAccountSchemaBase = z
     linkPreview: z.boolean().optional(),
     responsePrefix: z.string().optional(),
     ackReaction: z.string().optional(),
+    voice: TelegramVoiceSchema,
   })
   .strict();
 

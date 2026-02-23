@@ -16,6 +16,10 @@ jobs:
     name: Deploy to Cloud Run
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      OPENCLAW_GATEWAY_TOKEN: ${{ secrets.OPENCLAW_GATEWAY_TOKEN }}
 
     permissions:
       contents: read
@@ -48,10 +52,10 @@ jobs:
             OPENCLAW_MODEL=google/gemini-3-flash-preview
             OPENCLAW_SKIP_CANVAS_HOST=1
             OPENCLAW_CONFIG_PATH=/app/openclaw.cloudrun.json
-            TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            GOOGLE_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            OPENCLAW_GATEWAY_TOKEN=${{ secrets.OPENCLAW_GATEWAY_TOKEN }}
+            TELEGRAM_BOT_TOKEN=${{ env.TELEGRAM_BOT_TOKEN }}
+            GEMINI_API_KEY=${{ env.GEMINI_API_KEY }}
+            GOOGLE_API_KEY=${{ env.GEMINI_API_KEY }}
+            OPENCLAW_GATEWAY_TOKEN=${{ env.OPENCLAW_GATEWAY_TOKEN }}
 
 
 

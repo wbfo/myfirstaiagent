@@ -4,6 +4,7 @@ import type { GatewayMessageChannel } from "../utils/message-channel.js";
 import { resolveSessionAgentId } from "./agent-scope.js";
 import type { SandboxFsBridge } from "./sandbox/fs-bridge.js";
 import { createAgentsListTool } from "./tools/agents-list-tool.js";
+import { createCodeAuditTool } from "./tools/audit-tool.js";
 import { createBrowserTool } from "./tools/browser-tool.js";
 import { createCanvasTool } from "./tools/canvas-tool.js";
 import type { AnyAgentTool } from "./tools/common.js";
@@ -69,15 +70,15 @@ export function createOpenClawTools(options?: {
   const workspaceDir = resolveWorkspaceRoot(options?.workspaceDir);
   const imageTool = options?.agentDir?.trim()
     ? createImageTool({
-        config: options?.config,
-        agentDir: options.agentDir,
-        workspaceDir,
-        sandbox:
-          options?.sandboxRoot && options?.sandboxFsBridge
-            ? { root: options.sandboxRoot, bridge: options.sandboxFsBridge }
-            : undefined,
-        modelHasVision: options?.modelHasVision,
-      })
+      config: options?.config,
+      agentDir: options.agentDir,
+      workspaceDir,
+      sandbox:
+        options?.sandboxRoot && options?.sandboxFsBridge
+          ? { root: options.sandboxRoot, bridge: options.sandboxFsBridge }
+          : undefined,
+      modelHasVision: options?.modelHasVision,
+    })
     : null;
   const webSearchTool = createWebSearchTool({
     config: options?.config,
@@ -90,18 +91,18 @@ export function createOpenClawTools(options?: {
   const messageTool = options?.disableMessageTool
     ? null
     : createMessageTool({
-        agentAccountId: options?.agentAccountId,
-        agentSessionKey: options?.agentSessionKey,
-        config: options?.config,
-        currentChannelId: options?.currentChannelId,
-        currentChannelProvider: options?.agentChannel,
-        currentThreadTs: options?.currentThreadTs,
-        replyToMode: options?.replyToMode,
-        hasRepliedRef: options?.hasRepliedRef,
-        sandboxRoot: options?.sandboxRoot,
-        requireExplicitTarget: options?.requireExplicitMessageTarget,
-        requesterSenderId: options?.requesterSenderId ?? undefined,
-      });
+      agentAccountId: options?.agentAccountId,
+      agentSessionKey: options?.agentSessionKey,
+      config: options?.config,
+      currentChannelId: options?.currentChannelId,
+      currentChannelProvider: options?.agentChannel,
+      currentThreadTs: options?.currentThreadTs,
+      replyToMode: options?.replyToMode,
+      hasRepliedRef: options?.hasRepliedRef,
+      sandboxRoot: options?.sandboxRoot,
+      requireExplicitTarget: options?.requireExplicitMessageTarget,
+      requesterSenderId: options?.requesterSenderId ?? undefined,
+    });
   const tools: AnyAgentTool[] = [
     createBrowserTool({
       sandboxBridgeUrl: options?.sandboxBrowserBridgeUrl,
@@ -160,10 +161,14 @@ export function createOpenClawTools(options?: {
       agentSessionKey: options?.agentSessionKey,
       config: options?.config,
     }),
-    ...(webSearchTool ? [webSearchTool] : []),
     ...(webFetchTool ? [webFetchTool] : []),
     ...(imageTool ? [imageTool] : []),
-  ];
+    createCodeAuditTool({
+      config: options?.config,
+      agentSessionKey: options?.agentSessionKey,
+      workspaceDir: resolveWorkspaceRoot(options?.workspaceDir),
+    })!,
+  ].filter(Boolean) as AnyAgentTool[];
 
   const pluginTools = resolvePluginTools({
     context: {

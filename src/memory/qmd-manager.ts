@@ -158,12 +158,12 @@ export class QmdMemoryManager implements MemorySearchManager {
     };
     this.sessionExporter = this.qmd.sessions.enabled
       ? {
-          dir: this.qmd.sessions.exportDir ?? path.join(this.qmdDir, "sessions"),
-          retentionMs: this.qmd.sessions.retentionDays
-            ? this.qmd.sessions.retentionDays * 24 * 60 * 60 * 1000
-            : undefined,
-          collectionName: this.pickSessionCollectionName(),
-        }
+        dir: this.qmd.sessions.exportDir ?? path.join(this.qmdDir, "sessions"),
+        retentionMs: this.qmd.sessions.retentionDays
+          ? this.qmd.sessions.retentionDays * 24 * 60 * 60 * 1000
+          : undefined,
+        collectionName: this.pickSessionCollectionName(),
+      }
       : null;
     if (this.sessionExporter) {
       this.qmd.collections = [
@@ -419,10 +419,13 @@ export class QmdMemoryManager implements MemorySearchManager {
       return [];
     }
     await this.waitForPendingUpdateBeforeSearch();
-    const limit = Math.min(
+    let limit = Math.min(
       this.qmd.limits.maxResults,
       opts?.maxResults ?? this.qmd.limits.maxResults,
     );
+    if (this.cfg.costOptStack && !opts?.maxResults) {
+      limit = Math.min(limit, 5);
+    }
     const collectionNames = this.listManagedCollectionNames();
     if (collectionNames.length === 0) {
       log.warn("qmd query skipped: no managed collections configured");
@@ -855,9 +858,9 @@ export class QmdMemoryManager implements MemorySearchManager {
       let stderrTruncated = false;
       const timer = opts?.timeoutMs
         ? setTimeout(() => {
-            child.kill("SIGKILL");
-            reject(new Error(`qmd ${args.join(" ")} timed out after ${opts.timeoutMs}ms`));
-          }, opts.timeoutMs)
+          child.kill("SIGKILL");
+          reject(new Error(`qmd ${args.join(" ")} timed out after ${opts.timeoutMs}ms`));
+        }, opts.timeoutMs)
         : null;
       child.stdout.on("data", (data) => {
         const next = appendOutputWithCap(stdout, data.toString("utf8"), this.maxQmdOutputChars);
@@ -947,9 +950,9 @@ export class QmdMemoryManager implements MemorySearchManager {
       let stderrTruncated = false;
       const timer = opts?.timeoutMs
         ? setTimeout(() => {
-            child.kill("SIGKILL");
-            reject(new Error(`mcporter ${args.join(" ")} timed out after ${opts.timeoutMs}ms`));
-          }, opts.timeoutMs)
+          child.kill("SIGKILL");
+          reject(new Error(`mcporter ${args.join(" ")} timed out after ${opts.timeoutMs}ms`));
+        }, opts.timeoutMs)
         : null;
       child.stdout.on("data", (data) => {
         const next = appendOutputWithCap(stdout, data.toString("utf8"), this.maxQmdOutputChars);
@@ -1448,7 +1451,10 @@ export class QmdMemoryManager implements MemorySearchManager {
   }
 
   private clampResultsByInjectedChars(results: MemorySearchResult[]): MemorySearchResult[] {
-    const budget = this.qmd.limits.maxInjectedChars;
+    let budget = this.qmd.limits.maxInjectedChars;
+    if (this.cfg.costOptStack && (!budget || budget > 6000)) {
+      budget = 6000;
+    }
     if (!budget || budget <= 0) {
       return results;
     }

@@ -87,10 +87,10 @@ export async function getReplyFromConfig(
       opts.heartbeatModelOverride?.trim() ?? agentCfg?.heartbeat?.model?.trim() ?? "";
     const heartbeatRef = heartbeatRaw
       ? resolveModelRefFromString({
-          raw: heartbeatRaw,
-          defaultProvider,
-          aliasIndex,
-        })
+        raw: heartbeatRaw,
+        defaultProvider,
+        aliasIndex,
+      })
       : null;
     if (heartbeatRef) {
       provider = heartbeatRef.ref.provider;
@@ -123,16 +123,38 @@ export async function getReplyFromConfig(
   const finalized = finalizeInboundContext(ctx);
 
   if (!isFastTestEnv) {
-    await applyMediaUnderstanding({
-      ctx: finalized,
-      cfg,
-      agentDir,
-      activeModel: { provider, model },
-    });
-    await applyLinkUnderstanding({
-      ctx: finalized,
-      cfg,
-    });
+    const understandingTimeoutMs = Math.min(timeoutMs, 300_000); // 5 minute max for pre-processing
+    const runUnderstanding = async () => {
+      await applyMediaUnderstanding({
+        ctx: finalized,
+        cfg,
+        agentDir,
+        activeModel: { provider, model },
+      });
+      await applyLinkUnderstanding({
+        ctx: finalized,
+        cfg,
+      });
+    };
+
+    try {
+      if (understandingTimeoutMs <= 0) {
+        await runUnderstanding();
+      } else {
+        await Promise.race([
+          runUnderstanding(),
+          new Promise<void>((_, reject) =>
+            setTimeout(
+              () => reject(new Error(`Media/Link understanding timed out after ${understandingTimeoutMs}ms`)),
+              understandingTimeoutMs,
+            ),
+          ),
+        ]);
+      }
+    } catch (err) {
+      defaultRuntime.error(`Pre-reply understanding failed or timed out: ${String(err)}`);
+      // Continue without full understanding rather than hanging the entire reply
+    }
   }
 
   const commandAuthorized = finalized.CommandAuthorized;

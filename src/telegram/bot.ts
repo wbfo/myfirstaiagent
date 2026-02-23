@@ -141,9 +141,9 @@ export function createTelegramBot(opts: TelegramBotOptions) {
   const client: ApiClientOptions | undefined =
     shouldProvideFetch || timeoutSeconds
       ? {
-          ...(shouldProvideFetch && fetchImpl ? { fetch: fetchForClient } : {}),
-          ...(timeoutSeconds ? { timeoutSeconds } : {}),
-        }
+        ...(shouldProvideFetch && fetchImpl ? { fetch: fetchForClient } : {}),
+        ...(timeoutSeconds ? { timeoutSeconds } : {}),
+      }
       : undefined;
 
   const bot = new Bot(opts.token, client ? { client } : undefined);
@@ -212,6 +212,23 @@ export function createTelegramBot(opts: TelegramBotOptions) {
   };
 
   bot.use(async (ctx, next) => {
+    const GLOBAL_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Global update processing timeout (10m)")), GLOBAL_TIMEOUT_MS),
+    );
+    try {
+      await Promise.race([next(), timeoutPromise]);
+    } catch (err) {
+      const errMsg = String(err);
+      if (errMsg.includes("Global update processing timeout")) {
+        runtime.error?.(danger(`telegram: ${errMsg} for update ${ctx.update.update_id}`));
+        return;
+      }
+      throw err;
+    }
+  });
+
+  bot.use(async (ctx, next) => {
     if (shouldLogVerbose()) {
       try {
         const raw = stringifyUpdate(ctx.update);
@@ -229,8 +246,8 @@ export function createTelegramBot(opts: TelegramBotOptions) {
   const historyLimit = Math.max(
     0,
     telegramCfg.historyLimit ??
-      cfg.messages?.groupChat?.historyLimit ??
-      DEFAULT_GROUP_HISTORY_LIMIT,
+    cfg.messages?.groupChat?.historyLimit ??
+    DEFAULT_GROUP_HISTORY_LIMIT,
   );
   const groupHistories = new Map<string, HistoryEntry[]>();
   const textLimit = resolveTextChunkLimit(cfg, "telegram", account.accountId);

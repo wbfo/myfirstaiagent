@@ -584,6 +584,7 @@ export const OpenClawSchema = z
       })
       .strict()
       .optional(),
+    costOptStack: z.boolean().optional(),
     memory: MemorySchema,
     skills: z
       .object({

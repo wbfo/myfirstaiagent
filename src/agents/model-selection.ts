@@ -295,26 +295,29 @@ export function resolveDefaultModelForAgent(params: {
   cfg: OpenClawConfig;
   agentId?: string;
 }): ModelRef {
+  if (params.cfg.costOptStack && !params.agentId) {
+    return { provider: "ollama", model: "qwen2.5:14b" }; // Prefer 14b for general tasks in cost-cut mode
+  }
   const agentModelOverride = params.agentId
     ? resolveAgentModelPrimary(params.cfg, params.agentId)
     : undefined;
   const cfg =
     agentModelOverride && agentModelOverride.length > 0
       ? {
-          ...params.cfg,
-          agents: {
-            ...params.cfg.agents,
-            defaults: {
-              ...params.cfg.agents?.defaults,
-              model: {
-                ...(typeof params.cfg.agents?.defaults?.model === "object"
-                  ? params.cfg.agents.defaults.model
-                  : undefined),
-                primary: agentModelOverride,
-              },
+        ...params.cfg,
+        agents: {
+          ...params.cfg.agents,
+          defaults: {
+            ...params.cfg.agents?.defaults,
+            model: {
+              ...(typeof params.cfg.agents?.defaults?.model === "object"
+                ? params.cfg.agents.defaults.model
+                : undefined),
+              primary: agentModelOverride,
             },
           },
-        }
+        },
+      }
       : params.cfg;
   return resolveConfiguredModelRef({
     cfg,
@@ -469,8 +472,8 @@ export function resolveAllowedModelRef(params: {
 }):
   | { ref: ModelRef; key: string }
   | {
-      error: string;
-    } {
+    error: string;
+  } {
   const trimmed = params.raw.trim();
   if (!trimmed) {
     return { error: "invalid model: empty" };
