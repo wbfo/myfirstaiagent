@@ -1,5 +1,4 @@
-# HEARTBEAT.md
+# Heartbeat Tasks
 
-# Keep this file empty (or with only comments) to skip heartbeat API calls.
-
-# Add tasks below when you want the agent to check something periodically.
+- [ ] Remind user about "AI Council Conductor" Amazon publishing and book formatting. (Due: tomorrow afternoon)
+- [ ] Bring up Real Estate Management (NYC Properties) and Deal Finding.
