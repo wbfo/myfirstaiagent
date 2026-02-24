@@ -99,7 +99,7 @@ export async function cleanOldMedia(ttlMs = DEFAULT_TTL_MS) {
           return;
         }
         if (now - stat.mtimeMs > ttlMs) {
-          await fs.rm(full).catch(() => { });
+          await fs.rm(full).catch(() => {});
         }
       }),
     );
@@ -117,7 +117,7 @@ export async function cleanOldMedia(ttlMs = DEFAULT_TTL_MS) {
         return;
       }
       if (stat.isFile() && now - stat.mtimeMs > ttlMs) {
-        await fs.rm(full).catch(() => { });
+        await fs.rm(full).catch(() => {});
       }
     }),
   );

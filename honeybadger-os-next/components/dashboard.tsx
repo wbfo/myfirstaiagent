@@ -89,7 +89,9 @@ function formatCompactInt(value: number): string {
 
 function statusBadgeClass(status: string): string {
   const normalized = status.toLowerCase();
-  if (["active", "running", "streaming", "started", "delegated", "in_progress"].includes(normalized)) {
+  if (
+    ["active", "running", "streaming", "started", "delegated", "in_progress"].includes(normalized)
+  ) {
     return "border-hb-green/35 bg-hb-green/10 text-hb-green";
   }
   if (["aborting", "queued", "pending"].includes(normalized)) {
@@ -171,7 +173,9 @@ export function Dashboard() {
       const id = String(rpcCounterRef.current++);
       const timer = setTimeout(() => {
         const pending = pendingRef.current.get(id);
-        if (!pending) { return; }
+        if (!pending) {
+          return;
+        }
         pendingRef.current.delete(id);
         reject(new Error(`Timeout: ${method}`));
       }, 15000);
@@ -216,7 +220,9 @@ export function Dashboard() {
   }, [applySessionsFallback, gatewayStatus, rpc]);
 
   const loadChannels = useCallback(async () => {
-    if (gatewayStatus !== "connected") { return; }
+    if (gatewayStatus !== "connected") {
+      return;
+    }
     try {
       const result = (await rpc("channels.status", {})) as Record<string, unknown>;
       setChannelsHealth(result);
@@ -246,7 +252,9 @@ export function Dashboard() {
   }, [gatewayStatus, rpc]);
 
   const loadConfig = useCallback(async () => {
-    if (gatewayStatus !== "connected") { return; }
+    if (gatewayStatus !== "connected") {
+      return;
+    }
     setConfigLoading(true);
     try {
       const result = (await rpc("config.get", {})) as {
@@ -278,7 +286,7 @@ export function Dashboard() {
     const ws = new WebSocket(url);
     wsRef.current = ws;
 
-    ws.onopen = () => {
+    ws.addEventListener("open", () => {
       ws.send(
         JSON.stringify({
           type: "req",
@@ -300,7 +308,7 @@ export function Dashboard() {
       );
     };
 
-    ws.onmessage = (event) => {
+    ws.addEventListener("message", (event) => {
       let msg: WsMessage;
       try {
         msg = JSON.parse(event.data) as WsMessage;
@@ -316,84 +324,95 @@ export function Dashboard() {
         return;
       }
 
-      // Handle response frames (type: "res")
+      const abortController = new AbortController();
+
+      async function streamResponse(runId: string) {
+        (type: "res")
       if (msg.type === "res" && msg.id && pendingRef.current.has(msg.id)) {
-        const pending = pendingRef.current.get(msg.id);
-        if (!pending) { return; }
-        clearTimeout(pending.timer);
-        pendingRef.current.delete(msg.id);
-        const resMsg = msg as unknown as {
-          ok?: boolean;
-          payload?: unknown;
-          error?: { message?: string };
-        };
-        if (resMsg.ok === false || resMsg.error) {
-          pending.reject(new Error(resMsg.error?.message ?? "RPC error"));
-        } else {
-          pending.resolve(resMsg.payload);
+          const pending = pendingRef.current.get(msg.id);
+          if (!pending) {
+            return;
+          }
+          clearTimeout(pending.timer);
+          pendingRef.current.delete(msg.id);
+          const resMsg = msg as unknown as {
+            ok?: boolean;
+            payload?: unknown;
+            error?: { message?: string };
+          };
+          if (resMsg.ok === false || resMsg.error) {
+            pending.reject(new Error(resMsg.error?.message ?? "RPC error"));
+          } else {
+            pending.resolve(resMsg.payload);
+          }
+          return;
         }
-        return;
-      }
 
-      // Handle event frames (type: "event")
-      if (msg.type !== "event") { return; }
-      const evt = msg.event;
-      if (evt !== "chat") { return; }
+        // Handle event frames (type: "event")
+        if (msg.type !== "event") {
+          return;
+        }
+        const evt = msg.event;
+        if (evt !== "chat") {
+          return;
+        }
 
-      const data = (msg.data ?? msg) as {
-        runId?: string;
-        state?: string;
-        text?: string;
-        sessionKey?: string;
-      };
+        const data = (msg.data ?? msg) as {
+          runId?: string;
+          state?: string;
+          text?: string;
+          sessionKey?: string;
+        };
 
-      if (data.sessionKey && data.sessionKey !== `agent:${chatAgent}:main`) { return; }
+        if (data.sessionKey && data.sessionKey !== `agent:${chatAgent}:main`) {
+          return;
+        }
 
-      if (data.state === "delta" || data.state === "delta-text") {
-        chatBufferRef.current += data.text ?? "";
-        setChatRunState("streaming");
-        setChatRunId(data.runId ?? null);
-        return;
-      }
+        if (data.state === "delta" || data.state === "delta-text") {
+          chatBufferRef.current += data.text ?? "";
+          setChatRunState("streaming");
+          setChatRunId(data.runId ?? null);
+          return;
+        }
 
-      if (data.state === "final") {
-        const finalText = data.text ?? chatBufferRef.current;
-        setChatMessages((prevMsgs) => [
-          ...prevMsgs,
-          { id: randomKey("assistant"), role: "assistant", content: finalText, ts: Date.now() },
-        ]);
-        chatBufferRef.current = "";
-        setChatRunId(null);
-        setChatRunState("done");
-        setTimeout(() => setChatRunState(null), 1200);
-        return;
-      }
+        if (data.state === "final") {
+          const finalText = data.text ?? chatBufferRef.current;
+          setChatMessages((prevMsgs) => [
+            ...prevMsgs,
+            { id: randomKey("assistant"), role: "assistant", content: finalText, ts: Date.now() },
+          ]);
+          chatBufferRef.current = "";
+          setChatRunId(null);
+          setChatRunState("done");
+          setTimeout(() => setChatRunState(null), 1200);
+          return;
+        }
 
-      if (data.state === "error" || data.state === "aborted") {
-        const output = chatBufferRef.current || "No output returned";
-        setChatMessages((prevMsgs) => [
-          ...prevMsgs,
-          {
-            id: randomKey("assistant"),
-            role: "assistant",
-            content: `${output}\n\n[${(data.state ?? "error").toUpperCase()}]`,
-            ts: Date.now(),
-            isError: true,
-          },
-        ]);
-        chatBufferRef.current = "";
-        setChatRunId(null);
-        setChatRunState(data.state === "aborted" ? "aborted" : "error");
-        setTimeout(() => setChatRunState(null), 2200);
-      }
-    };
+        if (data.state === "error" || data.state === "aborted") {
+          const output = chatBufferRef.current || "No output returned";
+          setChatMessages((prevMsgs) => [
+            ...prevMsgs,
+            {
+              id: randomKey("assistant"),
+              role: "assistant",
+              content: `${output}\n\n[${(data.state ?? "error").toUpperCase()}]`,
+              ts: Date.now(),
+              isError: true,
+            },
+          ]);
+          chatBufferRef.current = "";
+          setChatRunId(null);
+          setChatRunState(data.state === "aborted" ? "aborted" : "error");
+          setTimeout(() => setChatRunState(null), 2200);
+        }
+      });
 
-    ws.onerror = () => setGatewayStatus("error");
+    ws.addEventListener("error", () => setGatewayStatus("error"));
 
-    ws.onclose = () => {
+    ws.addEventListener("close", () => {
       setGatewayStatus("disconnected");
       wsRef.current = null;
-    };
+    });
   }, [chatAgent, host, token]);
 
   useEffect(() => {
@@ -410,13 +429,21 @@ export function Dashboard() {
       void loadSessions();
       void loadUsageCost();
     }
-    if (screen === "sessions") { void loadSessions(); }
-    if (screen === "channels") { void loadChannels(); }
-    if (screen === "config") { void loadConfig(); }
+    if (screen === "sessions") {
+      void loadSessions();
+    }
+    if (screen === "channels") {
+      void loadChannels();
+    }
+    if (screen === "config") {
+      void loadConfig();
+    }
   }, [screen, loadChannels, loadConfig, loadSessions, loadUsageCost]);
 
   useEffect(() => {
-    if (gatewayStatus !== "connected") { return; }
+    if (gatewayStatus !== "connected") {
+      return;
+    }
     const timer = setInterval(() => {
       void loadSessions();
       if (screen === "overview") {
@@ -428,7 +455,9 @@ export function Dashboard() {
 
   const sendChat = useCallback(async () => {
     const text = chatInput.trim();
-    if (!text || chatRunState === "streaming") { return; }
+    if (!text || chatRunState === "streaming") {
+      return;
+    }
 
     setChatMessages((prevMsgs) => [
       ...prevMsgs,
@@ -460,7 +489,9 @@ export function Dashboard() {
   }, [chatAgent, chatInput, chatRunState, rpc]);
 
   const abortChat = useCallback(async () => {
-    if (!chatRunId) { return; }
+    if (!chatRunId) {
+      return;
+    }
     try {
       await rpc("chat.abort", { runId: chatRunId, sessionKey: `agent:${chatAgent}:main` });
     } catch {
@@ -470,37 +501,41 @@ export function Dashboard() {
 
   const spawnSubagent = useCallback(async () => {
     const task = subagentTask.trim();
-    if (!task || gatewayStatus !== "connected" || subagentBusy) { return; }
-
-    setSubagentBusy(true);
-    setSubagentTask("");
-    const runId = randomKey("run");
-    setSubagentRuns((prev) => [
-      { runId, agentId: subagentTargetId, task, status: "started", ts: Date.now() },
-      ...prev,
-    ]);
-
-    try {
-      await rpc("chat.send", {
-        sessionKey: "agent:honeybadger:main",
-        message: `[DELEGATE -> ${subagentTargetId}] ${task}`,
-        idempotencyKey: randomKey("spawn"),
-      });
-      setSubagentRuns((prev) =>
-        prev.map((r) => (r.runId === runId ? { ...r, status: "delegated" } : r)),
-      );
-    } catch (err) {
-      setSubagentRuns((prev) =>
-        prev.map((r) =>
-          r.runId === runId
-            ? { ...r, status: "error", output: err instanceof Error ? err.message : String(err) }
-            : r,
-        ),
-      );
-    } finally {
-      setSubagentBusy(false);
+    if (!task || gatewayStatus !== "connected" || subagentBusy) {
+      return;
     }
-  }, [gatewayStatus, rpc, subagentBusy, subagentTargetId, subagentTask]);
+
+    const abortController = new AbortController();
+
+    async function streamSubagentResponse(subagentId: string) {
+      ;
+      const runId = randomKey("run");
+      setSubagentRuns((prev) => [
+        { runId, agentId: subagentTargetId, task, status: "started", ts: Date.now() },
+        ...prev,
+      ]);
+
+      try {
+        await rpc("chat.send", {
+          sessionKey: "agent:honeybadger:main",
+          message: `[DELEGATE -> ${subagentTargetId}] ${task}`,
+          idempotencyKey: randomKey("spawn"),
+        });
+        setSubagentRuns((prev) =>
+          prev.map((r) => (r.runId === runId ? { ...r, status: "delegated" } : r)),
+        );
+      } catch (err) {
+        setSubagentRuns((prev) =>
+          prev.map((r) =>
+            r.runId === runId
+              ? { ...r, status: "error", output: err instanceof Error ? err.message : String(err) }
+              : r,
+          ),
+        );
+      } finally {
+        setSubagentBusy(false);
+      }
+    }, [gatewayStatus, rpc, subagentBusy, subagentTargetId, subagentTask]);
 
   const saveConfig = useCallback(async () => {
     try {
@@ -517,7 +552,9 @@ export function Dashboard() {
   const filteredSessions = useMemo(
     () =>
       sessions.filter((s) => {
-        if (!sessionsFilter) { return true; }
+        if (!sessionsFilter) {
+          return true;
+        }
         return `${s.key ?? ""}${s.agentId ?? ""}${s.label ?? ""}`
           .toLowerCase()
           .includes(sessionsFilter.toLowerCase());
@@ -566,19 +603,19 @@ export function Dashboard() {
       .map((run) => ({
         id: run.runId,
         source: "subagent" as const,
-        title: `${AGENTS.find((a) => a.id === run.agentId)?.name ?? run.agentId}`,
+        title: AGENTS.find((a) => a.id === run.agentId)?.name ?? run.agentId,
         subtitle: run.task,
         status: run.status,
         ts: run.ts,
       }));
-    return [...subagentRows, ...sessionRows]
-      .sort((a, b) => b.ts - a.ts)
-      .slice(0, 10);
+    return [...subagentRows, ...sessionRows].toSorted((a, b) => b.ts - a.ts).slice(0, 10);
   }, [activeSessionEntries, subagentRuns]);
 
   const navigate = (next: Screen, opts?: { agentId?: string; chatAgent?: string }) => {
     setScreen(next);
-    if (opts?.agentId) { setSelectedAgent(opts.agentId); }
+    if (opts?.agentId) {
+      setSelectedAgent(opts.agentId);
+    }
     if (opts?.chatAgent) {
       setChatAgent(opts.chatAgent);
       setChatMessages([]);
@@ -710,7 +747,9 @@ export function Dashboard() {
           )}
 
           <div className="mt-6">
-            <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">Daily Cost (Last 14)</p>
+            <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">
+              Daily Cost (Last 14)
+            </p>
             {costChart.length === 0 ? (
               <div className="rounded-lg border border-hb-border bg-hb-bg p-3 text-xs text-hb-muted">
                 No usage cost history returned yet.
@@ -718,7 +757,8 @@ export function Dashboard() {
             ) : (
               <div className="flex h-24 items-end gap-1 sm:h-32">
                 {costChart.map((entry) => {
-                  const pct = maxDailyCost > 0 ? Math.max((entry.totalCost / maxDailyCost) * 100, 4) : 4;
+                  const pct =
+                    maxDailyCost > 0 ? Math.max((entry.totalCost / maxDailyCost) * 100, 4) : 4;
                   return (
                     <div key={entry.date} className="group relative w-full">
                       <div
@@ -782,10 +822,19 @@ export function Dashboard() {
                 {[
                   { label: "Input", value: usageTotals.inputCost, color: "bg-hb-blue/45" },
                   { label: "Output", value: usageTotals.outputCost, color: "bg-hb-green/45" },
-                  { label: "Cache Read", value: usageTotals.cacheReadCost, color: "bg-hb-purple/45" },
-                  { label: "Cache Write", value: usageTotals.cacheWriteCost, color: "bg-hb-amber/45" },
+                  {
+                    label: "Cache Read",
+                    value: usageTotals.cacheReadCost,
+                    color: "bg-hb-purple/45",
+                  },
+                  {
+                    label: "Cache Write",
+                    value: usageTotals.cacheWriteCost,
+                    color: "bg-hb-amber/45",
+                  },
                 ].map((row) => {
-                  const ratio = usageTotals.totalCost > 0 ? (row.value / usageTotals.totalCost) * 100 : 0;
+                  const ratio =
+                    usageTotals.totalCost > 0 ? (row.value / usageTotals.totalCost) * 100 : 0;
                   return (
                     <div key={row.label}>
                       <div className="mb-1 flex items-center justify-between text-xs">
@@ -793,7 +842,10 @@ export function Dashboard() {
                         <span className="font-semibold text-hb-text">{formatUsd(row.value)}</span>
                       </div>
                       <div className="h-2 overflow-hidden rounded bg-hb-bg">
-                        <div className={`h-full ${row.color}`} style={{ width: `${Math.max(ratio, 0)}%` }} />
+                        <div
+                          className={`h-full ${row.color}`}
+                          style={{ width: `${Math.max(ratio, 0)}%` }}
+                        />
                       </div>
                     </div>
                   );
@@ -805,7 +857,9 @@ export function Dashboard() {
                   </div>
                   <div>
                     <p className="text-hb-muted">Billable Tokens</p>
-                    <p className="font-semibold text-hb-text">{formatCompactInt(usageTotals.totalTokens)}</p>
+                    <p className="font-semibold text-hb-text">
+                      {formatCompactInt(usageTotals.totalTokens)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -909,7 +963,9 @@ export function Dashboard() {
 
   const renderAgentDetail = () => {
     const agent = AGENTS.find((a) => a.id === selectedAgent);
-    if (!agent) { return <div className="p-7">Agent not found.</div>; }
+    if (!agent) {
+      return <div className="p-7">Agent not found.</div>;
+    }
 
     return (
       <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
@@ -1138,7 +1194,7 @@ export function Dashboard() {
                     <div className="flex items-center gap-2 text-xs text-hb-muted">
                       <StatusDot
                         status={
-                          (session.status === "active" ? "active" : "idle") as "active" | "idle"
+                          (session.status === "active" ? "active" : "idle")
                         }
                       />
                       {session.status ?? "idle"}

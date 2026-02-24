@@ -817,6 +817,16 @@ export async function runEmbeddedPiAgent(
                 errorText,
               )
             ) {
+              if (fallbackConfigured) {
+                const failoverReason = classifyFailoverReason(errorText);
+                throw new FailoverError(errorText, {
+                  reason: failoverReason ?? "role_ordering",
+                  provider,
+                  model: model.id,
+                  profileId: lastProfileId,
+                  status: resolveFailoverStatus(failoverReason ?? "role_ordering"),
+                });
+              }
               return {
                 payloads: [
                   {
@@ -952,7 +962,14 @@ export async function runEmbeddedPiAgent(
           const shouldRotate =
             (!aborted && failoverFailure) || (timedOut && !timedOutDuringCompaction);
 
-          if (shouldRotate) {
+          if (
+            (rateLimitFailure ||
+              billingFailure ||
+              failoverFailure ||
+              assistantFailoverReason === "timeout" ||
+              assistantFailoverReason === "role_ordering") &&
+            fallbackConfigured
+          ) {
             if (lastProfileId) {
               const reason =
                 timedOut || assistantFailoverReason === "timeout"

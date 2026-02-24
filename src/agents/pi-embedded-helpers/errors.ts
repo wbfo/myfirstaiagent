@@ -804,6 +804,13 @@ export function classifyFailoverReason(raw: string): FailoverReason | null {
   if (isModelNotFoundErrorMessage(raw)) {
     return "model_not_found";
   }
+  if (
+    /incorrect role information|roles must alternate|function call turn comes immediately after|400.*role|"message".*role.*information/i.test(
+      raw,
+    )
+  ) {
+    return "role_ordering";
+  }
   if (isTransientHttpError(raw)) {
     // Treat transient 5xx provider failures as retryable transport issues.
     return "timeout";

@@ -13,10 +13,15 @@ function countBySeverity(findings: AuditFinding[]) {
     info = 0,
     ok = 0;
   for (const f of findings) {
-    if (f.severity === "critical") {critical++;}
-    else if (f.severity === "warn") {warn++;}
-    else if (f.severity === "info") {info++;}
-    else {ok++;}
+    if (f.severity === "critical") {
+      critical++;
+    } else if (f.severity === "warn") {
+      warn++;
+    } else if (f.severity === "info") {
+      info++;
+    } else {
+      ok++;
+    }
   }
   return { critical, warn, info, ok };
 }
@@ -35,7 +40,9 @@ function topFindings(dimensions: DimensionScore[], limit = 5): AuditFinding[] {
     info: 2,
     ok: 3,
   };
-  return all.toSorted((a, b) => severityOrder[a.severity] - severityOrder[b.severity]).slice(0, limit);
+  return all
+    .toSorted((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
+    .slice(0, limit);
 }
 
 /**

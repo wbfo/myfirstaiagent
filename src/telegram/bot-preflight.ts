@@ -42,9 +42,7 @@ export type TelegramPreflightOptions = {
  * Telegram Preflight Middleware.
  * Provides immediate feedback (reactions) and detects if the bot is already busy with a specific chat.
  */
-export const createTelegramPreflightMiddleware = (
-  opts: TelegramPreflightOptions,
-): Middleware => {
+export const createTelegramPreflightMiddleware = (opts: TelegramPreflightOptions): Middleware => {
   const cfg = opts.config ?? loadConfig();
   const account = resolveTelegramAccount({
     cfg,

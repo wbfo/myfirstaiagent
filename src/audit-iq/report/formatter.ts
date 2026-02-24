@@ -31,7 +31,9 @@ export function formatFullReport(report: AuditReport): string {
 
   // Findings by dimension
   for (const d of report.dimensions) {
-    if (d.findings.length === 0) {continue;}
+    if (d.findings.length === 0) {
+      continue;
+    }
     lines.push(`## ${d.dimension.charAt(0).toUpperCase() + d.dimension.slice(1)}`);
     for (const f of d.findings) {
       const emoji = f.severity === "critical" ? "🔴" : f.severity === "warn" ? "🟡" : "🔵";

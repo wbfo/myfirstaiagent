@@ -242,7 +242,7 @@ export function collectHooksHardeningFindings(
   const defaultSessionKey =
     typeof cfg.hooks?.defaultSessionKey === "string" ? cfg.hooks.defaultSessionKey.trim() : "";
   const allowedPrefixes = Array.isArray(cfg.hooks?.allowedSessionKeyPrefixes)
-    ? (cfg.hooks.allowedSessionKeyPrefixes)
+    ? cfg.hooks.allowedSessionKeyPrefixes
         .map((prefix) => prefix.trim())
         .filter((prefix) => prefix.length > 0)
     : [];
@@ -293,7 +293,7 @@ export function collectNodeDenyCommandPatternFindings(cfg: OpenClawConfig): Secu
     return findings;
   }
 
-  const denyList = (denyListRaw).map(normalizeNodeCommand).filter(Boolean);
+  const denyList = denyListRaw.map(normalizeNodeCommand).filter(Boolean);
   if (denyList.length === 0) {
     return findings;
   }
