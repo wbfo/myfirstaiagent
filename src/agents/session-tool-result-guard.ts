@@ -171,6 +171,19 @@ export function installSessionToolResultGuard(
     let nextMessage = message;
     const role = (message as { role?: unknown }).role;
     if (role === "assistant") {
+      // Permanent fix: never persist empty assistant messages.
+      // Empty assistant messages (content: [] or null) are produced by aborted/errored
+      // LLM runs. If written to the session JSONL they create consecutive turn violations
+      // that cause Gemini 400 INVALID_ARGUMENT errors on all future requests for that session.
+      const rawContent = (message as { content?: unknown }).content;
+      const isEmpty = rawContent == null || (Array.isArray(rawContent) && rawContent.length === 0);
+      if (isEmpty) {
+        // Still flush any pending tool results so the session stays consistent.
+        if (allowSyntheticToolResults && pending.size > 0) {
+          flushPendingToolResults();
+        }
+        return undefined;
+      }
       const sanitized = sanitizeToolCallInputs([message]);
       if (sanitized.length === 0) {
         if (allowSyntheticToolResults && pending.size > 0) {
