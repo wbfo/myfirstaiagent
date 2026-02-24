@@ -36,7 +36,7 @@ export function createSessionsSpawnTool(opts?: {
     label: "Sessions",
     name: "sessions_spawn",
     description:
-      'Spawn a sub-agent in an isolated session (mode="run" one-shot or mode="session" persistent) and route results back to the requester chat/thread. If the task is complex, set runTimeoutSeconds (e.g., 120 or 300) to prevent the subagent from timing out.',
+      'Spawn a sub-agent in an isolated session (mode="run" one-shot or mode="session" persistent) and route results back to the requester chat/thread. For long-running tasks (e.g. parsing large documents, multi-step analysis), set runTimeoutSeconds to a generous value (e.g., 600 or 1800). Omitting runTimeoutSeconds means no timeout (unlimited). Do NOT use small values like 120 or 300 for document-heavy or complex tasks.',
     parameters: SessionsSpawnToolSchema,
     execute: async (_toolCallId, args) => {
       const params = args as Record<string, unknown>;
