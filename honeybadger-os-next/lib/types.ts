@@ -71,3 +71,28 @@ export type SubagentRun = {
 export type SkillMeta = Record<string, { color: string; desc: string }>;
 
 export type GatewayStatus = "connected" | "connecting" | "disconnected" | "error";
+
+export type CostUsageTotals = {
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheWrite: number;
+  totalTokens: number;
+  totalCost: number;
+  inputCost: number;
+  outputCost: number;
+  cacheReadCost: number;
+  cacheWriteCost: number;
+  missingCostEntries: number;
+};
+
+export type CostUsageDailyEntry = CostUsageTotals & {
+  date: string;
+};
+
+export type CostUsageSummary = {
+  updatedAt: number;
+  days: number;
+  daily: CostUsageDailyEntry[];
+  totals: CostUsageTotals;
+};

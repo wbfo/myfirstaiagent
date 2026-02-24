@@ -5,6 +5,7 @@ import { AGENTS, CHANNELS, NAV_ITEMS, SKILL_META } from "@/lib/dashboard-data";
 import type {
   Agent,
   ChatMessage,
+  CostUsageSummary,
   GatewayStatus,
   Screen,
   SessionEntry,
@@ -72,6 +73,20 @@ function ModelTag({ model }: { model: string }) {
   );
 }
 
+function formatUsd(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function formatCompactInt(value: number): string {
+  return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(
+    value,
+  );
+}
+
 export function Dashboard() {
   const wsRef = useRef<WebSocket | null>(null);
   const pendingRef = useRef<Map<string, RpcPending>>(new Map());
@@ -106,6 +121,10 @@ export function Dashboard() {
   const [sessionsFilter, setSessionsFilter] = useState("");
 
   const [channelsHealth, setChannelsHealth] = useState<Record<string, unknown> | null>(null);
+  const [usageCost, setUsageCost] = useState<CostUsageSummary | null>(null);
+  const [usageCostLoading, setUsageCostLoading] = useState(false);
+  const [usageCostError, setUsageCostError] = useState<string | null>(null);
+  const [metricsUpdatedAt, setMetricsUpdatedAt] = useState<number | null>(null);
 
   const [subagentTargetId, setSubagentTargetId] = useState("ops-coordinator");
   const [subagentTask, setSubagentTask] = useState("");
@@ -189,6 +208,26 @@ export function Dashboard() {
       setChannelsHealth(result);
     } catch {
       // ignore
+    }
+  }, [gatewayStatus, rpc]);
+
+  const loadUsageCost = useCallback(async () => {
+    if (gatewayStatus !== "connected") {
+      setUsageCost(null);
+      setUsageCostError(null);
+      return;
+    }
+
+    setUsageCostLoading(true);
+    try {
+      const result = (await rpc("usage.cost", { days: 30 })) as CostUsageSummary;
+      setUsageCost(result);
+      setUsageCostError(null);
+      setMetricsUpdatedAt(Date.now());
+    } catch (err) {
+      setUsageCostError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setUsageCostLoading(false);
     }
   }, [gatewayStatus, rpc]);
 
@@ -353,10 +392,25 @@ export function Dashboard() {
   }, [connectGateway]);
 
   useEffect(() => {
+    if (screen === "overview") {
+      void loadSessions();
+      void loadUsageCost();
+    }
     if (screen === "sessions") { void loadSessions(); }
     if (screen === "channels") { void loadChannels(); }
     if (screen === "config") { void loadConfig(); }
-  }, [screen, loadChannels, loadConfig, loadSessions]);
+  }, [screen, loadChannels, loadConfig, loadSessions, loadUsageCost]);
+
+  useEffect(() => {
+    if (gatewayStatus !== "connected") { return; }
+    const timer = setInterval(() => {
+      void loadSessions();
+      if (screen === "overview") {
+        void loadUsageCost();
+      }
+    }, 12000);
+    return () => clearInterval(timer);
+  }, [gatewayStatus, loadSessions, loadUsageCost, screen]);
 
   const sendChat = useCallback(async () => {
     const text = chatInput.trim();
@@ -457,6 +511,32 @@ export function Dashboard() {
     [sessions, sessionsFilter],
   );
 
+  const activeSessionCount = useMemo(() => {
+    return sessions.filter((s) => {
+      const status = (s.status ?? "").toLowerCase();
+      return [
+        "active",
+        "running",
+        "streaming",
+        "started",
+        "delegated",
+        "in_progress",
+        "in-progress",
+      ].includes(status);
+    }).length;
+  }, [sessions]);
+
+  const inProgressSubagentRuns = useMemo(() => {
+    return subagentRuns.filter((run) =>
+      ["started", "delegated", "active", "aborting"].includes(run.status),
+    ).length;
+  }, [subagentRuns]);
+
+  const totalTasksInProgress = activeSessionCount + inProgressSubagentRuns;
+  const usageTotals = usageCost?.totals;
+  const costChart = (usageCost?.daily ?? []).slice(-14);
+  const maxDailyCost = costChart.reduce((max, entry) => Math.max(max, entry.totalCost), 0);
+
   const navigate = (next: Screen, opts?: { agentId?: string; chatAgent?: string }) => {
     setScreen(next);
     if (opts?.agentId) { setSelectedAgent(opts.agentId); }
@@ -493,18 +573,28 @@ export function Dashboard() {
           </div>
         </section>
 
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
           {[
             { label: "Total Agents", value: AGENTS.length, color: "text-hb-amber" },
             {
-              label: "Orchestrators",
-              value: AGENTS.filter((a) => a.isDefault).length,
-              color: "text-hb-purple",
+              label: "Tasks In Progress",
+              value: totalTasksInProgress,
+              color: "text-hb-green",
             },
             {
-              label: "Specialists",
-              value: AGENTS.filter((a) => !a.isDefault).length,
+              label: "Active Sessions",
+              value: activeSessionCount,
               color: "text-hb-blue",
+            },
+            {
+              label: "Cost (30d)",
+              value: usageTotals ? formatUsd(usageTotals.totalCost) : "—",
+              color: "text-hb-amber",
+            },
+            {
+              label: "Tokens (30d)",
+              value: usageTotals ? formatCompactInt(usageTotals.totalTokens) : "—",
+              color: "text-hb-purple",
             },
             {
               label: "Unique Skills",
@@ -520,34 +610,88 @@ export function Dashboard() {
         </section>
 
         <section className={cardClass("p-4 sm:p-6")}>
-          <h2 className="mb-4 text-base font-bold sm:text-lg">System Stats & AuditIQ Metrics</h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-bold sm:text-lg">System Stats & Live Usage</h2>
+            <button
+              className="rounded-lg border border-hb-border bg-hb-panel2 px-3 py-1 text-xs"
+              onClick={() => {
+                void loadSessions();
+                void loadUsageCost();
+              }}
+            >
+              Refresh
+            </button>
+          </div>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <div>
-              <p className="text-xs text-hb-muted">Agent Run Rate</p>
-              <p className="text-xl font-bold text-hb-green">42 / hour</p>
+              <p className="text-xs text-hb-muted">Active Sessions</p>
+              <p className="text-xl font-bold text-hb-green">{activeSessionCount}</p>
             </div>
             <div>
-              <p className="text-xs text-hb-muted">Avg Response Latency</p>
-              <p className="text-xl font-bold text-hb-blue">1.2s</p>
+              <p className="text-xs text-hb-muted">Subagents In Progress</p>
+              <p className="text-xl font-bold text-hb-blue">{inProgressSubagentRuns}</p>
             </div>
             <div>
-              <p className="text-xs text-hb-muted">Error Rate (24h)</p>
-              <p className="text-xl font-bold text-hb-red">0.05%</p>
+              <p className="text-xs text-hb-muted">Input / Output Cost</p>
+              <p className="text-xl font-bold text-hb-red">
+                {usageTotals
+                  ? `${formatUsd(usageTotals.inputCost)} / ${formatUsd(usageTotals.outputCost)}`
+                  : "—"}
+              </p>
             </div>
             <div>
-              <p className="text-xs text-hb-muted">AuditIQ Processed (30d)</p>
-              <p className="text-xl font-bold text-hb-amber">1,240</p>
+              <p className="text-xs text-hb-muted">Missing Cost Entries</p>
+              <p className="text-xl font-bold text-hb-amber">
+                {usageTotals ? usageTotals.missingCostEntries : "—"}
+              </p>
             </div>
           </div>
-          <div className="mt-6 flex h-24 items-end gap-1 sm:h-32">
-            {/* Mock bar chart representing throughput */}
-            {[40, 60, 45, 80, 50, 90, 65, 100, 75, 85, 55, 70].map((h, i) => (
-              <div
-                key={i}
-                className="w-full rounded-t-sm bg-hb-amber/20 transition-all hover:bg-hb-amber/40"
-                style={{ height: `${h}%` }}
-              />
-            ))}
+          <p className="mt-4 text-xs text-hb-muted">
+            {metricsUpdatedAt
+              ? `Last metrics refresh: ${new Date(metricsUpdatedAt).toLocaleTimeString()}`
+              : "No metrics refresh yet"}
+          </p>
+
+          {gatewayStatus !== "connected" && (
+            <div className="mt-4 rounded-lg border border-hb-border bg-hb-bg p-3 text-xs text-hb-muted">
+              Connect gateway to load live tasks and cost data.
+            </div>
+          )}
+
+          {usageCostLoading && (
+            <div className="mt-4 rounded-lg border border-hb-border bg-hb-bg p-3 text-xs text-hb-muted">
+              Loading usage cost data...
+            </div>
+          )}
+
+          {usageCostError && (
+            <div className="mt-4 rounded-lg border border-hb-red/30 bg-hb-red/10 p-3 text-xs text-hb-red">
+              Cost metrics unavailable: {usageCostError}
+            </div>
+          )}
+
+          <div className="mt-6">
+            <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">Daily Cost (Last 14)</p>
+            {costChart.length === 0 ? (
+              <div className="rounded-lg border border-hb-border bg-hb-bg p-3 text-xs text-hb-muted">
+                No usage cost history returned yet.
+              </div>
+            ) : (
+              <div className="flex h-24 items-end gap-1 sm:h-32">
+                {costChart.map((entry) => {
+                  const pct = maxDailyCost > 0 ? Math.max((entry.totalCost / maxDailyCost) * 100, 4) : 4;
+                  return (
+                    <div key={entry.date} className="group relative w-full">
+                      <div
+                        className="w-full rounded-t-sm bg-hb-amber/25 transition-all hover:bg-hb-amber/45"
+                        style={{ height: `${pct}%` }}
+                        title={`${entry.date}: ${formatUsd(entry.totalCost)}`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
 
