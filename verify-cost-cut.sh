@@ -5,7 +5,7 @@
 echo "Checking OpenClaw Cost-Cut Stack Implementation..."
 
 # 1. Check if costOptStack is enabled in config
-CONFIG_FILE="/Users/wbfoclaw/.openclaw/openclaw.json"
+CONFIG_FILE="$HOME/.openclaw/openclaw.json"
 if grep -q "\"costOptStack\": true" "$CONFIG_FILE"; then
     echo "✅ costOptStack is enabled in $CONFIG_FILE"
 else

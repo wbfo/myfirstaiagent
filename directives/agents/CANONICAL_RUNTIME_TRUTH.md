@@ -2,7 +2,7 @@
 
 **Last Verified At:** 2026-02-24T13:43:00Z
 **Git Commit:** 14fcf6a30ae91a690ebd9e2fb3bba69ae5f29f0f
-**Baseline Workspace:** `/Users/wbfoclaw/OPENopenclaw/openclaw_app`
+**Baseline Workspace:** `$APP_ROOT`
 
 ## 1. Live Runtime Agents (Orchestration Layer)
 
@@ -45,8 +45,8 @@ _Source of Truth: `execution/agent_runtime_map.json`_
 If the live roster drifts from the canonical state (e.g., agents missing or extra ones present), run:
 
 ```bash
-cd /Users/wbfoclaw/OPENopenclaw/openclaw_app
-./scripts/sync-honeybadger-agents.sh /Users/wbfoclaw/OPENopenclaw/openclaw_app
+cd $APP_ROOT
+./scripts/sync-honeybadger-agents.sh $APP_ROOT
 ```
 
 Verify with:

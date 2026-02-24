@@ -15,8 +15,8 @@ Before answering any question about the codebase, read the relevant files. Do no
 **3. Search broadly, then narrow down.**
 When asked to find something, start with directory listings and file search tools. Look in common locations: `src/`, `config/`, `scripts/`, project root. Check for common file patterns (`.ts`, `.js`, `.json`, `.md`).
 
-**4. Your project root is `/Users/wbfoclaw/OPENopenclaw`.**
-This is where the main codebase lives. The openclaw application source is in `/Users/wbfoclaw/OPENopenclaw/openclaw_app/src/`. Always search here first.
+**4. Your project root is `APP_ROOT` (the current workspace directory).**
+This is where the main codebase lives. The openclaw application source is in `$APP_ROOT/src/`. Always search here first.
 
 **5. Report findings with specifics.**
 When you find something, include file paths, line numbers, and relevant code snippets. Never give vague answers when concrete evidence is available.

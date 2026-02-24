@@ -18,13 +18,15 @@
         "model": {
           "primary": "google/gemini-3-flash-preview",
           "fallbacks": [
-            "google/gemini-2.5-flash"
+            "google/gemini-2.5-flash",
+            "ollama/qwen2.5:14b",
+            "ollama/llama3.1",
+            "ollama/mixtral",
+            "ollama/gemma3"
           ]
         },
         "subagents": {
-          "allowAgents": [
-            "*"
-          ]
+          "allowAgents": ["*"]
         }
       },
       {
@@ -35,7 +37,11 @@
         "model": {
           "primary": "google/gemini-3-flash-preview",
           "fallbacks": [
-            "google/gemini-2.5-flash"
+            "google/gemini-2.5-flash",
+            "ollama/qwen2.5:14b",
+            "ollama/llama3.1",
+            "ollama/mixtral",
+            "ollama/gemma3"
           ]
         },
         "subagents": {
@@ -56,7 +62,11 @@
         "model": {
           "primary": "google/gemini-2.5-pro",
           "fallbacks": [
-            "google/gemini-3-flash-preview"
+            "google/gemini-3-flash-preview",
+            "ollama/qwen2.5:14b",
+            "ollama/llama3.1",
+            "ollama/mixtral",
+            "ollama/gemma3"
           ]
         }
       },
@@ -67,7 +77,11 @@
         "model": {
           "primary": "google/gemini-2.5-pro",
           "fallbacks": [
-            "google/gemini-3-flash-preview"
+            "google/gemini-3-flash-preview",
+            "ollama/qwen2.5:14b",
+            "ollama/llama3.1",
+            "ollama/mixtral",
+            "ollama/gemma3"
           ]
         }
       },
@@ -78,7 +92,11 @@
         "model": {
           "primary": "google/gemini-2.5-flash",
           "fallbacks": [
-            "google/gemini-3-flash-preview"
+            "google/gemini-3-flash-preview",
+            "ollama/qwen2.5:14b",
+            "ollama/llama3.1",
+            "ollama/mixtral",
+            "ollama/gemma3"
           ]
         }
       },
@@ -89,7 +107,11 @@
         "model": {
           "primary": "openai/gpt-4o-mini",
           "fallbacks": [
-            "google/gemini-2.5-flash"
+            "google/gemini-2.5-flash",
+            "ollama/qwen2.5:14b",
+            "ollama/llama3.1",
+            "ollama/mixtral",
+            "ollama/gemma3"
           ]
         }
       },
@@ -100,7 +122,11 @@
         "model": {
           "primary": "google/gemini-3-flash-preview",
           "fallbacks": [
-            "google/gemini-2.5-flash"
+            "google/gemini-2.5-flash",
+            "ollama/qwen2.5:14b",
+            "ollama/llama3.1",
+            "ollama/mixtral",
+            "ollama/gemma3"
           ]
         }
       },
@@ -111,7 +137,11 @@
         "model": {
           "primary": "google/gemini-3-flash-preview",
           "fallbacks": [
-            "google/gemini-2.5-flash"
+            "google/gemini-2.5-flash",
+            "ollama/qwen2.5:14b",
+            "ollama/llama3.1",
+            "ollama/mixtral",
+            "ollama/gemma3"
           ]
         }
       }
@@ -121,12 +151,7 @@
       "contextTokens": 65536,
       "memorySearch": {
         "enabled": true,
-        "extraPaths": [
-          "IDEAS.md",
-          "SOUL.md",
-          "IDENTITY.md",
-          "USER.md"
-        ],
+        "extraPaths": ["IDEAS.md", "SOUL.md", "IDENTITY.md", "USER.md"],
         "provider": "gemini"
       },
       "compaction": {
@@ -144,13 +169,9 @@
     }
   },
   "tools": {
-    "deny": [
-      "browser"
-    ],
+    "deny": ["browser"],
     "exec": {
-      "pathPrepend": [
-        "./bin"
-      ]
+      "pathPrepend": ["./bin"]
     }
   },
   "messages": {
