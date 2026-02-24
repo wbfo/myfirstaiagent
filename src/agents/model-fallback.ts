@@ -377,6 +377,13 @@ export async function runWithModelFallback<T>(params: {
       if (isLikelyContextOverflowError(errMessage)) {
         throw err;
       }
+      // Session corruption errors (Gemini turn ordering) are NOT a model
+      // problem — the same corrupted session will break ALL fallback models.
+      // Rethrow immediately so the session-reset handler in
+      // agent-runner-execution.ts can delete the transcript and recover.
+      if (/function call turn comes immediately after/i.test(errMessage)) {
+        throw err;
+      }
       const normalized =
         coerceToFailoverError(err, {
           provider: candidate.provider,
