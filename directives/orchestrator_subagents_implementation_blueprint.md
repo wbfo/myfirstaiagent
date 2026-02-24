@@ -25,7 +25,6 @@ This is an internal working spec (not a database artifact).
 - Blueprint and SOPs: `directives/`
   - `directives/agent_blueprint.md`
   - `directives/telegram_no_reply.md`
-  - `directives/cloudrun_deploy_and_rollback.md`
   - `directives/skills_governance.md`
 - Deterministic checks: `execution/`
   - `execution/startup_readiness.py`

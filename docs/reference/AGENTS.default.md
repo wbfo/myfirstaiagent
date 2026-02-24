@@ -98,7 +98,6 @@ git commit -m "Add Clawd workspace"
 - **mcporter** — Tool server runtime/CLI for managing external skill backends.
 - **Peekaboo** — Fast macOS screenshots with optional AI vision analysis.
 - **camsnap** — Capture frames, clips, or motion alerts from RTSP/ONVIF security cams.
-- **oracle** — OpenAI-ready agent CLI with session replay and browser control.
 - **eightctl** — Control your sleep, from the terminal.
 - **imsg** — Send, read, stream iMessage & SMS.
 - **wacli** — WhatsApp CLI: sync, search, send.

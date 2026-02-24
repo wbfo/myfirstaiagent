@@ -31,12 +31,10 @@ If needed, skills may include:
 - `scripts/` for deterministic helpers
 - `assets/` for templates or static resources
 
-## Centralized active set (Cloud Run)
+## Centralized active set
 
-The Cloud Run default agent is currently scoped to this curated list in
-`openclaw.cloudrun.json`:
+The default HoneyBadger operating set is currently scoped to this curated list:
 
-- `honeybadger-cloudrun-ops`
 - `honeybadger-telegram-diagnostics`
 - `honeybadger-config-secrets-audit`
 - `honeybadger-observability`

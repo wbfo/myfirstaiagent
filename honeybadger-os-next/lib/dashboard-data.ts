@@ -11,7 +11,6 @@ export const AGENTS: Agent[] = [
     model: "google/gemini-3-flash-preview",
     fallbacks: [],
     skills: [
-      "cloudrun-ops",
       "telegram-diagnostics",
       "config-secrets-audit",
       "observability",
@@ -38,7 +37,7 @@ export const AGENTS: Agent[] = [
     role: "Deploy/runtime operations",
     model: "google/gemini-3-flash-preview",
     fallbacks: ["google/gemini-2.5-flash"],
-    skills: ["observability", "cloudrun-ops"],
+    skills: ["observability", "config-secrets-audit"],
     allowAgents: [],
   },
   {
@@ -62,7 +61,7 @@ export const AGENTS: Agent[] = [
     role: "System-level design + reliability",
     model: "google/gemini-3-pro-preview",
     fallbacks: ["google/gemini-3-flash-preview"],
-    skills: ["cloudrun-ops", "config-secrets-audit", "observability"],
+    skills: ["config-secrets-audit", "observability"],
     allowAgents: [],
   },
   {
@@ -104,7 +103,6 @@ export const AGENTS: Agent[] = [
 ];
 
 export const SKILL_META: SkillMeta = {
-  "cloudrun-ops": { color: "#3b82f6", desc: "Google Cloud Run deploy & runtime ops" },
   "telegram-diagnostics": { color: "#06b6d4", desc: "Telegram channel health & bot diagnostics" },
   "config-secrets-audit": { color: "#10b981", desc: "Config validation & secrets scanning" },
   observability: { color: "#8b5cf6", desc: "Logging, metrics & system monitoring" },

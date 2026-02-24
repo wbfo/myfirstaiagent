@@ -58,5 +58,5 @@ USER node
 
 # Start gateway server with default config.
 # Binds LAN for container platforms and resolves port from env:
-# OPENCLAW_GATEWAY_PORT (preferred) -> PORT (Cloud Run) -> 18789.
+# OPENCLAW_GATEWAY_PORT (preferred) -> PORT -> 18789.
 CMD ["sh", "-lc", "node openclaw.mjs gateway --allow-unconfigured --bind lan --port ${OPENCLAW_GATEWAY_PORT:-${PORT:-18789}}"]

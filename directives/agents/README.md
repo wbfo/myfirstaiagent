@@ -2,7 +2,7 @@
 
 This directory organizes agent-specific operating files without changing runtime config behavior.
 
-Runtime truth still lives in config files (`~/.openclaw/openclaw.json` and `openclaw.cloudrun.json`).
+Runtime truth still lives in config files (`~/.openclaw/openclaw.json`).
 Specialist runtime bindings live in `execution/agent_runtime_map.json` and are invoked via
 `execution/agent_runtime_dispatch.py`.
 

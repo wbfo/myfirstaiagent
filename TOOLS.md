@@ -38,3 +38,10 @@ Skills are shared. Your setup is yours. Keeping them apart means you can update 
 ---
 
 Add whatever helps you do your job. This is your cheat sheet.
+
+## Project Policy: Ollama + Git Push
+
+- If running in local-model mode, ensure Ollama models are pulled first.
+- Preferred local store: `.local/ollama-models` under repo root.
+- Never stage/commit/push model blobs or model directories.
+- When asked to "push updates", push source/config/docs changes only.

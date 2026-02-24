@@ -77,6 +77,9 @@ apps/ios/*.mobileprovision
 
 # Local untracked files
 .local/
+.local/ollama-models/
+.ollama-models/
+ollama-models/
 docs/.local/
 IDENTITY.md
 USER.md
@@ -104,4 +107,3 @@ dist/protocol.schema.json
 
 # IONOS deployment secrets
 .env.ionos
-

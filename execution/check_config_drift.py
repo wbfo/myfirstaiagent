@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check common config/env drift for OpenClaw Cloud Run runtime."""
+"""Check common config/env drift for OpenClaw runtime."""
 
 from __future__ import annotations
 
@@ -38,10 +38,10 @@ def main() -> int:
     warnings: List[str] = []
 
     port_env = os.environ.get("OPENCLAW_GATEWAY_PORT", "").strip()
-    cloudrun_port = os.environ.get("PORT", "").strip()
-    if cloudrun_port and port_env and cloudrun_port != port_env:
-        issues.append(f"OPENCLAW_GATEWAY_PORT ({port_env}) != PORT ({cloudrun_port})")
-    if cloudrun_port and not port_env:
+    runtime_port = os.environ.get("PORT", "").strip()
+    if runtime_port and port_env and runtime_port != port_env:
+        issues.append(f"OPENCLAW_GATEWAY_PORT ({port_env}) != PORT ({runtime_port})")
+    if runtime_port and not port_env:
         warnings.append("PORT is set but OPENCLAW_GATEWAY_PORT is missing")
 
     gemini_present = _present("GEMINI_API_KEY")
@@ -62,7 +62,7 @@ def main() -> int:
         "summary": {
             "port": {
                 "OPENCLAW_GATEWAY_PORT": port_env or None,
-                "PORT": cloudrun_port or None,
+                "PORT": runtime_port or None,
             },
             "keys": {
                 "GEMINI_API_KEY": gemini_present,

@@ -8,7 +8,7 @@ Restore bot replies in Telegram and validate file ingestion in a repeatable way.
 
 - Config path (`OPENCLAW_CONFIG_PATH` or default config file)
 - Runtime environment variables
-- Current deployment target (local or Cloud Run)
+- Current deployment target (local or VPS)
 
 ## Execution tools
 
@@ -54,7 +54,7 @@ python3 execution/check_config_drift.py
 - `channels.telegram.enabled` false
 - `allowFrom` blocks sender
 - group `requireMention` true when message is unmentioned
-- wrong config path mounted in Cloud Run
+- wrong config path mounted in Docker/VPS runtime
 - key alias drift (e.g., `GEMINI_API_KEY` present but runtime expects `GOOGLE_API_KEY`)
 
 ## Output

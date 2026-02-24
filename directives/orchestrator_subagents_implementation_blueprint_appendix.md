@@ -81,10 +81,11 @@ Store as structured JSONL for weekly aggregation.
 To prevent drift, map config by environment:
 
 1. Local/dev runtime: `~/.openclaw/openclaw.json`
-2. Cloud Run runtime: `$APP_ROOT/openclaw.cloudrun.json`
-3. CI/deploy variables: workflow env in `.github/workflows/deploy-cloud-run.yml`
+2. VPS runtime: `~/.openclaw/openclaw.json` on the server host
+3. Cloud Run runtime (if used): `$APP_ROOT/openclaw.cloudrun.json`
+4. CI/deploy variables: workflow env in `.github/workflows/deploy-ionos-vps.yml` or `.github/workflows/deploy-cloud-run.yml` depending on target
 
-Any change to sub-agent model/tool policy must be applied consistently across all three layers.
+Any change to sub-agent model/tool policy must be applied consistently across all deployment layers in use.
 
 ## Guardrails
 

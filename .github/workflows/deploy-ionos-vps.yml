@@ -1,0 +1,101 @@
+name: Deploy to IONOS VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (branch, tag, or commit SHA)"
+        required: true
+        default: "main"
+      service:
+        description: "Compose service to deploy"
+        required: true
+        default: "openclaw-gateway"
+
+concurrency:
+  group: deploy-ionos-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment: production
+    env:
+      IONOS_SSH_HOST: ${{ secrets.IONOS_SSH_HOST }}
+      IONOS_SSH_USER: ${{ secrets.IONOS_SSH_USER }}
+      IONOS_SSH_PORT: ${{ secrets.IONOS_SSH_PORT }}
+      IONOS_SSH_PRIVATE_KEY: ${{ secrets.IONOS_SSH_PRIVATE_KEY }}
+      IONOS_SSH_KNOWN_HOSTS: ${{ secrets.IONOS_SSH_KNOWN_HOSTS }}
+      IONOS_DEPLOY_PATH: ${{ secrets.IONOS_DEPLOY_PATH }}
+      DEPLOY_REF: ${{ inputs.ref }}
+      DEPLOY_SERVICE: ${{ inputs.service }}
+    steps:
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            IONOS_SSH_HOST
+            IONOS_SSH_USER
+            IONOS_SSH_PORT
+            IONOS_SSH_PRIVATE_KEY
+            IONOS_DEPLOY_PATH
+          )
+          for var in "${required[@]}"; do
+            if [ -z "${!var}" ]; then
+              echo "::error::Missing required secret: ${var}"
+              exit 1
+            fi
+          done
+
+      - name: Deploy over SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${HOME}/.ssh"
+          chmod 700 "${HOME}/.ssh"
+
+          if [ -n "${IONOS_SSH_KNOWN_HOSTS}" ]; then
+            printf "%s\n" "${IONOS_SSH_KNOWN_HOSTS}" > "${HOME}/.ssh/known_hosts"
+            chmod 600 "${HOME}/.ssh/known_hosts"
+            SSH_KNOWN_HOSTS_ARG=(-o StrictHostKeyChecking=yes -o UserKnownHostsFile="${HOME}/.ssh/known_hosts")
+          else
+            SSH_KNOWN_HOSTS_ARG=(-o StrictHostKeyChecking=accept-new)
+          fi
+
+          eval "$(ssh-agent -s)"
+          trap 'ssh-agent -k' EXIT
+          printf "%s\n" "${IONOS_SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add - >/dev/null
+
+          ssh \
+            -p "${IONOS_SSH_PORT}" \
+            -o BatchMode=yes \
+            "${SSH_KNOWN_HOSTS_ARG[@]}" \
+            "${IONOS_SSH_USER}@${IONOS_SSH_HOST}" \
+            "DEPLOY_REF='${DEPLOY_REF}' DEPLOY_SERVICE='${DEPLOY_SERVICE}' DEPLOY_PATH='${IONOS_DEPLOY_PATH}' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          if [ ! -d "${DEPLOY_PATH}" ]; then
+            echo "Deploy path does not exist: ${DEPLOY_PATH}" >&2
+            exit 1
+          fi
+          cd "${DEPLOY_PATH}"
+
+          if [ ! -d ".git" ]; then
+            echo "Deploy path is not a git repo: ${DEPLOY_PATH}" >&2
+            exit 1
+          fi
+
+          git fetch --prune origin
+
+          if git show-ref --verify --quiet "refs/remotes/origin/${DEPLOY_REF}"; then
+            git checkout -B "${DEPLOY_REF}" "origin/${DEPLOY_REF}"
+          else
+            git checkout --detach "${DEPLOY_REF}"
+          fi
+
+          ./scripts/deploy-ionos.sh "${DEPLOY_SERVICE}"
+          REMOTE
+

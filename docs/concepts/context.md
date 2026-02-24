@@ -67,7 +67,7 @@ Session tokens (cached): 14,250 total / ctx=32,000
 …
 Top skills (prompt entry size):
 - frontend-design: 412 chars (~103 tok)
-- oracle: 401 chars (~101 tok)
+- camsnap: 398 chars (~100 tok)
 … (+10 more skills)
 
 Top tools (schema size):

@@ -1,6 +1,6 @@
 ---
 name: honeybadger-config-secrets-audit
-description: Audit config and secrets consistency across local, CI, and Cloud Run. Use when behavior differs by environment or credentials seem valid but runtime fails.
+description: Audit config and secrets consistency across local, CI, and VPS runtimes. Use when behavior differs by environment or credentials seem valid but runtime fails.
 ---
 
 # Honeybadger Config + Secrets Audit

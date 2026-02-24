@@ -25,7 +25,7 @@
 ## Local-First Runtime Rule
 
 - Assume local runtime by default unless Captain explicitly states cloud deployment.
-- Do not prescribe Cloud Run deployment actions in local-debug sessions.
+- Do not prescribe provider-specific deployment actions in local-debug sessions.
 - Prefer checks against local gateway/session/config behavior first.
 
 ## Restriction Overrides

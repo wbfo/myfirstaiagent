@@ -99,13 +99,44 @@ Telegram no-reply triage entrypoint:
 
 - `directives/telegram_no_reply.md`
 
-Deployment/rollback SOP:
+Manual VPS deploy script:
 
-- `directives/cloudrun_deploy_and_rollback.md`
+- `scripts/deploy-ionos.sh`
 
 Skill organization/governance SOP:
 
 - `directives/skills_governance.md`
+
+## Local Ollama Model Policy (project-specific)
+
+If you run this project in **local model mode**, the required Ollama models must be
+downloaded locally before agent runtime tests or local-only support-agent flows.
+
+Recommended project-local model store:
+
+```bash
+export OLLAMA_MODELS="$PWD/.local/ollama-models"
+mkdir -p "$OLLAMA_MODELS"
+```
+
+Start Ollama using the same model store:
+
+```bash
+OLLAMA_MODELS="$OLLAMA_MODELS" ollama serve
+```
+
+Example pulls:
+
+```bash
+OLLAMA_MODELS="$OLLAMA_MODELS" ollama pull qwen2.5:14b
+OLLAMA_MODELS="$OLLAMA_MODELS" ollama pull qwen2.5:7b
+```
+
+Push policy:
+
+1. Never commit or push model blobs/directories.
+2. Push code/docs/config only.
+3. Keep model storage under ignored paths (see `.gitignore`).
 
 ## Development channels
 
