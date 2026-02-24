@@ -166,9 +166,9 @@ printf "%s" "${AGENTS_JSON}" > "${TMP_DIR}/agents.json"
 printf "%s" "${CONFIG_AGENTS_JSON}" > "${TMP_DIR}/config_agents.json"
 printf "%s" "${RUNTIME_MAP_JSON}" > "${TMP_DIR}/runtime_map.json"
 printf "%s" "${SMOKE_OUTPUT}" > "${TMP_DIR}/smoke_output.txt"
-write_lines_file "${TMP_DIR}/blockers.txt" "${BLOCKERS[@]}"
-write_lines_file "${TMP_DIR}/next_actions.txt" "${NEXT_ACTIONS[@]}"
-write_lines_file "${TMP_DIR}/commands_run.txt" "${COMMANDS_RUN[@]}"
+write_lines_file "${TMP_DIR}/blockers.txt" "${BLOCKERS[@]:-}"
+write_lines_file "${TMP_DIR}/next_actions.txt" "${NEXT_ACTIONS[@]:-}"
+write_lines_file "${TMP_DIR}/commands_run.txt" "${COMMANDS_RUN[@]:-}"
 
 APP_ROOT="${APP_ROOT}" \
 HEAD_SHA="${HEAD_SHA}" \
