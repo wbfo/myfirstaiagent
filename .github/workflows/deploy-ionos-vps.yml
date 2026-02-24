@@ -98,4 +98,3 @@ jobs:
 
           ./scripts/deploy-ionos.sh "${DEPLOY_SERVICE}"
           REMOTE
-

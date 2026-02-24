@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import { runCliAgent } from "../../agents/cli-runner.js";
 import { getCliSessionId } from "../../agents/cli-session.js";
+import { FailoverError } from "../../agents/failover-error.js";
 import { runWithModelFallback } from "../../agents/model-fallback.js";
 import { isCliProvider } from "../../agents/model-selection.js";
 import {
@@ -447,15 +448,12 @@ export async function runAgentTurnWithFallback(params: {
         };
       }
       if (embeddedError?.kind === "role_ordering") {
-        const didReset = await params.resetSessionAfterRoleOrderingConflict(embeddedError.message);
-        if (didReset) {
-          return {
-            kind: "final",
-            payload: {
-              text: "⚠️ Message ordering conflict. I've reset the conversation - please try again.",
-            },
-          };
-        }
+        throw new FailoverError(embeddedError.message, {
+          reason: "role_ordering",
+          provider: runResult.meta?.agentMeta?.provider,
+          model: runResult.meta?.agentMeta?.model,
+          status: 400,
+        });
       }
 
       break;

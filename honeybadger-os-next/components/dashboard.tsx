@@ -306,7 +306,7 @@ export function Dashboard() {
           },
         }),
       );
-    };
+    });
 
     ws.addEventListener("message", (event) => {
       let msg: WsMessage;
@@ -324,88 +324,85 @@ export function Dashboard() {
         return;
       }
 
-      const abortController = new AbortController();
 
-      async function streamResponse(runId: string) {
-        (type: "res")
       if (msg.type === "res" && msg.id && pendingRef.current.has(msg.id)) {
-          const pending = pendingRef.current.get(msg.id);
-          if (!pending) {
-            return;
-          }
-          clearTimeout(pending.timer);
-          pendingRef.current.delete(msg.id);
-          const resMsg = msg as unknown as {
-            ok?: boolean;
-            payload?: unknown;
-            error?: { message?: string };
-          };
-          if (resMsg.ok === false || resMsg.error) {
-            pending.reject(new Error(resMsg.error?.message ?? "RPC error"));
-          } else {
-            pending.resolve(resMsg.payload);
-          }
+        const pending = pendingRef.current.get(msg.id);
+        if (!pending) {
           return;
         }
-
-        // Handle event frames (type: "event")
-        if (msg.type !== "event") {
-          return;
-        }
-        const evt = msg.event;
-        if (evt !== "chat") {
-          return;
-        }
-
-        const data = (msg.data ?? msg) as {
-          runId?: string;
-          state?: string;
-          text?: string;
-          sessionKey?: string;
+        clearTimeout(pending.timer);
+        pendingRef.current.delete(msg.id);
+        const resMsg = msg as unknown as {
+          ok?: boolean;
+          payload?: unknown;
+          error?: { message?: string };
         };
-
-        if (data.sessionKey && data.sessionKey !== `agent:${chatAgent}:main`) {
-          return;
+        if (resMsg.ok === false || resMsg.error) {
+          pending.reject(new Error(resMsg.error?.message ?? "RPC error"));
+        } else {
+          pending.resolve(resMsg.payload);
         }
+        return;
+      }
 
-        if (data.state === "delta" || data.state === "delta-text") {
-          chatBufferRef.current += data.text ?? "";
-          setChatRunState("streaming");
-          setChatRunId(data.runId ?? null);
-          return;
-        }
+      // Handle event frames (type: "event")
+      if (msg.type !== "event") {
+        return;
+      }
+      const evt = msg.event;
+      if (evt !== "chat") {
+        return;
+      }
 
-        if (data.state === "final") {
-          const finalText = data.text ?? chatBufferRef.current;
-          setChatMessages((prevMsgs) => [
-            ...prevMsgs,
-            { id: randomKey("assistant"), role: "assistant", content: finalText, ts: Date.now() },
-          ]);
-          chatBufferRef.current = "";
-          setChatRunId(null);
-          setChatRunState("done");
-          setTimeout(() => setChatRunState(null), 1200);
-          return;
-        }
+      const data = (msg.data ?? msg) as {
+        runId?: string;
+        state?: string;
+        text?: string;
+        sessionKey?: string;
+      };
 
-        if (data.state === "error" || data.state === "aborted") {
-          const output = chatBufferRef.current || "No output returned";
-          setChatMessages((prevMsgs) => [
-            ...prevMsgs,
-            {
-              id: randomKey("assistant"),
-              role: "assistant",
-              content: `${output}\n\n[${(data.state ?? "error").toUpperCase()}]`,
-              ts: Date.now(),
-              isError: true,
-            },
-          ]);
-          chatBufferRef.current = "";
-          setChatRunId(null);
-          setChatRunState(data.state === "aborted" ? "aborted" : "error");
-          setTimeout(() => setChatRunState(null), 2200);
-        }
-      });
+      if (data.sessionKey && data.sessionKey !== `agent:${chatAgent}:main`) {
+        return;
+      }
+
+      if (data.state === "delta" || data.state === "delta-text") {
+        chatBufferRef.current += data.text ?? "";
+        setChatRunState("streaming");
+        setChatRunId(data.runId ?? null);
+        return;
+      }
+
+      if (data.state === "final") {
+        const finalText = data.text ?? chatBufferRef.current;
+        setChatMessages((prevMsgs) => [
+          ...prevMsgs,
+          { id: randomKey("assistant"), role: "assistant", content: finalText, ts: Date.now() },
+        ]);
+        chatBufferRef.current = "";
+        setChatRunId(null);
+        setChatRunState("done");
+        setTimeout(() => setChatRunState(null), 1200);
+        return;
+      }
+
+      if (data.state === "error" || data.state === "aborted") {
+        const output = chatBufferRef.current || "No output returned";
+        setChatMessages((prevMsgs) => [
+          ...prevMsgs,
+          {
+            id: randomKey("assistant"),
+            role: "assistant",
+            content: `${output}\n\n[${(data.state ?? "error").toUpperCase()}]`,
+            ts: Date.now(),
+            isError: true,
+          },
+        ]);
+        chatBufferRef.current = "";
+        setChatRunId(null);
+        setChatRunState(data.state === "aborted" ? "aborted" : "error");
+        setTimeout(() => setChatRunState(null), 2200);
+      }
+    });
 
     ws.addEventListener("error", () => setGatewayStatus("error"));
 
@@ -504,38 +501,33 @@ export function Dashboard() {
     if (!task || gatewayStatus !== "connected" || subagentBusy) {
       return;
     }
+    const runId = randomKey("run");
+    setSubagentRuns((prev) => [
+      { runId, agentId: subagentTargetId, task, status: "started", ts: Date.now() },
+      ...prev,
+    ]);
 
-    const abortController = new AbortController();
-
-    async function streamSubagentResponse(subagentId: string) {
-      ;
-      const runId = randomKey("run");
-      setSubagentRuns((prev) => [
-        { runId, agentId: subagentTargetId, task, status: "started", ts: Date.now() },
-        ...prev,
-      ]);
-
-      try {
-        await rpc("chat.send", {
-          sessionKey: "agent:honeybadger:main",
-          message: `[DELEGATE -> ${subagentTargetId}] ${task}`,
-          idempotencyKey: randomKey("spawn"),
-        });
-        setSubagentRuns((prev) =>
-          prev.map((r) => (r.runId === runId ? { ...r, status: "delegated" } : r)),
-        );
-      } catch (err) {
-        setSubagentRuns((prev) =>
-          prev.map((r) =>
-            r.runId === runId
-              ? { ...r, status: "error", output: err instanceof Error ? err.message : String(err) }
-              : r,
-          ),
-        );
-      } finally {
-        setSubagentBusy(false);
-      }
-    }, [gatewayStatus, rpc, subagentBusy, subagentTargetId, subagentTask]);
+    try {
+      await rpc("chat.send", {
+        sessionKey: "agent:honeybadger:main",
+        message: `[DELEGATE -> ${subagentTargetId}] ${task}`,
+        idempotencyKey: randomKey("spawn"),
+      });
+      setSubagentRuns((prev) =>
+        prev.map((r) => (r.runId === runId ? { ...r, status: "delegated" } : r)),
+      );
+    } catch (err) {
+      setSubagentRuns((prev) =>
+        prev.map((r) =>
+          r.runId === runId
+            ? { ...r, status: "error", output: err instanceof Error ? err.message : String(err) }
+            : r,
+        ),
+      );
+    } finally {
+      setSubagentBusy(false);
+    }
+  }, [gatewayStatus, rpc, subagentBusy, subagentTargetId, subagentTask]);
 
   const saveConfig = useCallback(async () => {
     try {
@@ -1192,11 +1184,7 @@ export function Dashboard() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-hb-muted">
-                      <StatusDot
-                        status={
-                          (session.status === "active" ? "active" : "idle")
-                        }
-                      />
+                      <StatusDot status={session.status === "active" ? "active" : "idle"} />
                       {session.status ?? "idle"}
                     </div>
                   </div>
