@@ -6,7 +6,7 @@ A comprehensive audit of the Open Claw project has been completed. The canonical
 
 ## Execution / Topology
 
-- **APP_ROOT Resolution**: Resolved dynamically to the current workspace root directory (`/Users/wbfoclaw/OPENopenclaw/openclaw_app`).
+- **APP_ROOT Resolution**: Resolved dynamically to the current workspace root directory (`$APP_ROOT`).
 - **Configuration Wiring**: `openclaw.json` (both repository template and live `~/.openclaw/` versions) have been patched to remove hardcoded machine-specific paths, replacing them with `~/` aliases.
 
 ## Directives
@@ -38,5 +38,5 @@ All 8 active agents have been configured to fallback to local Ollama models.
 
 ## Findings By Severity
 
-- **[MEDIUM]** The `openclaw.json` files and specific agent documentation contained hardcoded `/Users/wbfoclaw` absolute paths which break environment portability. These were replaced with dynamic paths and `~/` expansion. Evidence: `directives/agents/CANONICAL_RUNTIME_TRUTH.md`, `verify-cost-cut.sh`, `config/agents/security-auditor-IDENTITY.md`.
-- **[LOW]** The `MEMORY.md` root directive file was missing. A blank foundational file was created to fulfill the framework's expectation. Evidence: `/Users/wbfoclaw/OPENopenclaw/openclaw_app/MEMORY.md` generated.
+- **[MEDIUM]** The `openclaw.json` files and specific agent documentation contained hardcoded `wbfoclaw` absolute paths which break environment portability. These were replaced with dynamic paths and `~/` expansion. Evidence: `directives/agents/CANONICAL_RUNTIME_TRUTH.md`, `verify-cost-cut.sh`, `config/agents/security-auditor-IDENTITY.md`.
+- **[LOW]** The `MEMORY.md` root directive file was missing. A blank foundational file was created to fulfill the framework's expectation. Evidence: `$APP_ROOT/MEMORY.md` generated.

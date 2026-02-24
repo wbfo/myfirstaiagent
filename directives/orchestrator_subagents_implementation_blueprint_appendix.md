@@ -81,7 +81,7 @@ Store as structured JSONL for weekly aggregation.
 To prevent drift, map config by environment:
 
 1. Local/dev runtime: `~/.openclaw/openclaw.json`
-2. Cloud Run runtime: `/Users/abimbolaolaitan/Desktop/OPENopenclaw/openclaw_app/openclaw.cloudrun.json`
+2. Cloud Run runtime: `$APP_ROOT/openclaw.cloudrun.json`
 3. CI/deploy variables: workflow env in `.github/workflows/deploy-cloud-run.yml`
 
 Any change to sub-agent model/tool policy must be applied consistently across all three layers.

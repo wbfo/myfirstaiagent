@@ -19,7 +19,7 @@ Next.js + Tailwind frontend for your HoneyBadger multi-agent setup with live Gat
 ## Run
 
 ```bash
-cd /Users/abimbolaolaitan/Desktop/OPENopenclaw/honeybadger-os-next
+cd $APP_ROOT/honeybadger-os-next
 npm install
 npm run dev
 ```
