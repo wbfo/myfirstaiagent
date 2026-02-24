@@ -39,6 +39,10 @@ Quick verification:
 ```bash
 node openclaw.mjs agents list --json
 node openclaw.mjs models status --json --agent honeybadger
+node openclaw.mjs models status --json --agent knowledge-management
+node openclaw.mjs models status --json --agent strategic-horizon-systems
+node openclaw.mjs models status --json --agent operational-diagnostics-optimization
+node openclaw.mjs models status --json --agent creative-director
 node openclaw.mjs models status --json --agent architect
 node openclaw.mjs models status --json --agent market-advisory
 ```
@@ -71,3 +75,7 @@ Each agent dossier should contain:
 5. `directives/agents/researcher/`
 6. `directives/agents/deal-closer/`
 7. `directives/agents/market-advisory/`
+8. `directives/agents/knowledge-management/`
+9. `directives/agents/strategic-horizon-systems/`
+10. `directives/agents/operational-diagnostics-optimization/`
+11. `directives/agents/creative-director/`

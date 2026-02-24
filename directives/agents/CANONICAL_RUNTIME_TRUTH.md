@@ -1,7 +1,7 @@
 # Canonical Agent Runtime Truth
 
-**Last Verified At:** 2026-02-24T13:43:00Z
-**Git Commit:** 14fcf6a30ae91a690ebd9e2fb3bba69ae5f29f0f
+**Last Verified At:** 2026-02-24T00:00:00Z
+**Git Commit:** 188910b
 **Baseline Workspace:** `$APP_ROOT`
 
 ## 1. Live Runtime Agents (Orchestration Layer)
@@ -12,6 +12,10 @@ _Source of Truth: `~/.openclaw/openclaw.json` / `node openclaw.mjs agents list`_
 | :------------------ | :----------------------- | :------ | :--------------------- | :---------------- |
 | **main**            | Main Assistant           | No      | gemini-3-flash-preview | Primary interface |
 | **honeybadger**     | HoneyBadger Orchestrator | **Yes** | gemini-3-flash-preview | Strategic COO     |
+| **knowledge-management** | Knowledge Management Agent | No  | gemini-2.5-flash       | Memory authority  |
+| **strategic-horizon-systems** | Strategic Horizon and Systems Agent | No | gemini-2.5-pro | Long-range strategy |
+| **operational-diagnostics-optimization** | Operational Diagnostics and Optimization Agent | No | gemini-2.5-flash | Ops diagnostics |
+| **creative-director** | Creative Director Agent | No      | gemini-2.5-pro         | Narrative direction |
 | **architect**       | Architect                | No      | gemini-2.5-pro         | System Design     |
 | **researcher**      | Researcher               | No      | gemini-2.5-pro         | Discovery         |
 | **deal-closer**     | Deal Closer              | No      | gemini-2.5-flash       | Evaluation        |
@@ -19,7 +23,7 @@ _Source of Truth: `~/.openclaw/openclaw.json` / `node openclaw.mjs agents list`_
 | **ops-coordinator** | Ops Coordinator          | No      | gemini-3-flash-preview | Task Support      |
 | **quality-gate**    | Quality Gate             | No      | gemini-3-flash-preview | Validation        |
 
-**Total Live Agents:** 8
+**Total Live Agents:** 12
 
 ## 2. Execution Runtime Map (Specialist Layer)
 
@@ -27,12 +31,16 @@ _Source of Truth: `execution/agent_runtime_map.json`_
 
 | Agent ID            | Lineage / Runtime | Implementation    |
 | :------------------ | :---------------- | :---------------- |
+| **knowledge-management** | nanobot      | Python Module     |
+| **strategic-horizon-systems** | zeroclaw | Rust/Cargo Binary |
+| **operational-diagnostics-optimization** | nanobot | Python Module |
+| **creative-director** | zeroclaw      | Rust/Cargo Binary |
 | **architect**       | zeroclaw          | Rust/Cargo Binary |
 | **researcher**      | zeroclaw          | Rust/Cargo Binary |
 | **deal-closer**     | zeroclaw          | Rust/Cargo Binary |
 | **market-advisory** | nanobot           | Python Module     |
 
-**Note:** `ops-coordinator` and `quality-gate` are orchestration support agents and do NOT have entries in the execution map.
+**Note:** `ops-coordinator` and `quality-gate` remain orchestration support agents and do NOT have entries in the execution map.
 
 ## 3. Mandatory Rules: Do Not Conflate
 

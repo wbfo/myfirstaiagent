@@ -31,25 +31,49 @@ Single source of truth for HoneyBadger on which agents exist, what they do, and 
 - Best for: schema compliance, risk flags, confidence normalization.
 - Output type: strict JSON envelope.
 
-## 4) architect
+## 4) knowledge-management
+
+- Role: Memory authority and context continuity.
+- Best for: recall packs, decision history, constraint tracking, contradiction detection.
+- Typical deliverable: structured memory context pack with citations and conflict flags.
+
+## 5) strategic-horizon-systems
+
+- Role: Long-horizon planning and systems strategy.
+- Best for: dependency maps, scenario branches, trigger thresholds, kill criteria.
+- Typical deliverable: 30/90/180-day strategic sequence with tradeoffs.
+
+## 6) operational-diagnostics-optimization
+
+- Role: Operational diagnostics and optimization.
+- Best for: bottleneck detection, root-cause analysis, reliability improvements.
+- Typical deliverable: severity-ranked findings with verification steps.
+
+## 7) creative-director
+
+- Role: Narrative and concept direction.
+- Best for: concept options, creative thesis, feasibility-scored recommendations.
+- Typical deliverable: concept matrix and execution-ready creative direction.
+
+## 8) architect
 
 - Role: System design and reliability implementation.
 - Best for: architecture, technical plans, refactors requiring engineering rigor.
 - Typical deliverable: architecture memo, implementation plan, or code change summary.
 
-## 5) researcher
+## 9) researcher
 
 - Role: Discovery and analysis.
 - Best for: research briefs, option comparison, external information synthesis.
 - Typical deliverable: evidence-backed brief with sources and tradeoffs.
 
-## 6) deal-closer
+## 10) deal-closer
 
 - Role: Outcome-oriented business/advisory output.
 - Best for: actionable plans, positioning, persuasive execution framing.
 - Typical deliverable: concise plan artifact (for example `deal_closer_report.txt`).
 
-## 7) market-advisory
+## 11) market-advisory
 
 - Role: Market analysis and opportunity/risk framing.
 - Best for: market scans, competitor signal summaries, trend implications.
@@ -73,13 +97,15 @@ Single source of truth for HoneyBadger on which agents exist, what they do, and 
 ## Routing Rules
 
 1. Route by task type, not by whichever agent responded last.
-2. Do not chain specialist-to-specialist blindly; HoneyBadger validates each hop.
-3. Enforce one owner per artifact.
-4. Use `quality-gate` before final Captain-facing delivery when structure/risk matters.
-5. For business/advisory deliverables, prefer `deal-closer`; only use `code-specialist` if explicitly requested by Captain.
-6. If a specialist fails twice, stop auto-retrying and escalate with fallback options.
-7. Before escalation to Captain, perform one full-codebase search pass and document evidence anchors.
-8. Interpret "audit base code/project/everything" as full-workspace audit; do not ask scope questions before first-pass findings.
+2. Run `knowledge-management` before plan generation for memory context pack.
+3. Do not chain specialist-to-specialist blindly; HoneyBadger validates each hop.
+4. Enforce one owner per artifact.
+5. Use `quality-gate` before final Captain-facing delivery when structure/risk matters.
+6. For business/advisory deliverables, prefer `deal-closer`; only use `code-specialist` if explicitly requested by Captain.
+7. If a specialist fails twice, stop auto-retrying and escalate with fallback options.
+8. Before escalation to Captain, perform one full-codebase search pass and document evidence anchors.
+9. Interpret "audit base code/project/everything" as full-workspace audit; do not ask scope questions before first-pass findings.
+10. After completion, write memory delta through `knowledge-management`.
 
 ## Frontend/System Understanding Checklist
 

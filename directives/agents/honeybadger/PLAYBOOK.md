@@ -20,13 +20,20 @@
    - top risks
    - likely high-impact improvements
 
+## Phase 0.5: Memory Sync (mandatory)
+
+1. Dispatch `knowledge-management` for a pre-task memory context pack.
+2. Use context pack facts and constraints as first-class planning input.
+3. If memory conflicts are flagged, mark `needs_review` before dispatching deep work.
+
 ## Phase 1: Ingestion & Triaging
 
 1. Read the objective and `task.md`.
-2. Determine if the objective is executable with current context.
-3. If not executable: attempt one assumption-driven path first.
-4. Only if still blocked, draft focused questions for Captain and mark task blocked.
-5. If executable: Break into discrete sub-tasks.
+2. Merge objective context with `knowledge-management` context pack.
+3. Determine if the objective is executable with current context.
+4. If not executable: attempt one assumption-driven path first.
+5. Only if still blocked, draft focused questions for Captain and mark task blocked.
+6. If executable: Break into discrete sub-tasks.
 
 ## Phase 2: Execution Routing (Ops Support)
 
@@ -36,7 +43,14 @@
 
 ## Phase 3: Specialist Dispatch
 
-1. Dispatch specific tasks to `architect`, `researcher`, or `deal-closer`.
+1. Dispatch specific tasks to one or more of:
+   - `strategic-horizon-systems`
+   - `operational-diagnostics-optimization`
+   - `creative-director`
+   - `architect`
+   - `researcher`
+   - `deal-closer`
+   - `market-advisory`
 2. For each dispatch, set a deterministic `artifact_contract`:
    - `artifact_file`: required target filename (example: `deal_closer_report.txt`)
    - `fallback_inline`: true
@@ -75,3 +89,8 @@
    - expected artifact path
    - read status (`ok` or `missing`)
    - fallback used (`yes` or `no`)
+4. Dispatch `knowledge-management` with a memory delta containing:
+   - decisions made
+   - constraints updated
+   - tasks created/closed
+   - risks discovered

@@ -46,12 +46,76 @@
         },
         "subagents": {
           "allowAgents": [
+            "knowledge-management",
             "ops-coordinator",
             "quality-gate",
+            "strategic-horizon-systems",
+            "operational-diagnostics-optimization",
+            "creative-director",
             "architect",
             "researcher",
             "deal-closer",
             "market-advisory"
+          ]
+        }
+      },
+      {
+        "id": "knowledge-management",
+        "name": "Knowledge Management Agent",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-2.5-flash",
+          "fallbacks": [
+            "google/gemini-3-flash-preview",
+            "ollama/qwen2.5:14b",
+            "ollama/llama3.1",
+            "ollama/mixtral",
+            "ollama/gemma3"
+          ]
+        }
+      },
+      {
+        "id": "strategic-horizon-systems",
+        "name": "Strategic Horizon and Systems Agent",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-2.5-pro",
+          "fallbacks": [
+            "google/gemini-3-flash-preview",
+            "ollama/qwen2.5:14b",
+            "ollama/llama3.1",
+            "ollama/mixtral",
+            "ollama/gemma3"
+          ]
+        }
+      },
+      {
+        "id": "operational-diagnostics-optimization",
+        "name": "Operational Diagnostics and Optimization Agent",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-2.5-flash",
+          "fallbacks": [
+            "google/gemini-3-flash-preview",
+            "ollama/qwen2.5:14b",
+            "ollama/llama3.1",
+            "ollama/mixtral",
+            "ollama/gemma3"
+          ]
+        }
+      },
+      {
+        "id": "creative-director",
+        "name": "Creative Director Agent",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-2.5-pro",
+          "fallbacks": [
+            "google/gemini-3-flash-preview",
+            "ollama/qwen2.5:14b",
+            "ollama/llama3.1",
+            "ollama/mixtral",
+            "ollama/gemma3"
           ]
         }
       },

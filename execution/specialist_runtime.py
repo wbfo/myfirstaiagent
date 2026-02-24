@@ -16,7 +16,16 @@ DEFAULT_NANOBOT_BIN = (
 )
 DEFAULT_NANOBOT_ROOT = pathlib.Path(__file__).resolve().parents[2] / "agent_runtimes" / "NanoBot"
 DEFAULT_ZEROCLAW_CONFIG_DIR = pathlib.Path(__file__).resolve().parents[1] / ".tmp" / "zeroclaw"
-SUPPORTED_AGENTS = {"architect", "researcher", "deal-closer", "market-advisory"}
+SUPPORTED_AGENTS = {
+    "knowledge-management",
+    "strategic-horizon-systems",
+    "operational-diagnostics-optimization",
+    "creative-director",
+    "architect",
+    "researcher",
+    "deal-closer",
+    "market-advisory",
+}
 
 
 def load_json(path: pathlib.Path) -> Dict[str, Any]:

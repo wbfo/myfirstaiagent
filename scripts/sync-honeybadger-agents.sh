@@ -20,6 +20,10 @@ fi
 TARGET_IDS=(
   main
   honeybadger
+  knowledge-management
+  strategic-horizon-systems
+  operational-diagnostics-optimization
+  creative-director
   architect
   researcher
   deal-closer
@@ -36,6 +40,10 @@ agent_name() {
   case "$1" in
     main) echo "Main Assistant" ;;
     honeybadger) echo "HoneyBadger Orchestrator" ;;
+    knowledge-management) echo "Knowledge Management Agent" ;;
+    strategic-horizon-systems) echo "Strategic Horizon and Systems Agent" ;;
+    operational-diagnostics-optimization) echo "Operational Diagnostics and Optimization Agent" ;;
+    creative-director) echo "Creative Director Agent" ;;
     architect) echo "Architect" ;;
     researcher) echo "Researcher" ;;
     deal-closer) echo "Deal Closer" ;;
@@ -54,7 +62,13 @@ agent_model_json() {
     architect|researcher)
       echo '{"primary":"google/gemini-2.5-pro","fallbacks":["google/gemini-3-flash-preview"]}'
       ;;
+    strategic-horizon-systems|creative-director)
+      echo '{"primary":"google/gemini-2.5-pro","fallbacks":["google/gemini-3-flash-preview"]}'
+      ;;
     deal-closer)
+      echo '{"primary":"google/gemini-2.5-flash","fallbacks":["google/gemini-3-flash-preview"]}'
+      ;;
+    knowledge-management|operational-diagnostics-optimization)
       echo '{"primary":"google/gemini-2.5-flash","fallbacks":["google/gemini-3-flash-preview"]}'
       ;;
     market-advisory)
@@ -72,7 +86,7 @@ agent_subagents_json() {
       echo '{"allowAgents":["*"]}'
       ;;
     honeybadger)
-      echo '{"allowAgents":["ops-coordinator","quality-gate","architect","researcher","deal-closer","market-advisory"]}'
+      echo '{"allowAgents":["knowledge-management","ops-coordinator","quality-gate","strategic-horizon-systems","operational-diagnostics-optimization","creative-director","architect","researcher","deal-closer","market-advisory"]}'
       ;;
     *)
       echo ''

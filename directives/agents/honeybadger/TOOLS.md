@@ -7,6 +7,8 @@
 - `subagent_dispatch`: For delegating tasks to specialists and support sub-agents.
 - `notify_user`: Final escalation or completion path.
 
+Dispatch policy: `knowledge-management` is mandatory for pre-task recall and post-task writeback on all non-trivial runs.
+
 ## Audit/Search Expectations
 
 - Prefer project-wide search before asking questions:

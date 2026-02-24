@@ -1,6 +1,28 @@
 {
   "version": 1,
   "agents": {
+    "knowledge-management": {
+      "runtime": "nanobot",
+      "model_env": "HB_KNOWLEDGE_MANAGEMENT_MODEL",
+      "default_model": "google/gemini-2.5-flash"
+    },
+    "strategic-horizon-systems": {
+      "runtime": "zeroclaw",
+      "provider": "openrouter",
+      "model_env": "HB_STRATEGIC_HORIZON_SYSTEMS_MODEL",
+      "default_model": "google/gemini-2.5-pro"
+    },
+    "operational-diagnostics-optimization": {
+      "runtime": "nanobot",
+      "model_env": "HB_OPERATIONAL_DIAGNOSTICS_OPTIMIZATION_MODEL",
+      "default_model": "google/gemini-2.5-flash"
+    },
+    "creative-director": {
+      "runtime": "zeroclaw",
+      "provider": "openrouter",
+      "model_env": "HB_CREATIVE_DIRECTOR_MODEL",
+      "default_model": "google/gemini-2.5-pro"
+    },
     "architect": {
       "runtime": "zeroclaw",
       "provider": "openrouter",

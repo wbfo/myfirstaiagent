@@ -21,24 +21,25 @@ This audit was performed to verify the lineage of the agents operating within th
 
 - **Definition:** A high-leverage specialist agent runtime designed for complex technical and strategic tasks.
 - **Technical Proof:**
-  - `execution/agent_runtime_map.json`: Explicitly maps `architect`, `researcher`, and `deal-closer` to the `zeroclaw` runtime.
+  - `execution/agent_runtime_map.json`: Explicitly maps `strategic-horizon-systems`, `creative-director`, `architect`, `researcher`, and `deal-closer` to the `zeroclaw` runtime.
   - `execution/specialist_runtime.py`: Defines the `zeroclaw` binary path and configuration directory.
 - **Agent Association:**
+  - **Strategic Horizon and Systems Agent**
+  - **Creative Director Agent**
   - **Architect**
   - **Researcher**
   - **Deal Closer**
-  - **Code Specialist**
 
 ### 3. Nano Bot Lineage
 
 - **Definition:** A lightweight, micro-agent runtime optimized for support roles and deterministic tasks, often utilizing local models.
 - **Technical Proof:**
-  - `execution/agent_runtime_map.json`: Maps `market-advisory` to the `nanobot` runtime.
+  - `execution/agent_runtime_map.json`: Maps `knowledge-management`, `operational-diagnostics-optimization`, and `market-advisory` to the `nanobot` runtime.
   - `execution/specialist_runtime.py`: Defines the `nanobot` binary and root directories.
 - **Agent Association:**
+  - **Knowledge Management Agent**
+  - **Operational Diagnostics and Optimization Agent**
   - **Market Advisory**
-  - **Ops Coordinator** (Support sub-agent role)
-  - **Quality Gate** (Validation support role)
 
 ## Conclusion
 

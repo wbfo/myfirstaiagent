@@ -12,7 +12,16 @@ from typing import Any, Dict, List
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DISPATCH = ROOT / "agent_runtime_dispatch.py"
-AGENTS = ["architect", "researcher", "deal-closer", "market-advisory"]
+AGENTS = [
+    "knowledge-management",
+    "strategic-horizon-systems",
+    "operational-diagnostics-optimization",
+    "creative-director",
+    "architect",
+    "researcher",
+    "deal-closer",
+    "market-advisory",
+]
 
 
 def _run_dispatch(agent_id: str, live: bool) -> Dict[str, Any]:

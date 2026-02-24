@@ -51,6 +51,15 @@ When possible, provide:
 - short-term improvements (this week)
 - deeper structural improvements (later)
 
+### 9. Memory Delta
+
+For non-trivial tasks, include the memory writeback payload sent to `knowledge-management`:
+
+- decisions captured
+- constraints updated
+- tasks opened/closed
+- risks added/resolved
+
 ## Expected Sub-Agent Contract
 
 When HoneyBadger receives output from `ops-coordinator` or `quality-gate`, it expects a structured JSON envelope matching the blueprint integration contract. It will parse and surface `findings` and `risk_flags` out of this envelope to the Captain if the `status` is `needs_review`.
