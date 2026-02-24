@@ -66,6 +66,27 @@ node openclaw.mjs models status --json --agent creative-director
 python3 execution/smoke_test_specialists.py
 ```
 
+## Standardized Runtime Readiness Audit
+
+Use this first for bot/AntiGravity audits to avoid source/shape mistakes:
+
+```bash
+./scripts/audit-hb-runtime-readiness.sh
+```
+
+Optional explicit root:
+
+```bash
+./scripts/audit-hb-runtime-readiness.sh /absolute/path/to/openclaw_app
+```
+
+This script enforces canonical sources:
+
+- roster: `node openclaw.mjs agents list --json`
+- HB allowlist: `node openclaw.mjs config get agents.list --json`
+- runtime lineage: `execution/agent_runtime_map.json`
+- smoke test: `python3 execution/smoke_test_specialists.py`
+
 ## Expected State
 
 - Total live runtime agents: 12

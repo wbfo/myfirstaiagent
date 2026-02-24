@@ -47,6 +47,12 @@ node openclaw.mjs models status --json --agent architect
 node openclaw.mjs models status --json --agent market-advisory
 ```
 
+Standardized readiness audit (recommended for bots/automation):
+
+```bash
+./scripts/audit-hb-runtime-readiness.sh
+```
+
 Shared specialist response baseline:
 
 - `directives/agents/STANDARD_ORCHESTRATION_CONTRACT.md`
