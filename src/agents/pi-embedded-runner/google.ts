@@ -16,7 +16,6 @@ import {
   sanitizeGoogleTurnOrdering,
   sanitizeSessionMessagesImages,
 } from "../pi-embedded-helpers.js";
-import { validateGeminiTurns } from "../pi-embedded-helpers.js";
 import { cleanToolSchemaForGemini } from "../pi-tools.schema.js";
 import {
   sanitizeToolCallInputs,
@@ -512,12 +511,35 @@ export async function sanitizeSessionHistory(params: {
   });
 
   // Always merge consecutive same-role turns for Gemini — this is the main
-  // guard against the 400 INVALID_ARGUMENT error. Must run unconditionally
-  // regardless of whether the history starts with an assistant turn.
-  const mergedTurns = validateGeminiTurns(withoutEmptyAssistant);
+  // guard against the 400 INVALID_ARGUMENT error. Must run unconditionally.
+  // Handles ALL role types: assistant, user, AND toolResult.
+  const toBlocks = (content: unknown): unknown[] => {
+    if (Array.isArray(content)) {
+      return content;
+    }
+    if (typeof content === "string") {
+      return [{ type: "text", text: content }];
+    }
+    return [];
+  };
+  const fullyMerged: AgentMessage[] = [];
+  for (const msg of withoutEmptyAssistant) {
+    const role = (msg as { role?: unknown }).role;
+    const last = fullyMerged[fullyMerged.length - 1] as
+      | { role?: unknown; content?: unknown }
+      | undefined;
+    if (last && last.role === role && (role === "assistant" || role === "user")) {
+      // Merge content blocks into the previous message of the same role
+      const prevContent = toBlocks(last.content);
+      const curContent = toBlocks((msg as { content?: unknown }).content);
+      (last as { content: unknown }).content = [...prevContent, ...curContent];
+    } else {
+      fullyMerged.push(msg);
+    }
+  }
 
   return applyGoogleTurnOrderingFix({
-    messages: mergedTurns,
+    messages: fullyMerged,
     modelApi: params.modelApi,
     sessionManager: params.sessionManager,
     sessionId: params.sessionId,
