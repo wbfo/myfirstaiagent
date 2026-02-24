@@ -24,9 +24,15 @@ Run `./scripts/sync-honeybadger-agents.sh` to align live agent model routing wit
 ## Preflight
 
 ```bash
+./scripts/install-specialist-runtimes.sh
 python3 execution/agent_runtime_health.py
 python3 execution/smoke_test_specialists.py
 ```
+
+Runtime source repos:
+
+1. `zeroclaw`: `https://github.com/zeroclaw-labs/zeroclaw.git`
+2. `NanoBot`: `https://github.com/HKUDS/NanoBot.git`
 
 ## Single specialist dispatch
 

@@ -17,6 +17,7 @@ You must sync runtime config so `agents.list` includes HoneyBadger + specialists
 Use:
 
 ```bash
+./scripts/install-specialist-runtimes.sh
 ./scripts/sync-honeybadger-agents.sh
 ```
 

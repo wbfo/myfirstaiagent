@@ -55,6 +55,13 @@ cd $APP_ROOT
 ./scripts/sync-honeybadger-agents.sh $APP_ROOT
 ```
 
+## Runtime Installer Command
+
+```bash
+cd $APP_ROOT
+./scripts/install-specialist-runtimes.sh $APP_ROOT
+```
+
 ## Validation Commands
 
 ```bash

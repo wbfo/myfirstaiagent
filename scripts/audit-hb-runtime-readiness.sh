@@ -134,10 +134,12 @@ NANOBOT_PY="$(dirname "${NANOBOT_BIN}")/python"
 
 if [[ ! -x "${ZEROCLAW_BIN}" ]]; then
   add_blocker "Missing runtime binary: zeroclaw (${ZEROCLAW_BIN})"
+  add_next_action "Run ./scripts/install-specialist-runtimes.sh \"${APP_ROOT}\"."
   add_next_action "Install zeroclaw and/or set HB_ZEROCLAW_BIN to a valid binary path."
 fi
 if [[ ! -x "${NANOBOT_BIN}" && ! -x "${NANOBOT_PY}" ]]; then
   add_blocker "Missing runtime binary: nanobot (${NANOBOT_BIN}) and python shim (${NANOBOT_PY})"
+  add_next_action "Run ./scripts/install-specialist-runtimes.sh \"${APP_ROOT}\"."
   add_next_action "Install NanoBot runtime venv under agent_runtimes/NanoBot/.venv or set HB_NANOBOT_BIN."
 fi
 
