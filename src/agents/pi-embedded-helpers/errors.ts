@@ -448,7 +448,7 @@ export function formatAssistantErrorText(
 
   // Catch role ordering errors - including JSON-wrapped and "400" prefix variants
   if (
-    /incorrect role information|roles must alternate|400.*role|"message".*role.*information/i.test(
+    /incorrect role information|roles must alternate|function call turn comes immediately after|400.*role|"message".*role.*information/i.test(
       raw,
     )
   ) {
@@ -509,7 +509,11 @@ export function sanitizeUserFacingText(text: string, opts?: { errorContext?: boo
   // Only apply error-pattern rewrites when the caller knows this text is an error payload.
   // Otherwise we risk swallowing legitimate assistant text that merely *mentions* these errors.
   if (errorContext) {
-    if (/incorrect role information|roles must alternate/i.test(trimmed)) {
+    if (
+      /incorrect role information|roles must alternate|function call turn comes immediately after/i.test(
+        trimmed,
+      )
+    ) {
       return (
         "Message ordering conflict - please try again. " +
         "If this persists, use /new to start a fresh session."

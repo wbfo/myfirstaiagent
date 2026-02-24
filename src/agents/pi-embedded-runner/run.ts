@@ -812,7 +812,11 @@ export async function runEmbeddedPiAgent(
           if (promptError && !aborted) {
             const errorText = describeUnknownError(promptError);
             // Handle role ordering errors with a user-friendly message
-            if (/incorrect role information|roles must alternate/i.test(errorText)) {
+            if (
+              /incorrect role information|roles must alternate|function call turn comes immediately after/i.test(
+                errorText,
+              )
+            ) {
               return {
                 payloads: [
                   {
