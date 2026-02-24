@@ -87,6 +87,20 @@ function formatCompactInt(value: number): string {
   );
 }
 
+function statusBadgeClass(status: string): string {
+  const normalized = status.toLowerCase();
+  if (["active", "running", "streaming", "started", "delegated", "in_progress"].includes(normalized)) {
+    return "border-hb-green/35 bg-hb-green/10 text-hb-green";
+  }
+  if (["aborting", "queued", "pending"].includes(normalized)) {
+    return "border-hb-amber/35 bg-hb-amber/10 text-hb-amber";
+  }
+  if (["error", "aborted", "failed"].includes(normalized)) {
+    return "border-hb-red/35 bg-hb-red/10 text-hb-red";
+  }
+  return "border-hb-border bg-hb-bg text-hb-muted";
+}
+
 export function Dashboard() {
   const wsRef = useRef<WebSocket | null>(null);
   const pendingRef = useRef<Map<string, RpcPending>>(new Map());
@@ -511,7 +525,7 @@ export function Dashboard() {
     [sessions, sessionsFilter],
   );
 
-  const activeSessionCount = useMemo(() => {
+  const activeSessionEntries = useMemo(() => {
     return sessions.filter((s) => {
       const status = (s.status ?? "").toLowerCase();
       return [
@@ -523,8 +537,10 @@ export function Dashboard() {
         "in_progress",
         "in-progress",
       ].includes(status);
-    }).length;
+    });
   }, [sessions]);
+
+  const activeSessionCount = activeSessionEntries.length;
 
   const inProgressSubagentRuns = useMemo(() => {
     return subagentRuns.filter((run) =>
@@ -536,6 +552,29 @@ export function Dashboard() {
   const usageTotals = usageCost?.totals;
   const costChart = (usageCost?.daily ?? []).slice(-14);
   const maxDailyCost = costChart.reduce((max, entry) => Math.max(max, entry.totalCost), 0);
+  const liveTaskRows = useMemo(() => {
+    const sessionRows = activeSessionEntries.map((entry, idx) => ({
+      id: `session-${entry.key}-${idx}`,
+      source: "session" as const,
+      title: entry.key,
+      subtitle: entry.lastMessage ?? entry.label ?? "Session active",
+      status: entry.status ?? "active",
+      ts: Date.now(),
+    }));
+    const subagentRows = subagentRuns
+      .filter((run) => ["started", "delegated", "active", "aborting"].includes(run.status))
+      .map((run) => ({
+        id: run.runId,
+        source: "subagent" as const,
+        title: `${AGENTS.find((a) => a.id === run.agentId)?.name ?? run.agentId}`,
+        subtitle: run.task,
+        status: run.status,
+        ts: run.ts,
+      }));
+    return [...subagentRows, ...sessionRows]
+      .sort((a, b) => b.ts - a.ts)
+      .slice(0, 10);
+  }, [activeSessionEntries, subagentRuns]);
 
   const navigate = (next: Screen, opts?: { agentId?: string; chatAgent?: string }) => {
     setScreen(next);
@@ -690,6 +729,85 @@ export function Dashboard() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="grid gap-3 sm:gap-4 xl:grid-cols-2">
+          <div className={cardClass("p-4 sm:p-6")}>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold sm:text-base">Live Task Feed</h3>
+              <span className="rounded-full border border-hb-green/35 bg-hb-green/10 px-2 py-0.5 text-[11px] text-hb-green">
+                {liveTaskRows.length} active
+              </span>
+            </div>
+            {liveTaskRows.length === 0 ? (
+              <div className="rounded-lg border border-hb-border bg-hb-bg p-3 text-xs text-hb-muted">
+                No in-progress sessions or subagent runs detected.
+              </div>
+            ) : (
+              <div className="max-h-64 space-y-2 overflow-auto pr-1">
+                {liveTaskRows.map((row) => (
+                  <div key={row.id} className="rounded-lg border border-hb-border bg-hb-bg p-3">
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <p className="truncate text-xs font-semibold sm:text-sm">{row.title}</p>
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${statusBadgeClass(
+                          row.status,
+                        )}`}
+                      >
+                        {row.status}
+                      </span>
+                    </div>
+                    <p className="truncate text-[11px] text-hb-muted sm:text-xs">{row.subtitle}</p>
+                    <p className="mt-1 text-[10px] text-hb-muted">
+                      {row.source === "subagent" ? "subagent" : "session"} ·{" "}
+                      {new Date(row.ts).toLocaleTimeString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className={cardClass("p-4 sm:p-6")}>
+            <h3 className="mb-3 text-sm font-bold sm:text-base">Cost Breakdown (30d)</h3>
+            {!usageTotals ? (
+              <div className="rounded-lg border border-hb-border bg-hb-bg p-3 text-xs text-hb-muted">
+                Cost breakdown unavailable until usage data is loaded.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {[
+                  { label: "Input", value: usageTotals.inputCost, color: "bg-hb-blue/45" },
+                  { label: "Output", value: usageTotals.outputCost, color: "bg-hb-green/45" },
+                  { label: "Cache Read", value: usageTotals.cacheReadCost, color: "bg-hb-purple/45" },
+                  { label: "Cache Write", value: usageTotals.cacheWriteCost, color: "bg-hb-amber/45" },
+                ].map((row) => {
+                  const ratio = usageTotals.totalCost > 0 ? (row.value / usageTotals.totalCost) * 100 : 0;
+                  return (
+                    <div key={row.label}>
+                      <div className="mb-1 flex items-center justify-between text-xs">
+                        <span className="text-hb-muted">{row.label}</span>
+                        <span className="font-semibold text-hb-text">{formatUsd(row.value)}</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded bg-hb-bg">
+                        <div className={`h-full ${row.color}`} style={{ width: `${Math.max(ratio, 0)}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="grid grid-cols-2 gap-3 rounded-lg border border-hb-border bg-hb-bg p-3 text-xs">
+                  <div>
+                    <p className="text-hb-muted">Total Cost</p>
+                    <p className="font-semibold text-hb-text">{formatUsd(usageTotals.totalCost)}</p>
+                  </div>
+                  <div>
+                    <p className="text-hb-muted">Billable Tokens</p>
+                    <p className="font-semibold text-hb-text">{formatCompactInt(usageTotals.totalTokens)}</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
