@@ -353,7 +353,7 @@ export function attachGatewayWsMessageHandler(params: {
         let devicePublicKey: string | null = null;
         const hasTokenAuth = Boolean(connectParams.auth?.token);
         const hasPasswordAuth = Boolean(connectParams.auth?.password);
-        const hasSharedAuth = hasTokenAuth || hasPasswordAuth;
+        const hasSharedAuth = hasTokenAuth || hasPasswordAuth || resolvedAuth.mode === "none";
         const controlUiAuthPolicy = resolveControlUiAuthPolicy({
           isControlUi,
           controlUiConfig: configSnapshot.gateway?.controlUi,
@@ -412,7 +412,9 @@ export function attachGatewayWsMessageHandler(params: {
             : null;
           const nextSharedAuthOk =
             sharedAuthResult?.ok === true &&
-            (sharedAuthResult.method === "token" || sharedAuthResult.method === "password");
+            (sharedAuthResult.method === "token" ||
+              sharedAuthResult.method === "password" ||
+              sharedAuthResult.method === "none");
 
           return {
             authResult: nextAuthResult,

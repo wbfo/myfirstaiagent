@@ -28,12 +28,11 @@ function validateTurnsWithConsecutiveMerge<TRole extends "assistant" | "user">(p
       continue;
     }
 
-    if (msgRole === lastRole && lastRole === role) {
+    if (msgRole === role && lastRole === role) {
       const lastMsg = result[result.length - 1];
-      const currentMsg = msg as Extract<AgentMessage, { role: TRole }>;
-
-      if (lastMsg && typeof lastMsg === "object") {
+      if (lastMsg && typeof lastMsg === "object" && (lastMsg as { role?: unknown }).role === role) {
         const lastTyped = lastMsg as Extract<AgentMessage, { role: TRole }>;
+        const currentMsg = msg as Extract<AgentMessage, { role: TRole }>;
         result[result.length - 1] = merge(lastTyped, currentMsg);
         continue;
       }
@@ -50,10 +49,16 @@ function mergeConsecutiveAssistantTurns(
   previous: Extract<AgentMessage, { role: "assistant" }>,
   current: Extract<AgentMessage, { role: "assistant" }>,
 ): Extract<AgentMessage, { role: "assistant" }> {
-  const mergedContent = [
-    ...(Array.isArray(previous.content) ? previous.content : []),
-    ...(Array.isArray(current.content) ? current.content : []),
-  ];
+  const toBlocks = (content: unknown) => {
+    if (Array.isArray(content)) {
+      return content;
+    }
+    if (typeof content === "string") {
+      return [{ type: "text", text: content }];
+    }
+    return [];
+  };
+  const mergedContent = [...toBlocks(previous.content), ...toBlocks(current.content)];
   return {
     ...previous,
     content: mergedContent,
@@ -82,10 +87,16 @@ export function mergeConsecutiveUserTurns(
   previous: Extract<AgentMessage, { role: "user" }>,
   current: Extract<AgentMessage, { role: "user" }>,
 ): Extract<AgentMessage, { role: "user" }> {
-  const mergedContent = [
-    ...(Array.isArray(previous.content) ? previous.content : []),
-    ...(Array.isArray(current.content) ? current.content : []),
-  ];
+  const toBlocks = (content: unknown) => {
+    if (Array.isArray(content)) {
+      return content;
+    }
+    if (typeof content === "string") {
+      return [{ type: "text", text: content }];
+    }
+    return [];
+  };
+  const mergedContent = [...toBlocks(previous.content), ...toBlocks(current.content)];
 
   return {
     ...current,

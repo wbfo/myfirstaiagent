@@ -493,8 +493,26 @@ export async function sanitizeSessionHistory(params: {
     return sanitizedOpenAI;
   }
 
+  // Strip empty assistant messages left over from aborted/errored runs.
+  // These have content: [] and break Gemini's strict turn-alternation rules
+  // (e.g. user → assistant(empty) → user creates consecutive user turns
+  // once the empty assistant is ignored by the API).
+  const withoutEmptyAssistant = sanitizedOpenAI.filter((msg) => {
+    if (msg.role !== "assistant") {
+      return true;
+    }
+    const content = (msg as { content?: unknown }).content;
+    if (Array.isArray(content) && content.length === 0) {
+      return false;
+    }
+    if (content == null) {
+      return false;
+    }
+    return true;
+  });
+
   return applyGoogleTurnOrderingFix({
-    messages: sanitizedOpenAI,
+    messages: withoutEmptyAssistant,
     modelApi: params.modelApi,
     sessionManager: params.sessionManager,
     sessionId: params.sessionId,
