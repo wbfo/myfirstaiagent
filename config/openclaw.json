@@ -62,7 +62,7 @@
           "anthropic/claude-3-5-sonnet-20240620"
         ]
       },
-      "workspace": "/Users/wbfoclaw/.openclaw/workspace",
+      "workspace": "/Users/wbfoclaw/OPENopenclaw",
       "contextTokens": 65536,
       "memorySearch": {
         "enabled": true,
@@ -77,7 +77,7 @@
         "maxConcurrent": 3,
         "maxSpawnDepth": 3,
         "model": {
-          "primary": "ollama/qwen2.5:14b",
+          "primary": "google/gemini-2.0-flash",
           "fallbacks": ["ollama/llama3.1:8b"]
         }
       },
@@ -87,7 +87,7 @@
     }
   },
   "tools": {
-    "deny": ["group:web", "browser"],
+    "deny": ["browser"],
     "exec": {
       "pathPrepend": ["/Users/wbfoclaw/OPENopenclaw/bin"]
     }
