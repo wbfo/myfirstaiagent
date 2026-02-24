@@ -1,7 +1,7 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.2.22",
-    "lastTouchedAt": "2026-02-23T17:40:36Z"
+    "lastTouchedAt": "2026-02-24T20:10:00Z"
   },
   "env": {
     "vars": {
@@ -13,60 +13,120 @@
       {
         "id": "main",
         "name": "Main Assistant",
+        "default": false,
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-3-flash-preview",
+          "fallbacks": [
+            "google/gemini-2.5-flash"
+          ]
+        },
+        "subagents": {
+          "allowAgents": [
+            "*"
+          ]
+        }
+      },
+      {
+        "id": "honeybadger",
+        "name": "HoneyBadger Orchestrator",
         "default": true,
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-3-flash-preview",
+          "fallbacks": [
+            "google/gemini-2.5-flash"
+          ]
+        },
         "subagents": {
-          "allowAgents": ["*"]
+          "allowAgents": [
+            "ops-coordinator",
+            "quality-gate",
+            "architect",
+            "researcher",
+            "deal-closer",
+            "market-advisory"
+          ]
         }
       },
       {
-        "id": "security-auditor",
-        "name": "Security Auditor",
-        "workspace": "/Users/wbfoclaw/OPENopenclaw",
-        "skills": ["code-auditor"],
-        "tools": {
-          "profile": "full"
-        },
-        "subagents": {
-          "allowAgents": ["*"]
+        "id": "architect",
+        "name": "Architect",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-2.5-pro",
+          "fallbacks": [
+            "google/gemini-3-flash-preview"
+          ]
         }
       },
       {
-        "id": "code-specialist",
-        "name": "Code Specialist",
-        "workspace": "/Users/wbfoclaw/OPENopenclaw",
-        "tools": {
-          "profile": "coding"
-        },
-        "subagents": {
-          "allowAgents": ["*"]
+        "id": "researcher",
+        "name": "Researcher",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-2.5-pro",
+          "fallbacks": [
+            "google/gemini-3-flash-preview"
+          ]
+        }
+      },
+      {
+        "id": "deal-closer",
+        "name": "Deal Closer",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-2.5-flash",
+          "fallbacks": [
+            "google/gemini-3-flash-preview"
+          ]
+        }
+      },
+      {
+        "id": "market-advisory",
+        "name": "Market Advisory",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "openai/gpt-4o-mini",
+          "fallbacks": [
+            "google/gemini-2.5-flash"
+          ]
+        }
+      },
+      {
+        "id": "ops-coordinator",
+        "name": "Ops Coordinator",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-3-flash-preview",
+          "fallbacks": [
+            "google/gemini-2.5-flash"
+          ]
+        }
+      },
+      {
+        "id": "quality-gate",
+        "name": "Quality Gate",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-3-flash-preview",
+          "fallbacks": [
+            "google/gemini-2.5-flash"
+          ]
         }
       }
     ],
     "defaults": {
-      "model": {
-        "primary": "google/gemini-2.0-flash",
-        "fallbacks": [
-          "ollama/qwen2.5:14b",
-          "ollama/llama3.1:8b",
-          "openai/gpt-4o",
-          "anthropic/claude-3-5-sonnet-20240620"
-        ]
-      },
-      "imageModel": {
-        "primary": "google/gemini-2.0-flash",
-        "fallbacks": [
-          "ollama/llama3.2-vision",
-          "ollama/qwen2.5vl",
-          "ollama/llava",
-          "openai/gpt-4o",
-          "anthropic/claude-3-5-sonnet-20240620"
-        ]
-      },
-      "workspace": "/Users/wbfoclaw/OPENopenclaw",
+      "workspace": "~/.openclaw/workspace",
       "contextTokens": 65536,
       "memorySearch": {
         "enabled": true,
-        "extraPaths": ["IDEAS.md", "SOUL.md", "IDENTITY.md", "USER.md"],
+        "extraPaths": [
+          "IDEAS.md",
+          "SOUL.md",
+          "IDENTITY.md",
+          "USER.md"
+        ],
         "provider": "gemini"
       },
       "compaction": {
@@ -74,12 +134,9 @@
       },
       "maxConcurrent": 4,
       "subagents": {
-        "maxConcurrent": 3,
-        "maxSpawnDepth": 3,
-        "model": {
-          "primary": "google/gemini-2.0-flash",
-          "fallbacks": ["ollama/llama3.1:8b"]
-        }
+        "maxConcurrent": 8,
+        "maxSpawnDepth": 2,
+        "model": "google/gemini-2.5-flash"
       },
       "sandbox": {
         "mode": "off"
@@ -87,9 +144,13 @@
     }
   },
   "tools": {
-    "deny": ["browser"],
+    "deny": [
+      "browser"
+    ],
     "exec": {
-      "pathPrepend": ["/Users/wbfoclaw/OPENopenclaw/bin"]
+      "pathPrepend": [
+        "./bin"
+      ]
     }
   },
   "messages": {
