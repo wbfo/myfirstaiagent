@@ -16,6 +16,7 @@ import {
   sanitizeGoogleTurnOrdering,
   sanitizeSessionMessagesImages,
 } from "../pi-embedded-helpers.js";
+import { validateGeminiTurns } from "../pi-embedded-helpers.js";
 import { cleanToolSchemaForGemini } from "../pi-tools.schema.js";
 import {
   sanitizeToolCallInputs,
@@ -411,8 +412,10 @@ export function applyGoogleTurnOrderingFix(params: {
   if (first?.role !== "assistant") {
     return { messages: params.messages, didPrepend: false };
   }
-  const sanitized = sanitizeGoogleTurnOrdering(params.messages);
-  const didPrepend = sanitized !== params.messages;
+  const turnOrderingFixed = sanitizeGoogleTurnOrdering(params.messages);
+  const sanitized = validateGeminiTurns(turnOrderingFixed);
+
+  const didPrepend = turnOrderingFixed !== params.messages;
   if (didPrepend && !hasGoogleTurnOrderingMarker(params.sessionManager)) {
     const warn = params.warn ?? ((message: string) => log.warn(message));
     warn(`google turn ordering fixup: prepended user bootstrap (sessionId=${params.sessionId})`);
