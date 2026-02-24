@@ -13,6 +13,10 @@ Run and verify specialist agents on their assigned runtimes.
 
 Source of truth: `execution/agent_runtime_map.json`.
 
+Live chat note: this runtime map is used by `execution/*.py` dispatch scripts. It does not
+automatically override the model/runtime used by live Telegram/webchat sessions.
+Run `./scripts/sync-honeybadger-agents.sh` to align live agent model routing with this plan.
+
 ## Preflight
 
 ```bash
