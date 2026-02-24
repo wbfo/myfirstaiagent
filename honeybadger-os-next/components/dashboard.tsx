@@ -4,12 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AGENTS, CHANNELS, NAV_ITEMS, SKILL_META } from "@/lib/dashboard-data";
 import type {
   Agent,
+  AgentsFilesGetResult,
+  AgentsFilesListResult,
   ChatMessage,
   CostUsageSummary,
   GatewayStatus,
   Screen,
   SessionEntry,
+  SkillStatusReport,
   SubagentRun,
+  UsageSummary,
 } from "@/lib/types";
 
 type RpcPending = {
@@ -22,9 +26,10 @@ type WsMessage = {
   id?: string;
   type?: string;
   event?: string;
-  result?: unknown;
+  ok?: boolean;
+  payload?: unknown;
   error?: { message?: string };
-  data?: unknown;
+  seq?: number;
   server?: { version?: string; connId?: string };
 };
 
@@ -87,6 +92,47 @@ function formatCompactInt(value: number): string {
   );
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function extractChatText(message: unknown): string {
+  if (!isRecord(message)) {
+    return "";
+  }
+  const content = message.content;
+  if (typeof content === "string") {
+    return content;
+  }
+  if (Array.isArray(content)) {
+    const parts = content
+      .map((part) => {
+        if (!isRecord(part)) {
+          return "";
+        }
+        return typeof part.text === "string" ? part.text : "";
+      })
+      .filter(Boolean);
+    if (parts.length > 0) {
+      return parts.join("\n");
+    }
+  }
+  if (typeof message.text === "string") {
+    return message.text;
+  }
+  return "";
+}
+
+function looksLikeRateLimitError(message: string): boolean {
+  const text = message.toLowerCase();
+  return (
+    text.includes("429") ||
+    text.includes("rate limit") ||
+    text.includes("quota") ||
+    text.includes("resource exhausted")
+  );
+}
+
 function statusBadgeClass(status: string): string {
   const normalized = status.toLowerCase();
   if (
@@ -140,7 +186,23 @@ export function Dashboard() {
   const [usageCost, setUsageCost] = useState<CostUsageSummary | null>(null);
   const [usageCostLoading, setUsageCostLoading] = useState(false);
   const [usageCostError, setUsageCostError] = useState<string | null>(null);
+  const [usageStatus, setUsageStatus] = useState<UsageSummary | null>(null);
+  const [usageStatusLoading, setUsageStatusLoading] = useState(false);
+  const [usageStatusError, setUsageStatusError] = useState<string | null>(null);
   const [metricsUpdatedAt, setMetricsUpdatedAt] = useState<number | null>(null);
+
+  const [skillsByAgent, setSkillsByAgent] = useState<Record<string, SkillStatusReport>>({});
+  const [skillsLoading, setSkillsLoading] = useState(false);
+  const [skillsError, setSkillsError] = useState<string | null>(null);
+
+  const [agentFilesByAgent, setAgentFilesByAgent] = useState<Record<string, AgentsFilesListResult>>(
+    {},
+  );
+  const [agentFileContents, setAgentFileContents] = useState<Record<string, string>>({});
+  const [activeAgentFileByAgent, setActiveAgentFileByAgent] = useState<Record<string, string>>({});
+  const [agentFilesLoading, setAgentFilesLoading] = useState(false);
+  const [agentFilesError, setAgentFilesError] = useState<string | null>(null);
+  const [agentFileLoadingKey, setAgentFileLoadingKey] = useState<string | null>(null);
 
   const [subagentTargetId, setSubagentTargetId] = useState("ops-coordinator");
   const [subagentTask, setSubagentTask] = useState("");
@@ -251,6 +313,126 @@ export function Dashboard() {
     }
   }, [gatewayStatus, rpc]);
 
+  const loadUsageStatus = useCallback(async () => {
+    if (gatewayStatus !== "connected") {
+      setUsageStatus(null);
+      setUsageStatusError(null);
+      return;
+    }
+    setUsageStatusLoading(true);
+    setUsageStatusError(null);
+    try {
+      const result = (await rpc("usage.status", {})) as UsageSummary;
+      setUsageStatus(result);
+      setMetricsUpdatedAt(Date.now());
+    } catch (err) {
+      setUsageStatusError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setUsageStatusLoading(false);
+    }
+  }, [gatewayStatus, rpc]);
+
+  const loadSkillsStatus = useCallback(async () => {
+    if (gatewayStatus !== "connected") {
+      setSkillsByAgent({});
+      setSkillsError(null);
+      return;
+    }
+    setSkillsLoading(true);
+    setSkillsError(null);
+    try {
+      const rows = await Promise.all(
+        AGENTS.map(async (agent) => {
+          try {
+            const report = (await rpc("skills.status", { agentId: agent.id })) as SkillStatusReport;
+            return [agent.id, report] as const;
+          } catch {
+            return [agent.id, null] as const;
+          }
+        }),
+      );
+      const next: Record<string, SkillStatusReport> = {};
+      for (const [agentId, report] of rows) {
+        if (report && Array.isArray(report.skills)) {
+          next[agentId] = report;
+        }
+      }
+      setSkillsByAgent(next);
+      setMetricsUpdatedAt(Date.now());
+    } catch (err) {
+      setSkillsError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSkillsLoading(false);
+    }
+  }, [gatewayStatus, rpc]);
+
+  const loadAgentFileContent = useCallback(
+    async (agentId: string, name: string, force = false) => {
+      if (gatewayStatus !== "connected") {
+        return;
+      }
+      const contentKey = `${agentId}:${name}`;
+      if (!force && Object.prototype.hasOwnProperty.call(agentFileContents, contentKey)) {
+        setActiveAgentFileByAgent((prev) => ({ ...prev, [agentId]: name }));
+        return;
+      }
+      setAgentFileLoadingKey(contentKey);
+      setAgentFilesError(null);
+      try {
+        const result = (await rpc("agents.files.get", { agentId, name })) as AgentsFilesGetResult;
+        if (result?.file) {
+          const content = typeof result.file.content === "string" ? result.file.content : "";
+          setAgentFileContents((prev) => ({ ...prev, [contentKey]: content }));
+          setAgentFilesByAgent((prev) => {
+            const current = prev[agentId];
+            if (!current) {
+              return prev;
+            }
+            const files = current.files.some((entry) => entry.name === result.file.name)
+              ? current.files.map((entry) => (entry.name === result.file.name ? result.file : entry))
+              : [...current.files, result.file];
+            return { ...prev, [agentId]: { ...current, files } };
+          });
+          setActiveAgentFileByAgent((prev) => ({ ...prev, [agentId]: name }));
+        }
+      } catch (err) {
+        setAgentFilesError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setAgentFileLoadingKey(null);
+      }
+    },
+    [agentFileContents, gatewayStatus, rpc],
+  );
+
+  const loadAgentFilesList = useCallback(
+    async (agentId: string) => {
+      if (gatewayStatus !== "connected") {
+        return;
+      }
+      setAgentFilesLoading(true);
+      setAgentFilesError(null);
+      try {
+        const result = (await rpc("agents.files.list", { agentId })) as AgentsFilesListResult;
+        if (result?.files) {
+          setAgentFilesByAgent((prev) => ({ ...prev, [agentId]: result }));
+          const preferred =
+            activeAgentFileByAgent[agentId] ||
+            result.files.find((entry) => !entry.missing)?.name ||
+            result.files[0]?.name;
+          if (preferred) {
+            setActiveAgentFileByAgent((prev) => ({ ...prev, [agentId]: preferred }));
+            await loadAgentFileContent(agentId, preferred);
+          }
+        }
+      } catch (err) {
+        setAgentFilesError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setAgentFilesLoading(false);
+      }
+    },
+    [activeAgentFileByAgent, gatewayStatus, loadAgentFileContent, rpc],
+  );
+
   const loadConfig = useCallback(async () => {
     if (gatewayStatus !== "connected") {
       return;
@@ -285,8 +467,13 @@ export function Dashboard() {
     const url = host.startsWith("ws://") || host.startsWith("wss://") ? host : `ws://${host}`;
     const ws = new WebSocket(url);
     wsRef.current = ws;
+    let handshakeSent = false;
 
-    ws.addEventListener("open", () => {
+    const sendConnectFrame = () => {
+      if (handshakeSent) {
+        return;
+      }
+      handshakeSent = true;
       ws.send(
         JSON.stringify({
           type: "req",
@@ -306,6 +493,10 @@ export function Dashboard() {
           },
         }),
       );
+    };
+
+    ws.addEventListener("open", () => {
+      sendConnectFrame();
     });
 
     ws.addEventListener("message", (event) => {
@@ -316,14 +507,22 @@ export function Dashboard() {
         return;
       }
 
-      // Handle hello-ok (handshake success)
-      if (msg.type === "hello-ok") {
-        const helloOk = msg as unknown as { server?: { version?: string; connId?: string } };
-        setGatewayInfo(helloOk.server ?? null);
-        setGatewayStatus("connected");
+      if (msg.type === "event" && msg.event === "connect.challenge") {
+        sendConnectFrame();
         return;
       }
 
+      // Handshake returns as a response frame with payload.type === "hello-ok".
+      if (msg.type === "res" && msg.id === "handshake" && msg.ok !== false) {
+        if (isRecord(msg.payload) && msg.payload.type === "hello-ok") {
+          const server = isRecord(msg.payload.server)
+            ? (msg.payload.server as { version?: string; connId?: string })
+            : null;
+          setGatewayInfo(server);
+          setGatewayStatus("connected");
+        }
+        return;
+      }
 
       if (msg.type === "res" && msg.id && pendingRef.current.has(msg.id)) {
         const pending = pendingRef.current.get(msg.id);
@@ -354,10 +553,12 @@ export function Dashboard() {
         return;
       }
 
-      const data = (msg.data ?? msg) as {
+      const data = (isRecord(msg.payload) ? msg.payload : msg) as {
         runId?: string;
         state?: string;
         text?: string;
+        message?: unknown;
+        errorMessage?: string;
         sessionKey?: string;
       };
 
@@ -366,14 +567,23 @@ export function Dashboard() {
       }
 
       if (data.state === "delta" || data.state === "delta-text") {
-        chatBufferRef.current += data.text ?? "";
+        const nextChunk = data.text ?? extractChatText(data.message);
+        if (nextChunk) {
+          if (nextChunk.startsWith(chatBufferRef.current)) {
+            chatBufferRef.current = nextChunk;
+          } else if (chatBufferRef.current.startsWith(nextChunk)) {
+            // Ignore stale/shorter delta frames.
+          } else {
+            chatBufferRef.current += nextChunk;
+          }
+        }
         setChatRunState("streaming");
         setChatRunId(data.runId ?? null);
         return;
       }
 
       if (data.state === "final") {
-        const finalText = data.text ?? chatBufferRef.current;
+        const finalText = data.text || extractChatText(data.message) || chatBufferRef.current;
         setChatMessages((prevMsgs) => [
           ...prevMsgs,
           { id: randomKey("assistant"), role: "assistant", content: finalText, ts: Date.now() },
@@ -387,12 +597,16 @@ export function Dashboard() {
 
       if (data.state === "error" || data.state === "aborted") {
         const output = chatBufferRef.current || "No output returned";
+        const errorHint =
+          data.state === "error" && data.errorMessage
+            ? `\n\nError: ${data.errorMessage}`
+            : "";
         setChatMessages((prevMsgs) => [
           ...prevMsgs,
           {
             id: randomKey("assistant"),
             role: "assistant",
-            content: `${output}\n\n[${(data.state ?? "error").toUpperCase()}]`,
+            content: `${output}\n\n[${(data.state ?? "error").toUpperCase()}]${errorHint}`,
             ts: Date.now(),
             isError: true,
           },
@@ -425,9 +639,13 @@ export function Dashboard() {
     if (screen === "overview") {
       void loadSessions();
       void loadUsageCost();
+      void loadUsageStatus();
     }
     if (screen === "sessions") {
       void loadSessions();
+    }
+    if (screen === "skills") {
+      void loadSkillsStatus();
     }
     if (screen === "channels") {
       void loadChannels();
@@ -435,7 +653,14 @@ export function Dashboard() {
     if (screen === "config") {
       void loadConfig();
     }
-  }, [screen, loadChannels, loadConfig, loadSessions, loadUsageCost]);
+  }, [screen, loadChannels, loadConfig, loadSessions, loadSkillsStatus, loadUsageCost, loadUsageStatus]);
+
+  useEffect(() => {
+    if (screen !== "agent-detail" || !selectedAgent || gatewayStatus !== "connected") {
+      return;
+    }
+    void loadAgentFilesList(selectedAgent);
+  }, [gatewayStatus, loadAgentFilesList, screen, selectedAgent]);
 
   useEffect(() => {
     if (gatewayStatus !== "connected") {
@@ -445,10 +670,14 @@ export function Dashboard() {
       void loadSessions();
       if (screen === "overview") {
         void loadUsageCost();
+        void loadUsageStatus();
       }
-    }, 12000);
+      if (screen === "skills") {
+        void loadSkillsStatus();
+      }
+    }, 15000);
     return () => clearInterval(timer);
-  }, [gatewayStatus, loadSessions, loadUsageCost, screen]);
+  }, [gatewayStatus, loadSessions, loadSkillsStatus, loadUsageCost, loadUsageStatus, screen]);
 
   const sendChat = useCallback(async () => {
     const text = chatInput.trim();
@@ -470,20 +699,27 @@ export function Dashboard() {
         idempotencyKey: randomKey("ui"),
       });
     } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const rateLimited = looksLikeRateLimitError(message);
       setChatMessages((prevMsgs) => [
         ...prevMsgs,
         {
           id: randomKey("system"),
           role: "system",
-          content: `Error: ${err instanceof Error ? err.message : String(err)}`,
+          content: rateLimited
+            ? `Rate limit reached. Check Overview -> Provider Windows for quota status.\n\n${message}`
+            : `Error: ${message}`,
           ts: Date.now(),
           isError: true,
         },
       ]);
+      if (rateLimited) {
+        void loadUsageStatus();
+      }
       setChatRunState("error");
       setTimeout(() => setChatRunState(null), 1500);
     }
-  }, [chatAgent, chatInput, chatRunState, rpc]);
+  }, [chatAgent, chatInput, chatRunState, loadUsageStatus, rpc]);
 
   const abortChat = useCallback(async () => {
     if (!chatRunId) {
@@ -501,6 +737,7 @@ export function Dashboard() {
     if (!task || gatewayStatus !== "connected" || subagentBusy) {
       return;
     }
+    setSubagentBusy(true);
     const runId = randomKey("run");
     setSubagentRuns((prev) => [
       { runId, agentId: subagentTargetId, task, status: "started", ts: Date.now() },
@@ -581,6 +818,61 @@ export function Dashboard() {
   const usageTotals = usageCost?.totals;
   const costChart = (usageCost?.daily ?? []).slice(-14);
   const maxDailyCost = costChart.reduce((max, entry) => Math.max(max, entry.totalCost), 0);
+  const usageWindows = useMemo(() => {
+    return (usageStatus?.providers ?? []).flatMap((provider) =>
+      (provider.windows ?? []).map((window) => ({
+        provider: provider.displayName || provider.provider,
+        providerId: provider.provider,
+        label: window.label,
+        usedPercent: window.usedPercent,
+        resetAt: window.resetAt,
+        plan: provider.plan,
+        error: provider.error,
+      })),
+    );
+  }, [usageStatus]);
+  const highestUsageWindow = useMemo(() => {
+    return usageWindows.toSorted((a, b) => b.usedPercent - a.usedPercent)[0];
+  }, [usageWindows]);
+  const rateLimitedWindows = useMemo(
+    () => usageWindows.filter((entry) => entry.usedPercent >= 95),
+    [usageWindows],
+  );
+  const warningWindows = useMemo(
+    () => usageWindows.filter((entry) => entry.usedPercent >= 85),
+    [usageWindows],
+  );
+
+  const skillStatusRows = useMemo(() => {
+    return AGENTS.map((agent) => {
+      const report = skillsByAgent[agent.id];
+      const skills = report?.skills ?? [];
+      const eligible = skills.filter((entry) => entry.eligible).length;
+      const blocked = skills.filter((entry) => !entry.eligible || entry.disabled).length;
+      const filePaths = skills.map((entry) => entry.filePath).filter(Boolean);
+      return {
+        agent,
+        report,
+        skills,
+        eligible,
+        blocked,
+        filePaths,
+      };
+    });
+  }, [skillsByAgent]);
+
+  const dynamicSkillNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const row of skillStatusRows) {
+      for (const skill of row.skills) {
+        if (skill.name) {
+          names.add(skill.name);
+        }
+      }
+    }
+    return [...names].toSorted();
+  }, [skillStatusRows]);
+
   const liveTaskRows = useMemo(() => {
     const sessionRows = activeSessionEntries.map((entry, idx) => ({
       id: `session-${entry.key}-${idx}`,
@@ -666,7 +958,7 @@ export function Dashboard() {
             },
             {
               label: "Unique Skills",
-              value: Object.keys(SKILL_META).length,
+              value: dynamicSkillNames.length > 0 ? dynamicSkillNames.length : Object.keys(SKILL_META).length,
               color: "text-hb-green",
             },
           ].map((item) => (
@@ -685,6 +977,7 @@ export function Dashboard() {
               onClick={() => {
                 void loadSessions();
                 void loadUsageCost();
+                void loadUsageStatus();
               }}
             >
               Refresh
@@ -737,6 +1030,111 @@ export function Dashboard() {
               Cost metrics unavailable: {usageCostError}
             </div>
           )}
+
+          {usageStatusLoading && (
+            <div className="mt-4 rounded-lg border border-hb-border bg-hb-bg p-3 text-xs text-hb-muted">
+              Loading provider usage + rate-limit windows...
+            </div>
+          )}
+
+          {usageStatusError && (
+            <div className="mt-4 rounded-lg border border-hb-red/30 bg-hb-red/10 p-3 text-xs text-hb-red">
+              Provider usage unavailable: {usageStatusError}
+            </div>
+          )}
+
+          {highestUsageWindow && (
+            <div
+              className={`mt-4 rounded-lg border p-3 text-xs ${
+                highestUsageWindow.usedPercent >= 95
+                  ? "border-hb-red/35 bg-hb-red/10 text-hb-red"
+                  : highestUsageWindow.usedPercent >= 85
+                    ? "border-hb-amber/35 bg-hb-amber/10 text-hb-amber"
+                    : "border-hb-border bg-hb-bg text-hb-muted"
+              }`}
+            >
+              Highest usage window: {highestUsageWindow.provider} / {highestUsageWindow.label} at{" "}
+              {highestUsageWindow.usedPercent.toFixed(1)}%
+              {highestUsageWindow.resetAt
+                ? ` · resets ${new Date(highestUsageWindow.resetAt).toLocaleString()}`
+                : ""}
+            </div>
+          )}
+
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            <div className="rounded-lg border border-hb-border bg-hb-bg p-3">
+              <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">
+                Rate Limit Alerts
+              </p>
+              {rateLimitedWindows.length === 0 ? (
+                <p className="text-xs text-hb-muted">No provider window above 95%.</p>
+              ) : (
+                <div className="space-y-2">
+                  {rateLimitedWindows.slice(0, 6).map((entry) => (
+                    <div key={`${entry.providerId}:${entry.label}`} className="rounded border border-hb-red/35 bg-hb-red/10 p-2 text-xs">
+                      <p className="font-semibold text-hb-red">
+                        {entry.provider} · {entry.label}
+                      </p>
+                      <p className="text-hb-red">{entry.usedPercent.toFixed(1)}% used</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="rounded-lg border border-hb-border bg-hb-bg p-3">
+              <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">
+                Provider Windows
+              </p>
+              {usageWindows.length === 0 ? (
+                <p className="text-xs text-hb-muted">
+                  Run `usage.status` credentials setup to display provider windows.
+                </p>
+              ) : (
+                <div className="max-h-36 space-y-2 overflow-auto pr-1">
+                  {warningWindows
+                    .concat(
+                      usageWindows.filter((entry) => entry.usedPercent < 85).slice(
+                        0,
+                        Math.max(0, 8 - warningWindows.length),
+                      ),
+                    )
+                    .slice(0, 8)
+                    .map((entry) => (
+                      <div key={`${entry.providerId}:${entry.label}`} className="rounded border border-hb-border p-2 text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="truncate">
+                            {entry.provider} · {entry.label}
+                          </p>
+                          <p
+                            className={
+                              entry.usedPercent >= 95
+                                ? "text-hb-red"
+                                : entry.usedPercent >= 85
+                                  ? "text-hb-amber"
+                                  : "text-hb-green"
+                            }
+                          >
+                            {entry.usedPercent.toFixed(1)}%
+                          </p>
+                        </div>
+                        <div className="mt-1 h-1.5 overflow-hidden rounded bg-hb-panel">
+                          <div
+                            className={`h-full ${
+                              entry.usedPercent >= 95
+                                ? "bg-hb-red"
+                                : entry.usedPercent >= 85
+                                  ? "bg-hb-amber"
+                                  : "bg-hb-green"
+                            }`}
+                            style={{ width: `${Math.min(entry.usedPercent, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
 
           <div className="mt-6">
             <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">
@@ -958,6 +1356,11 @@ export function Dashboard() {
     if (!agent) {
       return <div className="p-7">Agent not found.</div>;
     }
+    const filesResult = agentFilesByAgent[agent.id];
+    const activeFileName = activeAgentFileByAgent[agent.id];
+    const activeFile = filesResult?.files.find((entry) => entry.name === activeFileName);
+    const activeFileContent =
+      activeFileName ? agentFileContents[`${agent.id}:${activeFileName}`] ?? "" : "";
 
     return (
       <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
@@ -1007,6 +1410,98 @@ export function Dashboard() {
                 <p className="text-sm text-hb-muted">maxSpawnDepth {agent.maxSpawnDepth}</p>
               )}
             </div>
+          </div>
+
+          <div className="mt-4 rounded-lg border border-hb-border bg-hb-bg p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-hb-muted">Core Agent Files</p>
+                <p className="text-xs text-hb-muted">
+                  View the orchestrator directives for this agent from gateway RPC.
+                </p>
+              </div>
+              <button
+                className="rounded-lg border border-hb-border bg-hb-panel2 px-3 py-1 text-xs"
+                onClick={() => void loadAgentFilesList(agent.id)}
+              >
+                Reload files
+              </button>
+            </div>
+
+            {gatewayStatus !== "connected" && (
+              <div className="rounded border border-hb-border bg-hb-panel p-3 text-xs text-hb-muted">
+                Connect gateway to browse agent files.
+              </div>
+            )}
+
+            {agentFilesError && (
+              <div className="mb-3 rounded border border-hb-red/35 bg-hb-red/10 p-2 text-xs text-hb-red">
+                {agentFilesError}
+              </div>
+            )}
+
+            {gatewayStatus === "connected" && (
+              <>
+                {agentFilesLoading && !filesResult ? (
+                  <div className="rounded border border-hb-border bg-hb-panel p-3 text-xs text-hb-muted">
+                    Loading files...
+                  </div>
+                ) : filesResult ? (
+                  <>
+                    <p className="mb-2 text-[11px] text-hb-muted">Workspace: {filesResult.workspace}</p>
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {filesResult.files.map((file) => {
+                        const selected = file.name === activeFileName;
+                        return (
+                          <button
+                            key={file.name}
+                            onClick={() => void loadAgentFileContent(agent.id, file.name)}
+                            className={`rounded border px-2 py-1 text-[11px] ${
+                              selected
+                                ? "border-hb-amber/45 bg-hb-amber/10 text-hb-amber"
+                                : "border-hb-border bg-hb-panel text-hb-muted"
+                            }`}
+                          >
+                            {file.missing ? "△" : "•"} {file.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {activeFile ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-[11px] text-hb-muted">
+                          <span>{activeFile.path}</span>
+                          <span>
+                            {activeFile.updatedAtMs
+                              ? new Date(activeFile.updatedAtMs).toLocaleString()
+                              : "missing"}
+                          </span>
+                        </div>
+                        {activeFile.missing ? (
+                          <div className="rounded border border-hb-border bg-hb-panel p-3 text-xs text-hb-muted">
+                            This file does not exist yet for this agent.
+                          </div>
+                        ) : (
+                          <pre className="max-h-80 overflow-auto rounded border border-hb-border bg-hb-panel p-3 text-xs text-hb-text">
+                            {agentFileLoadingKey === `${agent.id}:${activeFile.name}`
+                              ? "Loading file..."
+                              : activeFileContent || "(empty file)"}
+                          </pre>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="rounded border border-hb-border bg-hb-panel p-3 text-xs text-hb-muted">
+                        Select a file to view content.
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="rounded border border-hb-border bg-hb-panel p-3 text-xs text-hb-muted">
+                    No file metadata returned yet.
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -1280,19 +1775,67 @@ export function Dashboard() {
   };
 
   const renderSkills = () => {
+    const skillColumns = dynamicSkillNames.length > 0 ? dynamicSkillNames : Object.keys(SKILL_META);
+    const hasLiveData = skillStatusRows.some((row) => row.skills.length > 0);
+    const missingRequirementRows = skillStatusRows.flatMap((row) =>
+      row.skills
+        .filter(
+          (skill) =>
+            skill.missing.bins.length > 0 ||
+            skill.missing.env.length > 0 ||
+            skill.missing.config.length > 0,
+        )
+        .map((skill) => ({
+          agent: row.agent.name,
+          skill: skill.name,
+          missing: [
+            ...skill.missing.bins.map((value) => `bin:${value}`),
+            ...skill.missing.env.map((value) => `env:${value}`),
+            ...skill.missing.config.map((value) => `config:${value}`),
+          ],
+        })),
+    );
+
     return (
       <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
-        <h2 className="text-2xl font-bold">Skills Status</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-2xl font-bold">Skills Status</h2>
+          <button
+            className="rounded-lg border border-hb-border bg-hb-panel px-3 py-2 text-sm"
+            onClick={() => void loadSkillsStatus()}
+          >
+            Refresh
+          </button>
+        </div>
+
+        {gatewayStatus !== "connected" && (
+          <div className="rounded-lg border border-hb-border bg-hb-panel p-3 text-sm text-hb-muted">
+            Connect gateway to load live skills and skill file locations.
+          </div>
+        )}
+
+        {skillsLoading && (
+          <div className="rounded-lg border border-hb-border bg-hb-panel p-3 text-sm text-hb-muted">
+            Loading skill status...
+          </div>
+        )}
+
+        {skillsError && (
+          <div className="rounded-lg border border-hb-red/35 bg-hb-red/10 p-3 text-sm text-hb-red">
+            {skillsError}
+          </div>
+        )}
+
         <div className={cardClass("overflow-x-auto p-4")}>
           <table className="w-full min-w-[920px] text-left text-sm">
             <thead>
               <tr className="border-b border-hb-border text-xs uppercase tracking-wide text-hb-muted">
                 <th className="py-2 pr-4">Agent</th>
-                {Object.keys(SKILL_META).map((skill) => (
+                {skillColumns.map((skill) => (
                   <th
                     key={skill}
                     className="px-2 py-2 text-center"
-                    style={{ color: SKILL_META[skill].color }}
+                    style={{ color: SKILL_META[skill]?.color ?? "#94a3b8" }}
                   >
                     {skill}
                   </th>
@@ -1300,27 +1843,90 @@ export function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {AGENTS.map((agent) => (
-                <tr key={agent.id} className="border-b border-hb-border/40">
+              {skillStatusRows.map((row) => (
+                <tr key={row.agent.id} className="border-b border-hb-border/40">
                   <td className="py-3 pr-4">
                     <div className="flex items-center gap-2">
-                      <AgentAvatar agent={agent} size={28} />
-                      <span>{agent.name}</span>
+                      <AgentAvatar agent={row.agent} size={28} />
+                      <div>
+                        <span>{row.agent.name}</span>
+                        <p className="text-[11px] text-hb-muted">
+                          {row.eligible} eligible / {row.blocked} blocked
+                        </p>
+                      </div>
                     </div>
                   </td>
-                  {Object.keys(SKILL_META).map((skill) => (
+                  {skillColumns.map((skill) => {
+                    const entry = row.skills.find((item) => item.name === skill);
+                    const style = entry?.eligible
+                      ? "text-hb-green"
+                      : entry
+                        ? "text-hb-amber"
+                        : "text-hb-muted";
+                    const marker = entry ? (entry.eligible ? "✓" : "!") : "·";
+                    const title = entry
+                      ? `${entry.name} (${entry.source})\n${entry.filePath}`
+                      : `${skill} not available`;
+                    return (
                     <td key={skill} className="px-2 py-3 text-center">
-                      {agent.skills.includes(skill) ? (
-                        <span style={{ color: SKILL_META[skill].color }}>✓</span>
-                      ) : (
-                        <span className="text-hb-muted">·</span>
-                      )}
+                      <span className={style} title={title}>
+                        {marker}
+                      </span>
                     </td>
-                  ))}
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-2">
+          <div className={cardClass("p-4")}>
+            <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">
+              Skill Files (from gateway)
+            </p>
+            {!hasLiveData ? (
+              <p className="text-sm text-hb-muted">
+                No live skill file metadata returned yet.
+              </p>
+            ) : (
+              <div className="max-h-64 space-y-2 overflow-auto pr-1">
+                {skillStatusRows
+                  .filter((row) => row.filePaths.length > 0)
+                  .map((row) => (
+                    <div key={row.agent.id} className="rounded border border-hb-border bg-hb-bg p-3">
+                      <p className="mb-1 text-xs font-semibold text-hb-text">{row.agent.name}</p>
+                      {row.filePaths.slice(0, 4).map((filePath) => (
+                        <p key={filePath} className="truncate font-mono text-[11px] text-hb-cyan">
+                          {filePath}
+                        </p>
+                      ))}
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+
+          <div className={cardClass("p-4")}>
+            <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">
+              Missing Requirements
+            </p>
+            {missingRequirementRows.length === 0 ? (
+              <p className="text-sm text-hb-muted">No missing bins/env/config requirements.</p>
+            ) : (
+              <div className="max-h-64 space-y-2 overflow-auto pr-1">
+                {missingRequirementRows.slice(0, 18).map((row, idx) => (
+                  <div key={`${row.agent}:${row.skill}:${idx}`} className="rounded border border-hb-amber/30 bg-hb-amber/10 p-2 text-xs">
+                    <p className="font-semibold text-hb-amber">
+                      {row.agent} · {row.skill}
+                    </p>
+                    <p className="truncate text-hb-muted">{row.missing.join(", ")}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
