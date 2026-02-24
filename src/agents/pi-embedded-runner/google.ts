@@ -413,7 +413,6 @@ export function applyGoogleTurnOrderingFix(params: {
     return { messages: params.messages, didPrepend: false };
   }
   const turnOrderingFixed = sanitizeGoogleTurnOrdering(params.messages);
-  const sanitized = validateGeminiTurns(turnOrderingFixed);
 
   const didPrepend = turnOrderingFixed !== params.messages;
   if (didPrepend && !hasGoogleTurnOrderingMarker(params.sessionManager)) {
@@ -421,7 +420,7 @@ export function applyGoogleTurnOrderingFix(params: {
     warn(`google turn ordering fixup: prepended user bootstrap (sessionId=${params.sessionId})`);
     markGoogleTurnOrderingMarker(params.sessionManager);
   }
-  return { messages: sanitized, didPrepend };
+  return { messages: turnOrderingFixed, didPrepend };
 }
 
 export async function sanitizeSessionHistory(params: {
@@ -497,9 +496,7 @@ export async function sanitizeSessionHistory(params: {
   }
 
   // Strip empty assistant messages left over from aborted/errored runs.
-  // These have content: [] and break Gemini's strict turn-alternation rules
-  // (e.g. user → assistant(empty) → user creates consecutive user turns
-  // once the empty assistant is ignored by the API).
+  // These have content: [] and break Gemini's strict turn-alternation rules.
   const withoutEmptyAssistant = sanitizedOpenAI.filter((msg) => {
     if (msg.role !== "assistant") {
       return true;
@@ -514,8 +511,13 @@ export async function sanitizeSessionHistory(params: {
     return true;
   });
 
+  // Always merge consecutive same-role turns for Gemini — this is the main
+  // guard against the 400 INVALID_ARGUMENT error. Must run unconditionally
+  // regardless of whether the history starts with an assistant turn.
+  const mergedTurns = validateGeminiTurns(withoutEmptyAssistant);
+
   return applyGoogleTurnOrderingFix({
-    messages: withoutEmptyAssistant,
+    messages: mergedTurns,
     modelApi: params.modelApi,
     sessionManager: params.sessionManager,
     sessionId: params.sessionId,
