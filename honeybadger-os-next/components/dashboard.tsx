@@ -389,7 +389,9 @@ export function Dashboard() {
               return prev;
             }
             const files = current.files.some((entry) => entry.name === result.file.name)
-              ? current.files.map((entry) => (entry.name === result.file.name ? result.file : entry))
+              ? current.files.map((entry) =>
+                  entry.name === result.file.name ? result.file : entry,
+                )
               : [...current.files, result.file];
             return { ...prev, [agentId]: { ...current, files } };
           });
@@ -482,6 +484,7 @@ export function Dashboard() {
           params: {
             minProtocol: 1,
             maxProtocol: 10,
+            scopes: ["operator.read", "operator.write"],
             client: {
               id: "openclaw-control-ui",
               displayName: "HoneyBadger OS",
@@ -598,9 +601,7 @@ export function Dashboard() {
       if (data.state === "error" || data.state === "aborted") {
         const output = chatBufferRef.current || "No output returned";
         const errorHint =
-          data.state === "error" && data.errorMessage
-            ? `\n\nError: ${data.errorMessage}`
-            : "";
+          data.state === "error" && data.errorMessage ? `\n\nError: ${data.errorMessage}` : "";
         setChatMessages((prevMsgs) => [
           ...prevMsgs,
           {
@@ -653,7 +654,15 @@ export function Dashboard() {
     if (screen === "config") {
       void loadConfig();
     }
-  }, [screen, loadChannels, loadConfig, loadSessions, loadSkillsStatus, loadUsageCost, loadUsageStatus]);
+  }, [
+    screen,
+    loadChannels,
+    loadConfig,
+    loadSessions,
+    loadSkillsStatus,
+    loadUsageCost,
+    loadUsageStatus,
+  ]);
 
   useEffect(() => {
     if (screen !== "agent-detail" || !selectedAgent || gatewayStatus !== "connected") {
@@ -958,7 +967,10 @@ export function Dashboard() {
             },
             {
               label: "Unique Skills",
-              value: dynamicSkillNames.length > 0 ? dynamicSkillNames.length : Object.keys(SKILL_META).length,
+              value:
+                dynamicSkillNames.length > 0
+                  ? dynamicSkillNames.length
+                  : Object.keys(SKILL_META).length,
               color: "text-hb-green",
             },
           ].map((item) => (
@@ -1071,7 +1083,10 @@ export function Dashboard() {
               ) : (
                 <div className="space-y-2">
                   {rateLimitedWindows.slice(0, 6).map((entry) => (
-                    <div key={`${entry.providerId}:${entry.label}`} className="rounded border border-hb-red/35 bg-hb-red/10 p-2 text-xs">
+                    <div
+                      key={`${entry.providerId}:${entry.label}`}
+                      className="rounded border border-hb-red/35 bg-hb-red/10 p-2 text-xs"
+                    >
                       <p className="font-semibold text-hb-red">
                         {entry.provider} · {entry.label}
                       </p>
@@ -1082,9 +1097,7 @@ export function Dashboard() {
               )}
             </div>
             <div className="rounded-lg border border-hb-border bg-hb-bg p-3">
-              <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">
-                Provider Windows
-              </p>
+              <p className="mb-2 text-xs uppercase tracking-wide text-hb-muted">Provider Windows</p>
               {usageWindows.length === 0 ? (
                 <p className="text-xs text-hb-muted">
                   Run `usage.status` credentials setup to display provider windows.
@@ -1093,14 +1106,16 @@ export function Dashboard() {
                 <div className="max-h-36 space-y-2 overflow-auto pr-1">
                   {warningWindows
                     .concat(
-                      usageWindows.filter((entry) => entry.usedPercent < 85).slice(
-                        0,
-                        Math.max(0, 8 - warningWindows.length),
-                      ),
+                      usageWindows
+                        .filter((entry) => entry.usedPercent < 85)
+                        .slice(0, Math.max(0, 8 - warningWindows.length)),
                     )
                     .slice(0, 8)
                     .map((entry) => (
-                      <div key={`${entry.providerId}:${entry.label}`} className="rounded border border-hb-border p-2 text-xs">
+                      <div
+                        key={`${entry.providerId}:${entry.label}`}
+                        className="rounded border border-hb-border p-2 text-xs"
+                      >
                         <div className="flex items-center justify-between gap-2">
                           <p className="truncate">
                             {entry.provider} · {entry.label}
@@ -1359,8 +1374,9 @@ export function Dashboard() {
     const filesResult = agentFilesByAgent[agent.id];
     const activeFileName = activeAgentFileByAgent[agent.id];
     const activeFile = filesResult?.files.find((entry) => entry.name === activeFileName);
-    const activeFileContent =
-      activeFileName ? agentFileContents[`${agent.id}:${activeFileName}`] ?? "" : "";
+    const activeFileContent = activeFileName
+      ? (agentFileContents[`${agent.id}:${activeFileName}`] ?? "")
+      : "";
 
     return (
       <div className="space-y-4 p-4 pt-12 sm:p-7 md:pt-7">
@@ -1448,7 +1464,9 @@ export function Dashboard() {
                   </div>
                 ) : filesResult ? (
                   <>
-                    <p className="mb-2 text-[11px] text-hb-muted">Workspace: {filesResult.workspace}</p>
+                    <p className="mb-2 text-[11px] text-hb-muted">
+                      Workspace: {filesResult.workspace}
+                    </p>
                     <div className="mb-3 flex flex-wrap gap-2">
                       {filesResult.files.map((file) => {
                         const selected = file.name === activeFileName;
@@ -1868,11 +1886,11 @@ export function Dashboard() {
                       ? `${entry.name} (${entry.source})\n${entry.filePath}`
                       : `${skill} not available`;
                     return (
-                    <td key={skill} className="px-2 py-3 text-center">
-                      <span className={style} title={title}>
-                        {marker}
-                      </span>
-                    </td>
+                      <td key={skill} className="px-2 py-3 text-center">
+                        <span className={style} title={title}>
+                          {marker}
+                        </span>
+                      </td>
                     );
                   })}
                 </tr>
@@ -1887,15 +1905,16 @@ export function Dashboard() {
               Skill Files (from gateway)
             </p>
             {!hasLiveData ? (
-              <p className="text-sm text-hb-muted">
-                No live skill file metadata returned yet.
-              </p>
+              <p className="text-sm text-hb-muted">No live skill file metadata returned yet.</p>
             ) : (
               <div className="max-h-64 space-y-2 overflow-auto pr-1">
                 {skillStatusRows
                   .filter((row) => row.filePaths.length > 0)
                   .map((row) => (
-                    <div key={row.agent.id} className="rounded border border-hb-border bg-hb-bg p-3">
+                    <div
+                      key={row.agent.id}
+                      className="rounded border border-hb-border bg-hb-bg p-3"
+                    >
                       <p className="mb-1 text-xs font-semibold text-hb-text">{row.agent.name}</p>
                       {row.filePaths.slice(0, 4).map((filePath) => (
                         <p key={filePath} className="truncate font-mono text-[11px] text-hb-cyan">
@@ -1917,7 +1936,10 @@ export function Dashboard() {
             ) : (
               <div className="max-h-64 space-y-2 overflow-auto pr-1">
                 {missingRequirementRows.slice(0, 18).map((row, idx) => (
-                  <div key={`${row.agent}:${row.skill}:${idx}`} className="rounded border border-hb-amber/30 bg-hb-amber/10 p-2 text-xs">
+                  <div
+                    key={`${row.agent}:${row.skill}:${idx}`}
+                    className="rounded border border-hb-amber/30 bg-hb-amber/10 p-2 text-xs"
+                  >
                     <p className="font-semibold text-hb-amber">
                       {row.agent} · {row.skill}
                     </p>
@@ -1950,7 +1972,7 @@ export function Dashboard() {
             const live = Boolean(
               channelsHealth?.[channel.id] ??
               (channelsHealth as { channels?: Record<string, unknown> } | null)?.channels?.[
-              channel.id
+                channel.id
               ],
             );
             return (
@@ -2123,8 +2145,9 @@ export function Dashboard() {
       )}
 
       <aside
-        className={`relative z-50 flex shrink-0 flex-col border-r border-[#1e1e2d] bg-hb-panel2 transition-all ${sidebarCollapsed ? "w-16" : "w-52"
-          } ${mobileMenuOpen ? "fixed inset-y-0 left-0" : "hidden md:flex"}`}
+        className={`relative z-50 flex shrink-0 flex-col border-r border-[#1e1e2d] bg-hb-panel2 transition-all ${
+          sidebarCollapsed ? "w-16" : "w-52"
+        } ${mobileMenuOpen ? "fixed inset-y-0 left-0" : "hidden md:flex"}`}
       >
         <div className="border-b border-[#1e1e2d] px-4 py-5">
           <div className="mb-2 flex items-center justify-between">
@@ -2170,10 +2193,11 @@ export function Dashboard() {
                   navigate(item.id);
                   setMobileMenuOpen(false);
                 }}
-                className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${active
+                className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+                  active
                     ? "bg-hb-amber/15 font-semibold text-hb-amber"
                     : "text-hb-muted hover:bg-white/5"
-                  }`}
+                }`}
                 title={item.label}
               >
                 <span className={sidebarCollapsed ? "mx-auto" : ""}>{item.icon}</span>
@@ -2192,8 +2216,9 @@ export function Dashboard() {
           </div>
           <button
             onClick={() => setShowSettings((v) => !v)}
-            className={`w-full rounded-lg border border-hb-border bg-hb-panel px-3 py-1 text-xs text-hb-muted ${sidebarCollapsed ? "text-center" : "text-left"
-              }`}
+            className={`w-full rounded-lg border border-hb-border bg-hb-panel px-3 py-1 text-xs text-hb-muted ${
+              sidebarCollapsed ? "text-center" : "text-left"
+            }`}
             title="Gateway Settings"
           >
             {sidebarCollapsed ? "⚙" : "Gateway Settings"}

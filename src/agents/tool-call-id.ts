@@ -186,17 +186,53 @@ function rewriteToolResultIds(params: {
   message: Extract<AgentMessage, { role: "toolResult" }>;
   resolve: (id: string) => string;
 }): Extract<AgentMessage, { role: "toolResult" }> {
-  const toolCallId =
-    typeof params.message.toolCallId === "string" && params.message.toolCallId
-      ? params.message.toolCallId
-      : undefined;
+  let changed = false;
+
+  const toolCallId = (params.message as { toolCallId?: unknown }).toolCallId;
+  const toolCallIdStr = typeof toolCallId === "string" && toolCallId ? toolCallId : undefined;
   const toolUseId = (params.message as { toolUseId?: unknown }).toolUseId;
   const toolUseIdStr = typeof toolUseId === "string" && toolUseId ? toolUseId : undefined;
 
-  const nextToolCallId = toolCallId ? params.resolve(toolCallId) : undefined;
+  const nextToolCallId = toolCallIdStr ? params.resolve(toolCallIdStr) : undefined;
   const nextToolUseId = toolUseIdStr ? params.resolve(toolUseIdStr) : undefined;
 
-  if (nextToolCallId === toolCallId && nextToolUseId === toolUseIdStr) {
+  if (nextToolCallId !== toolCallIdStr || nextToolUseId !== toolUseIdStr) {
+    changed = true;
+  }
+
+  let nextContent = params.message.content;
+  if (Array.isArray(params.message.content)) {
+    nextContent = params.message.content.map((block) => {
+      if (!block || typeof block !== "object") {
+        return block;
+      }
+      const b = block as unknown as Record<string, unknown>;
+      let blockChanged = false;
+      const nextBlock = { ...b };
+
+      if (typeof b.toolCallId === "string" && b.toolCallId) {
+        const rewritten = params.resolve(b.toolCallId);
+        if (rewritten !== b.toolCallId) {
+          nextBlock.toolCallId = rewritten;
+          blockChanged = true;
+        }
+      }
+      if (typeof b.toolUseId === "string" && b.toolUseId) {
+        const rewritten = params.resolve(b.toolUseId);
+        if (rewritten !== b.toolUseId) {
+          nextBlock.toolUseId = rewritten;
+          blockChanged = true;
+        }
+      }
+      if (blockChanged) {
+        changed = true;
+        return nextBlock;
+      }
+      return block;
+    }) as typeof params.message.content;
+  }
+
+  if (!changed) {
     return params.message;
   }
 
@@ -204,6 +240,7 @@ function rewriteToolResultIds(params: {
     ...params.message,
     ...(nextToolCallId && { toolCallId: nextToolCallId }),
     ...(nextToolUseId && { toolUseId: nextToolUseId }),
+    content: nextContent,
   } as Extract<AgentMessage, { role: "toolResult" }>;
 }
 

@@ -1,0 +1,15 @@
+
+> honeybadger-os-next@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.1.4
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.12.150:3000
+
+ ✓ Starting...
+ ✓ Ready in 2.4s
+ ○ Compiling / ...
+ ✓ Compiled / in 1606ms (568 modules)
+ HEAD / 200 in 1993ms
+ GET / 200 in 68ms
+[?25h
