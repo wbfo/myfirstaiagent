@@ -23,6 +23,17 @@
       "model_env": "HB_CREATIVE_DIRECTOR_MODEL",
       "default_model": "google/gemini-2.5-pro"
     },
+    "creative-strategist": {
+      "runtime": "zeroclaw",
+      "provider": "openrouter",
+      "model_env": "HB_CREATIVE_STRATEGIST_MODEL",
+      "default_model": "google/gemini-2.5-pro"
+    },
+    "execution-governor": {
+      "runtime": "nanobot",
+      "model_env": "HB_EXECUTION_GOVERNOR_MODEL",
+      "default_model": "google/gemini-2.5-flash"
+    },
     "architect": {
       "runtime": "zeroclaw",
       "provider": "openrouter",

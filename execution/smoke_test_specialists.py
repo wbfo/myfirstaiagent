@@ -17,6 +17,8 @@ AGENTS = [
     "strategic-horizon-systems",
     "operational-diagnostics-optimization",
     "creative-director",
+    "creative-strategist",
+    "execution-governor",
     "architect",
     "researcher",
     "deal-closer",

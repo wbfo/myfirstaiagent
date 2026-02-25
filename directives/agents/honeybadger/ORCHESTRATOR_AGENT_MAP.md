@@ -55,25 +55,37 @@ Single source of truth for HoneyBadger on which agents exist, what they do, and 
 - Best for: concept options, creative thesis, feasibility-scored recommendations.
 - Typical deliverable: concept matrix and execution-ready creative direction.
 
-## 8) architect
+## 8) creative-strategist
+
+- Role: Creative strategy bridge between market signals and executable concepts.
+- Best for: campaign strategy, positioning options, audience-message fit, creative tradeoffs.
+- Typical deliverable: strategy matrix with prioritized concepts and risk notes.
+
+## 9) execution-governor
+
+- Role: Execution gatekeeping and delivery governance.
+- Best for: plan-to-execution checks, dependency gates, handoff readiness, rollback criteria.
+- Typical deliverable: go/no-go matrix with blocking issues and acceptance criteria.
+
+## 10) architect
 
 - Role: System design and reliability implementation.
 - Best for: architecture, technical plans, refactors requiring engineering rigor.
 - Typical deliverable: architecture memo, implementation plan, or code change summary.
 
-## 9) researcher
+## 11) researcher
 
 - Role: Discovery and analysis.
 - Best for: research briefs, option comparison, external information synthesis.
 - Typical deliverable: evidence-backed brief with sources and tradeoffs.
 
-## 10) deal-closer
+## 12) deal-closer
 
 - Role: Outcome-oriented business/advisory output.
 - Best for: actionable plans, positioning, persuasive execution framing.
 - Typical deliverable: concise plan artifact (for example `deal_closer_report.txt`).
 
-## 11) market-advisory
+## 13) market-advisory
 
 - Role: Market analysis and opportunity/risk framing.
 - Best for: market scans, competitor signal summaries, trend implications.

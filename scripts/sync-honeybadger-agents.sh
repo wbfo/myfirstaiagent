@@ -18,12 +18,13 @@ if [[ ! -f "${REPO_ROOT}/openclaw.mjs" ]]; then
 fi
 
 TARGET_IDS=(
-  main
   honeybadger
   knowledge-management
   strategic-horizon-systems
   operational-diagnostics-optimization
   creative-director
+  creative-strategist
+  execution-governor
   architect
   researcher
   deal-closer
@@ -38,12 +39,13 @@ json_quote() {
 
 agent_name() {
   case "$1" in
-    main) echo "Main Assistant" ;;
     honeybadger) echo "HoneyBadger Orchestrator" ;;
     knowledge-management) echo "Knowledge Management Agent" ;;
     strategic-horizon-systems) echo "Strategic Horizon and Systems Agent" ;;
     operational-diagnostics-optimization) echo "Operational Diagnostics and Optimization Agent" ;;
     creative-director) echo "Creative Director Agent" ;;
+    creative-strategist) echo "Creative Strategist Agent" ;;
+    execution-governor) echo "Execution Governor Agent" ;;
     architect) echo "Architect" ;;
     researcher) echo "Researcher" ;;
     deal-closer) echo "Deal Closer" ;;
@@ -56,19 +58,16 @@ agent_name() {
 
 agent_model_json() {
   case "$1" in
-    main|honeybadger|ops-coordinator|quality-gate)
+    honeybadger|ops-coordinator|quality-gate)
       echo '{"primary":"google/gemini-3-flash-preview","fallbacks":["google/gemini-2.5-flash"]}'
       ;;
     architect|researcher)
       echo '{"primary":"google/gemini-2.5-pro","fallbacks":["google/gemini-3-flash-preview"]}'
       ;;
-    strategic-horizon-systems|creative-director)
+    strategic-horizon-systems|creative-director|creative-strategist)
       echo '{"primary":"google/gemini-2.5-pro","fallbacks":["google/gemini-3-flash-preview"]}'
       ;;
-    deal-closer)
-      echo '{"primary":"google/gemini-2.5-flash","fallbacks":["google/gemini-3-flash-preview"]}'
-      ;;
-    knowledge-management|operational-diagnostics-optimization)
+    deal-closer|knowledge-management|operational-diagnostics-optimization|execution-governor)
       echo '{"primary":"google/gemini-2.5-flash","fallbacks":["google/gemini-3-flash-preview"]}'
       ;;
     market-advisory)
@@ -82,11 +81,8 @@ agent_model_json() {
 
 agent_subagents_json() {
   case "$1" in
-    main)
-      echo '{"allowAgents":["*"]}'
-      ;;
     honeybadger)
-      echo '{"allowAgents":["knowledge-management","ops-coordinator","quality-gate","strategic-horizon-systems","operational-diagnostics-optimization","creative-director","architect","researcher","deal-closer","market-advisory"]}'
+      echo '{"allowAgents":["knowledge-management","ops-coordinator","quality-gate","strategic-horizon-systems","operational-diagnostics-optimization","creative-director","creative-strategist","execution-governor","architect","researcher","deal-closer","market-advisory"]}'
       ;;
     *)
       echo ''
@@ -111,6 +107,21 @@ set_config() {
 
 agents_json=""
 refresh_agents_json
+
+# Consolidation rule: remove legacy "main" runtime agent but keep all files/state intact.
+legacy_main_exists="$(printf '%s' "${agents_json}" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const list=JSON.parse(s);console.log(list.some(a=>a.id==="main")?"1":"0");});')"
+if [[ "${legacy_main_exists}" == "1" ]]; then
+  # OpenClaw protects reserved `main` on some builds; keep compatibility if deletion is blocked.
+  if ! node openclaw.mjs agents delete main --force >/dev/null 2>/tmp/sync_hb_delete_main.err; then
+    if ! rg -q "cannot be deleted" /tmp/sync_hb_delete_main.err; then
+      cat /tmp/sync_hb_delete_main.err >&2
+      rm -f /tmp/sync_hb_delete_main.err
+      exit 1
+    fi
+  fi
+  rm -f /tmp/sync_hb_delete_main.err
+  refresh_agents_json
+fi
 
 for id in "${TARGET_IDS[@]}"; do
   exists="$(printf '%s' "${agents_json}" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const list=JSON.parse(s);const id=process.argv[1];console.log(list.some(a=>a.id===id)?"1":"0");});' "${id}")"

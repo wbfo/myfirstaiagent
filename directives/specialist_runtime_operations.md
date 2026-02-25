@@ -10,10 +10,12 @@ Run and verify specialist agents on their assigned runtimes.
 2. `strategic-horizon-systems` -> `ZeroClaw`
 3. `operational-diagnostics-optimization` -> `NanoBot`
 4. `creative-director` -> `ZeroClaw`
-5. `architect` -> `ZeroClaw`
-6. `researcher` -> `ZeroClaw`
-7. `deal-closer` -> `ZeroClaw`
-8. `market-advisory` -> `NanoBot`
+5. `creative-strategist` -> `ZeroClaw`
+6. `execution-governor` -> `NanoBot`
+7. `architect` -> `ZeroClaw`
+8. `researcher` -> `ZeroClaw`
+9. `deal-closer` -> `ZeroClaw`
+10. `market-advisory` -> `NanoBot`
 
 Source of truth: `execution/agent_runtime_map.json`.
 

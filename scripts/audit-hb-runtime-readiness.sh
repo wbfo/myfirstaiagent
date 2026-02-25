@@ -218,15 +218,18 @@ const blockers = readLines(path.join(tmpDir, "blockers.txt"));
 const nextActions = readLines(path.join(tmpDir, "next_actions.txt"));
 const commandsRun = readLines(path.join(tmpDir, "commands_run.txt"));
 
-const requiredNew = [
+const requiredNew4 = [
   "knowledge-management",
   "strategic-horizon-systems",
   "operational-diagnostics-optimization",
   "creative-director",
 ];
+const requiredNew6 = [...requiredNew4, "creative-strategist", "execution-governor"];
 
 const agentIds = new Set((Array.isArray(agents) ? agents : []).map((a) => a?.id).filter(Boolean));
-const new4Present = requiredNew.every((id) => agentIds.has(id));
+const new4Present = requiredNew4.every((id) => agentIds.has(id));
+const new6Present = requiredNew6.every((id) => agentIds.has(id));
+const legacyMainPresent = agentIds.has("main");
 
 const hb = (Array.isArray(configAgents) ? configAgents : []).find((a) => a?.id === "honeybadger");
 const hbAllowAgents = hb?.subagents?.allowAgents ?? "not-found";
@@ -256,6 +259,8 @@ const result = {
   HEAD_SHA: headSha,
   AGENT_COUNT: Array.isArray(agents) ? agents.length : 0,
   NEW_4_PRESENT: new4Present,
+  NEW_6_PRESENT: new6Present,
+  LEGACY_MAIN_PRESENT: legacyMainPresent,
   HB_ALLOWAGENTS: hbAllowAgents,
   RUNTIME_MAP_AGENTS: runtimeMapAgents,
   SMOKE_TEST_STATUS: smokeStatus,

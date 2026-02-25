@@ -2,12 +2,14 @@
 
 ## Scope
 
-Added four HoneyBadger-only subagents:
+Added six HoneyBadger-only subagents:
 
 1. `knowledge-management`
 2. `strategic-horizon-systems`
 3. `operational-diagnostics-optimization`
 4. `creative-director`
+5. `creative-strategist`
+6. `execution-governor`
 
 ## Runtime Mapping
 
@@ -17,6 +19,8 @@ Source of truth: `execution/agent_runtime_map.json`
 - `strategic-horizon-systems` -> `zeroclaw`
 - `operational-diagnostics-optimization` -> `nanobot`
 - `creative-director` -> `zeroclaw`
+- `creative-strategist` -> `zeroclaw`
+- `execution-governor` -> `nanobot`
 
 ## HoneyBadger Delegation Policy
 
@@ -33,6 +37,8 @@ Source of truth: `directives/agents/honeybadger/ORCHESTRATOR_AGENT_MAP.md`
 - `directives/agents/strategic-horizon-systems/`
 - `directives/agents/operational-diagnostics-optimization/`
 - `directives/agents/creative-director/`
+- `directives/agents/creative-strategist/`
+- `directives/agents/execution-governor/`
 
 Each contains:
 
@@ -70,6 +76,8 @@ node openclaw.mjs models status --json --agent knowledge-management
 node openclaw.mjs models status --json --agent strategic-horizon-systems
 node openclaw.mjs models status --json --agent operational-diagnostics-optimization
 node openclaw.mjs models status --json --agent creative-director
+node openclaw.mjs models status --json --agent creative-strategist
+node openclaw.mjs models status --json --agent execution-governor
 python3 execution/smoke_test_specialists.py
 ```
 
@@ -96,15 +104,18 @@ This script enforces canonical sources:
 
 ## Expected State
 
-- Total live runtime agents: 12
+- Total live runtime agents: 14 (includes reserved non-default `main` alias on some builds)
+- HoneyBadger-managed operational agents: 13
 - HoneyBadger default orchestrator remains unchanged
-- HoneyBadger `allowAgents` includes 10 subagents:
+- HoneyBadger `allowAgents` includes 12 subagents:
   - `knowledge-management`
   - `ops-coordinator`
   - `quality-gate`
   - `strategic-horizon-systems`
   - `operational-diagnostics-optimization`
   - `creative-director`
+  - `creative-strategist`
+  - `execution-governor`
   - `architect`
   - `researcher`
   - `deal-closer`
@@ -112,6 +123,6 @@ This script enforces canonical sources:
 
 ## Non-Regression Notes
 
-- Existing 8-agent behavior remains in place.
-- No existing agent IDs were renamed or removed.
-- Runtime map changes are additive.
+- Existing specialist behavior remains in place.
+- Legacy `main` runtime alias is non-default and treated as compatibility-only when deletion is blocked by runtime guard.
+- Runtime map changes are additive for new specialist IDs.

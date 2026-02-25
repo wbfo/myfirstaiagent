@@ -29,7 +29,7 @@ Optional custom workspace:
 
 The sync script now applies the full baseline:
 
-1. Ensures agent roster exists (`main` + HoneyBadger specialists).
+1. Ensures agent roster exists (HoneyBadger + canonical specialists/support agents).
 2. Pins each agent workspace to the target workspace.
 3. Sets `honeybadger` as default orchestrator.
 4. Configures delegation/spawn policy (`allowAgents`, `maxConcurrent`, `maxSpawnDepth`).
@@ -44,6 +44,8 @@ node openclaw.mjs models status --json --agent knowledge-management
 node openclaw.mjs models status --json --agent strategic-horizon-systems
 node openclaw.mjs models status --json --agent operational-diagnostics-optimization
 node openclaw.mjs models status --json --agent creative-director
+node openclaw.mjs models status --json --agent creative-strategist
+node openclaw.mjs models status --json --agent execution-governor
 node openclaw.mjs models status --json --agent architect
 node openclaw.mjs models status --json --agent market-advisory
 ```
@@ -86,3 +88,5 @@ Each agent dossier should contain:
 9. `directives/agents/strategic-horizon-systems/`
 10. `directives/agents/operational-diagnostics-optimization/`
 11. `directives/agents/creative-director/`
+12. `directives/agents/creative-strategist/`
+13. `directives/agents/execution-governor/`
