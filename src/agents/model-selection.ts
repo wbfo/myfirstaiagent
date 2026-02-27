@@ -295,9 +295,6 @@ export function resolveDefaultModelForAgent(params: {
   cfg: OpenClawConfig;
   agentId?: string;
 }): ModelRef {
-  if (params.cfg.costOptStack && !params.agentId) {
-    return { provider: "ollama", model: "qwen2.5:14b" }; // Prefer 14b for general tasks in cost-cut mode
-  }
   const agentModelOverride = params.agentId
     ? resolveAgentModelPrimary(params.cfg, params.agentId)
     : undefined;

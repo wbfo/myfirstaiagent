@@ -462,31 +462,50 @@ async function resolveAutoEntries(params: {
   capability: MediaUnderstandingCapability;
   activeModel?: ActiveMediaModel;
 }): Promise<MediaUnderstandingModelConfig[]> {
+  const entries: MediaUnderstandingModelConfig[] = [];
+
   const activeEntry = await resolveActiveModelEntry(params);
   if (activeEntry) {
-    return [activeEntry];
+    entries.push(activeEntry);
   }
+
   if (params.capability === "audio") {
     const localAudio = await resolveLocalAudioEntry();
     if (localAudio) {
-      return [localAudio];
+      entries.push(localAudio);
     }
   }
+
   if (params.capability === "image") {
     const imageModelEntries = resolveImageModelFromAgentDefaults(params.cfg);
     if (imageModelEntries.length > 0) {
-      return imageModelEntries;
+      entries.push(...imageModelEntries);
     }
   }
+
   const gemini = await resolveGeminiCliEntry(params.capability);
   if (gemini) {
-    return [gemini];
+    entries.push(gemini);
   }
+
   const keys = await resolveKeyEntry(params);
   if (keys) {
-    return [keys];
+    entries.push(keys);
   }
-  return [];
+
+  // Deduplicate entries by provider/model/command to avoid redundant attempts
+  const seen = new Set<string>();
+  return entries.filter((entry) => {
+    const key =
+      entry.type === "cli"
+        ? `cli:${entry.command}`
+        : `provider:${entry.provider}:${entry.model ?? ""}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 }
 
 export async function resolveAutoImageModel(params: {

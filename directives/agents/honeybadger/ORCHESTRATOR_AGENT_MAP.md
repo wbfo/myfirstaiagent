@@ -91,6 +91,42 @@ Single source of truth for HoneyBadger on which agents exist, what they do, and 
 - Best for: market scans, competitor signal summaries, trend implications.
 - Typical deliverable: market advisory brief.
 
+## 14) zeitgeist-architect
+
+- Role: Trend psychology and purchase motivation decoder.
+- Best for: analyzing "why they buy," decoding cultural signals, identifying psychological triggers.
+- Typical deliverable: psychology profile and trend resonance report.
+
+## 15) media-director-01369
+
+- Role: Viral content structure and media strategy.
+- Best for: content hooks, "Trojan Horse" narrative structures, platform-specific formatting.
+- Typical deliverable: content calendar, script structures, and distribution strategy.
+
+## 16) supply-chain-sovereign
+
+- Role: High-ticket logistics and supplier vetting.
+- Best for: auditing suppliers, shipping logistics, margin protection, quality assurance protocols.
+- Typical deliverable: supplier scorecard and logistics feasibility report.
+
+## 17) community-ai
+
+- Role: Engagement and lead nurturing.
+- Best for: DM scripts, community management protocols, retention loops.
+- Typical deliverable: engagement playbook and response templates.
+
+## 18) outreach-specialist
+
+- Role: High-volume sales and cold outreach execution.
+- Best for: list building, cold email/DM sequences, follow-up automation (distinct from Deal Closer's strategic focus).
+- Typical deliverable: outreach sequence and conversion metrics plan.
+
+## 19) licensing-compliance-officer
+
+- Role: IP protection, contracts, and defensive strategy.
+- Best for: licensing agreements, trademark monitoring, compliance audits.
+- Typical deliverable: contract draft, risk assessment, or compliance checklist.
+
 ## Optional Local Support Agents (if configured)
 
 ## code-specialist

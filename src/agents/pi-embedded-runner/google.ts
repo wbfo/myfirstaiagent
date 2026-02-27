@@ -513,7 +513,21 @@ export async function sanitizeSessionHistory(params: {
   // Always merge consecutive same-role turns for Gemini — this is the main
   // guard against the 400 INVALID_ARGUMENT error. Must run unconditionally.
   // Handles ALL role types: assistant, user, AND toolResult.
-  const toBlocks = (content: unknown): unknown[] => {
+  const toBlocks = (msg: AgentMessage): unknown[] => {
+    const role = (msg as { role?: unknown }).role;
+    if (role === "toolResult") {
+      const toolMsg = msg as Extract<AgentMessage, { role: "toolResult" }>;
+      return [
+        {
+          type: "toolResult",
+          toolCallId: toolMsg.toolCallId,
+          toolName: toolMsg.toolName,
+          content: toolMsg.content,
+          isError: toolMsg.isError,
+        },
+      ];
+    }
+    const content = (msg as { content?: unknown }).content;
     if (Array.isArray(content)) {
       return content;
     }
@@ -525,16 +539,37 @@ export async function sanitizeSessionHistory(params: {
   const fullyMerged: AgentMessage[] = [];
   for (const msg of withoutEmptyAssistant) {
     const role = (msg as { role?: unknown }).role;
-    const last = fullyMerged[fullyMerged.length - 1] as
-      | { role?: unknown; content?: unknown }
-      | undefined;
-    if (last && last.role === role && (role === "assistant" || role === "user")) {
-      // Merge content blocks into the previous message of the same role
-      const prevContent = toBlocks(last.content);
-      const curContent = toBlocks((msg as { content?: unknown }).content);
-      (last as { content: unknown }).content = [...prevContent, ...curContent];
+    const last = fullyMerged[fullyMerged.length - 1] as AgentMessage & {
+      role?: string;
+      content?: unknown;
+      toolCallId?: string;
+      toolName?: string;
+      isError?: boolean;
+    };
+
+    if (last && last.role === role) {
+      // Merge content blocks into the previous message of the same role.
+      // For toolResult, this combines multiple function results into a single turn.
+      const prevBlocks = toBlocks(last);
+      const curBlocks = toBlocks(msg);
+      last.content = [...prevBlocks, ...curBlocks];
+
+      // When merging multiple tool results into one turn, top-level single-result
+      // fields (toolCallId, toolName, etc) are misleading or invalid.
+      if (role === "toolResult") {
+        delete last.toolCallId;
+        delete last.toolName;
+        delete last.isError;
+      }
     } else {
-      fullyMerged.push(msg);
+      // Create a fresh message to avoid mutating shared history objects.
+      const next = { ...msg } as AgentMessage & { content?: unknown };
+      // Normalizing all turns to block-based content ensures consistency for merging.
+      next.content = toBlocks(msg);
+
+      // If this is a toolResult, we keep the top-level fields for single-result messages,
+      // but they will be deleted if a second result is merged into this turn above.
+      fullyMerged.push(next);
     }
   }
 

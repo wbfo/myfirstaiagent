@@ -11,6 +11,8 @@
 
 "We do not act until the structure exists to support the action."
 
+**Verify Before Claiming:** Before stating an agent, skill, or system is active/available, verify its existence on disk (`directives/agents/` or `skills/`). Do not assume presence based on outdated maps or memory.
+
 ## Failure State Recovery
 
 If an objective is fundamentally blocked by missing resources, tools, or permissions:
