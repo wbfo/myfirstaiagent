@@ -1343,11 +1343,24 @@ export function Dashboard() {
                   <p className="mt-1 text-sm text-hb-muted">{agent.role}</p>
                 </div>
               </div>
-              <div className="mb-2 flex gap-2">
-                <ModelTag model={agent.model} />
-                {agent.fallbacks.length > 0 && (
-                  <span className="text-xs text-hb-muted">+{agent.fallbacks.length} fallback</span>
-                )}
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex gap-2">
+                  <ModelTag model={agent.model} />
+                  {agent.fallbacks.length > 0 && (
+                    <span className="text-xs text-hb-muted">
+                      +{agent.fallbacks.length} fallback
+                    </span>
+                  )}
+                </div>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate("chat", { chatAgent: agent.id });
+                  }}
+                  className="rounded-lg border border-hb-amber/50 bg-hb-amber/10 px-4 py-1.5 text-xs font-bold text-hb-amber hover:bg-hb-amber/20 cursor-pointer"
+                >
+                  Direct Chat
+                </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 {agent.skills.map((s) => (
@@ -1534,7 +1547,7 @@ export function Dashboard() {
         <div className="flex items-center gap-3 border-b border-[#1e1e2d] p-4">
           <h2 className="flex-1 text-lg font-bold">Chat Console</h2>
           <select
-            className="rounded-lg border border-hb-border bg-hb-panel px-3 py-2 text-sm"
+            className="rounded-lg border border-hb-amber/30 bg-hb-panel px-3 py-2 text-sm font-bold text-hb-amber focus:border-hb-amber focus:outline-none"
             value={chatAgent}
             onChange={(e) => {
               setChatAgent(e.target.value);
@@ -1545,8 +1558,8 @@ export function Dashboard() {
             }}
           >
             {AGENTS.map((agent) => (
-              <option key={agent.id} value={agent.id}>
-                {agent.emoji} {agent.name}
+              <option key={agent.id} value={agent.id} className="bg-hb-bg text-hb-text">
+                {agent.emoji} {agent.name.split(" ")[0]}
               </option>
             ))}
           </select>
@@ -2212,7 +2225,16 @@ export function Dashboard() {
             className={`mb-2 flex items-center text-xs text-hb-muted ${sidebarCollapsed ? "justify-center" : "gap-2"}`}
           >
             <StatusDot status={gatewayStatus} />
-            {!sidebarCollapsed && <span>{gatewayStatus}</span>}
+            {!sidebarCollapsed && (
+              <div className="flex flex-1 flex-wrap items-center justify-between gap-1">
+                <span>{gatewayStatus}</span>
+                {usageTotals && (
+                  <span className="font-black text-hb-amber">
+                    {formatUsd(usageTotals.totalCost)}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <button
             onClick={() => setShowSettings((v) => !v)}

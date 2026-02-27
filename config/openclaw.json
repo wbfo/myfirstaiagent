@@ -1,7 +1,7 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.2.22",
-    "lastTouchedAt": "2026-02-25T19:40:00Z"
+    "lastTouchedAt": "2026-02-27T11:46:00Z"
   },
   "env": {
     "vars": {
@@ -17,13 +17,7 @@
         "workspace": "~/.openclaw/workspace",
         "model": {
           "primary": "google/gemini-3-flash-preview",
-          "fallbacks": [
-            "google/gemini-2.5-flash",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "fallbacks": ["google/gemini-2.5-flash", "openai/gpt-4o-mini"]
         },
         "subagents": {
           "allowAgents": [
@@ -38,7 +32,18 @@
             "architect",
             "researcher",
             "deal-closer",
-            "market-advisory"
+            "market-advisory",
+            "media-director-01369",
+            "zeitgeist-architect",
+            "community-ai",
+            "licensing-compliance-officer",
+            "outreach-specialist",
+            "supply-chain-sovereign",
+            "real-estate-ai-adviser",
+            "off-market-hunter",
+            "institutional-buyer-analyst",
+            "surplus-funds-orchestrator",
+            "blueprint-architect"
           ]
         }
       },
@@ -47,14 +52,7 @@
         "name": "Knowledge Management Agent",
         "workspace": "~/.openclaw/workspace",
         "model": {
-          "primary": "google/gemini-2.5-flash",
-          "fallbacks": [
-            "google/gemini-3-flash-preview",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "primary": "google/gemini-2.5-flash"
         }
       },
       {
@@ -62,14 +60,7 @@
         "name": "Strategic Horizon and Systems Agent",
         "workspace": "~/.openclaw/workspace",
         "model": {
-          "primary": "google/gemini-2.5-pro",
-          "fallbacks": [
-            "google/gemini-3-flash-preview",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "primary": "google/gemini-2.5-pro"
         }
       },
       {
@@ -77,14 +68,7 @@
         "name": "Operational Diagnostics and Optimization Agent",
         "workspace": "~/.openclaw/workspace",
         "model": {
-          "primary": "google/gemini-2.5-flash",
-          "fallbacks": [
-            "google/gemini-3-flash-preview",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "primary": "google/gemini-2.5-flash"
         }
       },
       {
@@ -92,14 +76,7 @@
         "name": "Creative Director Agent",
         "workspace": "~/.openclaw/workspace",
         "model": {
-          "primary": "google/gemini-2.5-pro",
-          "fallbacks": [
-            "google/gemini-3-flash-preview",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "primary": "google/gemini-2.5-pro"
         }
       },
       {
@@ -107,14 +84,7 @@
         "name": "Creative Strategist Agent",
         "workspace": "~/.openclaw/workspace",
         "model": {
-          "primary": "google/gemini-2.5-pro",
-          "fallbacks": [
-            "google/gemini-3-flash-preview",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "primary": "google/gemini-2.5-pro"
         }
       },
       {
@@ -122,14 +92,7 @@
         "name": "Execution Governor Agent",
         "workspace": "~/.openclaw/workspace",
         "model": {
-          "primary": "google/gemini-2.5-flash",
-          "fallbacks": [
-            "google/gemini-3-flash-preview",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "primary": "google/gemini-2.5-flash"
         }
       },
       {
@@ -137,14 +100,7 @@
         "name": "Architect",
         "workspace": "~/.openclaw/workspace",
         "model": {
-          "primary": "google/gemini-2.5-pro",
-          "fallbacks": [
-            "google/gemini-3-flash-preview",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "primary": "google/gemini-2.5-pro"
         }
       },
       {
@@ -152,14 +108,7 @@
         "name": "Researcher",
         "workspace": "~/.openclaw/workspace",
         "model": {
-          "primary": "google/gemini-2.5-pro",
-          "fallbacks": [
-            "google/gemini-3-flash-preview",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "primary": "google/gemini-2.5-pro"
         }
       },
       {
@@ -167,14 +116,7 @@
         "name": "Deal Closer",
         "workspace": "~/.openclaw/workspace",
         "model": {
-          "primary": "google/gemini-2.5-flash",
-          "fallbacks": [
-            "google/gemini-3-flash-preview",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "primary": "google/gemini-2.5-flash"
         }
       },
       {
@@ -182,14 +124,7 @@
         "name": "Market Advisory",
         "workspace": "~/.openclaw/workspace",
         "model": {
-          "primary": "openai/gpt-4o-mini",
-          "fallbacks": [
-            "google/gemini-2.5-flash",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "primary": "openai/gpt-4o-mini"
         }
       },
       {
@@ -197,14 +132,7 @@
         "name": "Ops Coordinator",
         "workspace": "~/.openclaw/workspace",
         "model": {
-          "primary": "google/gemini-3-flash-preview",
-          "fallbacks": [
-            "google/gemini-2.5-flash",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "primary": "google/gemini-3-flash-preview"
         }
       },
       {
@@ -212,14 +140,95 @@
         "name": "Quality Gate",
         "workspace": "~/.openclaw/workspace",
         "model": {
-          "primary": "google/gemini-3-flash-preview",
-          "fallbacks": [
-            "google/gemini-2.5-flash",
-            "ollama/qwen2.5:14b",
-            "ollama/llama3.1",
-            "ollama/mixtral",
-            "ollama/gemma3"
-          ]
+          "primary": "google/gemini-3-flash-preview"
+        }
+      },
+      {
+        "id": "media-director-01369",
+        "name": "Media Director 01369",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-3-flash-preview"
+        }
+      },
+      {
+        "id": "zeitgeist-architect",
+        "name": "Zeitgeist Architect",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-3-flash-preview"
+        }
+      },
+      {
+        "id": "real-estate-ai-adviser",
+        "name": "Real Estate AI Adviser",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-3-flash-preview"
+        }
+      },
+      {
+        "id": "off-market-hunter",
+        "name": "Off-Market Hunter",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-3-flash-preview"
+        }
+      },
+      {
+        "id": "institutional-buyer-analyst",
+        "name": "Institutional Buyer Analyst",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-2.5-flash"
+        }
+      },
+      {
+        "id": "surplus-funds-orchestrator",
+        "name": "Surplus Funds Orchestrator",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-3-flash-preview"
+        }
+      },
+      {
+        "id": "blueprint-architect",
+        "name": "Blueprint Architect",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-3-flash-preview"
+        }
+      },
+      {
+        "id": "community-ai",
+        "name": "Community AI",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-2.5-flash"
+        }
+      },
+      {
+        "id": "licensing-compliance-officer",
+        "name": "Licensing Compliance Officer",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-2.5-flash"
+        }
+      },
+      {
+        "id": "outreach-specialist",
+        "name": "Outreach Specialist",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-2.5-flash"
+        }
+      },
+      {
+        "id": "supply-chain-sovereign",
+        "name": "Supply Chain Sovereign",
+        "workspace": "~/.openclaw/workspace",
+        "model": {
+          "primary": "google/gemini-2.5-flash"
         }
       }
     ],

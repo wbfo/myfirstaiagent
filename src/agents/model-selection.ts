@@ -233,12 +233,10 @@ export function resolveModelRefFromString(params: {
   if (!trimmed) {
     return null;
   }
-  if (!trimmed.includes("/")) {
-    const aliasKey = normalizeAliasKey(trimmed);
-    const aliasMatch = params.aliasIndex?.byAlias.get(aliasKey);
-    if (aliasMatch) {
-      return { ref: aliasMatch.ref, alias: aliasMatch.alias };
-    }
+  const aliasKey = normalizeAliasKey(trimmed);
+  const aliasMatch = params.aliasIndex?.byAlias.get(aliasKey);
+  if (aliasMatch) {
+    return { ref: aliasMatch.ref, alias: aliasMatch.alias };
   }
   const parsed = parseModelRef(trimmed, params.defaultProvider);
   if (!parsed) {

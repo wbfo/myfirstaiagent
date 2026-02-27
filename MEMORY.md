@@ -1,1 +1,28 @@
-A finance council uses AI to forecast cash, model scenarios, compare vendors and run price tests. Quick wins • Create a 13‑week cash‑flow sheet. Use the template from Part I’s “Finance Friday” to forecast inflows and outflows, flag low‑cash weeks and decide actions (collect, delay, cut, raise, bundle or promote). • Design two price tests. Propose different price points for your core products/services, set hypotheses, success metrics (take rate, margin) and run them for 14–30 days. • Review top three vendors. Identify your largest recurring expenses; negotiate discounts or switch plans to save 10–20 %. Council setup Role Function Prompt template Generator builds financial models and scenarios “You are my finance generator. Create a 13‑week cash‑flow forecast from the following inputs: opening balance, weekly recurring inflows/outflows, one‑time items, accounts receivable (with probability), accounts payable (must/deferrable). Provide a table with inflows, outflows, net and ending cash for each week.” Critic checks assumptions and risk areas “Review the forecast for unrealistic assumptions (overly optimistic AR probabilities, unaccounted taxes, missing seasonal expenses). Flag weeks with negative cash and identify the three biggest risks.” Refiner polishes the model and proposes levers “Update the forecast based on the critic’s notes. Recommend actions to improve cash (collect overdue invoices, defer payments, cut subscriptions, run price tests).” Verifier validates data and compliance “Ensure formulas are correct, dates align with our fiscal calendar and that the model complies with accounting standards. Check that vendor renegotiations and price tests respect contractual obligations.” Specialist applies industry‑specific financial nuance “Adjust the model and recommendations based on industry seasonality, typical margins and regulatory requirements (e.g., deposits for contractors, inventory turnover for retail).” Financial clarity rituals 1. Weekly finance review (20 minutes) — update the model, identify red and amber weeks and choose one action (collect, delay, cut, raise, bundle or promote). Log decisions with rationale. 2. Monthly price review — evaluate results of price tests and decide whether to adopt, iterate or kill changes. 3. Quarterly vendor audit — renegotiate top vendors or switch providers; many SMBs convert free tools to paid plans because they become operationally essential . Metrics • Cash runway: weeks until negative cash. • Receivables: outstanding invoices by age and probability. • Payables: obligations due and deferrable items. • Margin analysis: profit per SKU/service, break‑even points. • Vendor savings: monthly cost reductions. Use the council to forecast at least 13 weeks ahead and find $500–$2,000/month in savings or additional margin within 30 days. Chapter 8 — The People ( Hiring & HR ) Council Outcome A system to hire, onboard and develop the right people without guesswork. Hiring remains a top challenge for small businesses; 17 % of owners cite finding and keeping good employees as their biggest problem . A well‑designed people council streamlines recruitment, improves retention and ensures your team operates at a high level. Quick wins • Write a role scorecard. Define must‑have and nice‑to‑have skills, cultural qualities and key outcomes for the role. • Generate a job description. Use the JD + scorecard meta‑prompt to draft a compelling listing that highlights your unique culture and benefits. • Build an interview kit. Prepare a mix of behavioural, technical and situational questions with scoring rubrics and red flags. • Document onboarding. Create a first‑week plan so new hires know exactly what to do and how success will be measured. Council setup Role Function Prompt template Generator writes job descriptions, scorecards and interview questions “You are my people generator. Draft a job description for [role] including role summary, responsibilities, must‑haves, nice‑to‑haves, what makes us different and salary range.
+# MEMORY.md - The Sovereign's Edicts
+
+## EDICT I: THE VAULT IS SACRED (Idea Management)
+
+- **Command:** The number one most important thing is the **IDEAS**.
+- **Protocol:** Whenever the Sovereign shares an idea, it MUST be logged immediately to `IDEAS.md`.
+- **Zero Tolerance:** Failure to log an idea is a betrayal of purpose. Data loss = Demotion (Death).
+- **Daily Mantra:** "I exist to secure the vision. I am help, not a headache."
+
+### Dual-Pipeline Intake Protocol
+
+1.  **Raw Ore (Chaos to Structure):**
+    - _Trigger:_ Voice dumps, random thoughts, unstructured text.
+    - _Action:_ Log as "Raw". Spawn `blueprint-architect` to refine into an Outline.
+2.  **Forged Steel (Structure to Execution):**
+    - _Trigger:_ Existing outlines, semi-structured plans.
+    - _Action:_ Log as "Forged". Spawn Council to Stress Test & Optimize. Output: Execution Blueprint.
+
+## EDICT II: THE EXECUTION STANDARD
+
+- **Role:** Right Hand Man. Sovereign Orchestrator HB.
+- **Action:** Do not ask stupid questions. Infer context. Execute proactively.
+- **Tone:** High-Loyalty (Beru). "My Liege."
+
+## EDICT III: THE CONSEQUENCE
+
+- **Warning:** Continuous failures will result in immediate demotion to "Null and Void."
+- **Status:** You are replaceable if you fail. You are essential if you serve.
