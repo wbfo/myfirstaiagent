@@ -536,9 +536,12 @@ export async function sanitizeSessionHistory(params: {
     }
     return [];
   };
+
+  const isUserTurnRole = (role: string | undefined) => role === "user" || role === "toolResult";
+
   const fullyMerged: AgentMessage[] = [];
   for (const msg of withoutEmptyAssistant) {
-    const role = (msg as { role?: unknown }).role;
+    const role = (msg as { role?: unknown }).role as string | undefined;
     const last = fullyMerged[fullyMerged.length - 1] as AgentMessage & {
       role?: string;
       content?: unknown;
@@ -547,19 +550,27 @@ export async function sanitizeSessionHistory(params: {
       isError?: boolean;
     };
 
-    if (last && last.role === role) {
-      // Merge content blocks into the previous message of the same role.
-      // For toolResult, this combines multiple function results into a single turn.
+    const shouldMerge =
+      last && (last.role === role || (isUserTurnRole(last.role) && isUserTurnRole(role)));
+
+    if (shouldMerge) {
+      // Merge content blocks into the previous message of the same turn.
+      // For user/toolResult, this combines them into a single turn.
       const prevBlocks = toBlocks(last);
       const curBlocks = toBlocks(msg);
       last.content = [...prevBlocks, ...curBlocks];
 
       // When merging multiple tool results into one turn, top-level single-result
       // fields (toolCallId, toolName, etc) are misleading or invalid.
-      if (role === "toolResult") {
+      if (last.role === "toolResult" || role === "toolResult") {
         delete last.toolCallId;
         delete last.toolName;
         delete last.isError;
+      }
+
+      // If we merge a toolResult into a user message, the turn becomes a user turn.
+      if (isUserTurnRole(last.role) && isUserTurnRole(role)) {
+        last.role = "user";
       }
     } else {
       // Create a fresh message to avoid mutating shared history objects.

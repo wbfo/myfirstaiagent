@@ -1,11 +1,14 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.2.22",
-    "lastTouchedAt": "2026-02-27T11:46:00Z"
+    "lastTouchedAt": "2026-02-27T12:15:00Z"
   },
   "env": {
     "vars": {
-      "OLLAMA_API_KEY": "ollama"
+      "OLLAMA_API_KEY": "${OLLAMA_API_KEY}",
+      "TELEGRAM_BOT_TOKEN": "${TELEGRAM_BOT_TOKEN}",
+      "GEMINI_API_KEY": "${GEMINI_API_KEY}",
+      "OPENAI_API_KEY": "${OPENAI_API_KEY}"
     }
   },
   "agents": {
