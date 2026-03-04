@@ -74,7 +74,7 @@ jobs:
             -o BatchMode=yes \
             "${SSH_KNOWN_HOSTS_ARG[@]}" \
             "${IONOS_SSH_USER}@${IONOS_SSH_HOST}" \
-            "DEPLOY_REF='${DEPLOY_REF}' DEPLOY_SERVICE='${DEPLOY_SERVICE}' DEPLOY_PATH='${IONOS_DEPLOY_PATH}' bash -s" <<'REMOTE'
+            "DEPLOY_REF='${DEPLOY_REF}' DEPLOY_SERVICE='${DEPLOY_SERVICE}' DEPLOY_PATH='${IONOS_DEPLOY_PATH}' IONOS_DEPLOY_MODE='vps' bash -s" <<'REMOTE'
           set -euo pipefail
 
           if [ ! -d "${DEPLOY_PATH}" ]; then

@@ -1,40 +1,61 @@
-# Directive: IONOS Cloud Deployment
+# Directive: IONOS Deployment
 
 ## Goal
 
-Deploy the OpenClaw project to IONOS Cloud infrastructure.
+Deploy OpenClaw to IONOS with a repeatable workflow.
 
-## Deployment Strategy
+## Deployment Modes
 
-We use `ionos-node-cloud-deploy` for automated deployment. This tool handles:
+- `vps` (recommended): run deployment on an IONOS VPS over SSH.
+- `sftp` (legacy): upload using `ionos-node-cloud-deploy`.
 
-1. SFTP file transfer to the remote host.
-2. Installation of dependencies via `pnpm`.
-3. Process management and restarts.
+`scripts/deploy-ionos.sh` auto-detects mode:
+- If `IONOS_SFTP_*` variables are set, it uses `sftp`.
+- Otherwise, it defaults to `vps`.
+- You can force mode with `IONOS_DEPLOY_MODE=vps|sftp`.
 
-## Configuration
+## VPS Workflow (GitHub Actions)
 
-The deployment configuration is maintained in `openclaw_app/ionos-config.json` (to be created with user credentials).
+Workflow file: `.github/workflows/deploy-ionos-vps.yml`
 
-## Pre-deployment Checklist
+Required repository secrets:
 
-1. Ensure `ionos-node-cloud-deploy` is installed: `pnpm list ionos-node-cloud-deploy`.
-2. Verify local build: `pnpm build`.
-3. Set environment variables for credentials:
-   - `IONOS_SFTP_HOST`
-   - `IONOS_SFTP_USER`
-   - `IONOS_SFTP_PASSWORD`
-   - `IONOS_REMOTE_PATH`
+1. `IONOS_SSH_HOST`
+2. `IONOS_SSH_USER`
+3. `IONOS_SSH_PORT`
+4. `IONOS_SSH_PRIVATE_KEY`
+5. `IONOS_DEPLOY_PATH`
+6. Optional: `IONOS_SSH_KNOWN_HOSTS`
 
-## Deployment Command
+Remote server expectations:
 
-Run the automation script:
+1. `IONOS_DEPLOY_PATH` exists and is a git checkout of this repository.
+2. Docker + Docker Compose plugin are installed.
+3. `docker compose` can run without sudo in that user context.
+4. `.env` in `IONOS_DEPLOY_PATH` is configured for OpenClaw runtime values.
+
+Manual remote deploy command:
 
 ```bash
-bash scripts/deploy-ionos.sh
+./scripts/deploy-ionos.sh openclaw-gateway
+```
+
+## SFTP Workflow (Legacy)
+
+Required env vars:
+
+- `IONOS_SFTP_HOST`
+- `IONOS_SFTP_USER`
+- `IONOS_SFTP_PASSWORD`
+- `IONOS_REMOTE_PATH`
+
+Command:
+
+```bash
+IONOS_DEPLOY_MODE=sftp ./scripts/deploy-ionos.sh
 ```
 
 ## Security
 
 > [!CAUTION]
-> NEVER commit `.env` files or `ionos-config.json` containing raw passwords to the repository. Use environment variables in the CI/CD pipeline or local environment.
+> Never commit `.env` files or raw deployment credentials to the repository.
