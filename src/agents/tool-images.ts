@@ -57,6 +57,12 @@ function inferMimeTypeFromBase64(base64: string): string | undefined {
   if (trimmed.startsWith("R0lGOD")) {
     return "image/gif";
   }
+  if (trimmed.startsWith("UklGR")) {
+    return "image/webp";
+  }
+  if (trimmed.startsWith("PHN2Z") || trimmed.startsWith("PD94b")) {
+    return "image/svg+xml";
+  }
   return undefined;
 }
 
@@ -312,7 +318,7 @@ export async function sanitizeContentBlocksImages(
       out.push({
         ...block,
         data: resized.base64,
-        mimeType: resized.resized ? resized.mimeType : mimeType,
+        mimeType: (resized.resized ? resized.mimeType : mimeType) || "image/jpeg",
       });
     } catch (err) {
       out.push({

@@ -471,11 +471,11 @@ export async function sanitizeSessionHistory(params: {
   const priorSnapshot = hasSnapshot ? readLastModelSnapshot(params.sessionManager) : null;
   const modelChanged = priorSnapshot
     ? !isSameModelSnapshot(priorSnapshot, {
-        timestamp: 0,
-        provider: params.provider,
-        modelApi: params.modelApi,
-        modelId: params.modelId,
-      })
+      timestamp: 0,
+      provider: params.provider,
+      modelApi: params.modelApi,
+      modelId: params.modelId,
+    })
     : false;
   const sanitizedOpenAI = isOpenAIResponsesApi
     ? downgradeOpenAIReasoningBlocks(sanitizedToolResults)
@@ -513,21 +513,12 @@ export async function sanitizeSessionHistory(params: {
   // Always merge consecutive same-role turns for Gemini — this is the main
   // guard against the 400 INVALID_ARGUMENT error. Must run unconditionally.
   // Handles ALL role types: assistant, user, AND toolResult.
-  const toBlocks = (msg: AgentMessage): unknown[] => {
-    const role = (msg as { role?: unknown }).role;
+  const toBlocks = (msg: AgentMessage): any[] => {
+    const role = (msg as any).role;
     if (role === "toolResult") {
-      const toolMsg = msg as Extract<AgentMessage, { role: "toolResult" }>;
-      return [
-        {
-          type: "toolResult",
-          toolCallId: toolMsg.toolCallId,
-          toolName: toolMsg.toolName,
-          content: toolMsg.content,
-          isError: toolMsg.isError,
-        },
-      ];
+      return (msg as any).content || [];
     }
-    const content = (msg as { content?: unknown }).content;
+    const content = (msg as any).content;
     if (Array.isArray(content)) {
       return content;
     }
@@ -537,50 +528,41 @@ export async function sanitizeSessionHistory(params: {
     return [];
   };
 
-  const isUserTurnRole = (role: string | undefined) => role === "user" || role === "toolResult";
-
   const fullyMerged: AgentMessage[] = [];
   for (const msg of withoutEmptyAssistant) {
-    const role = (msg as { role?: unknown }).role as string | undefined;
-    const last = fullyMerged[fullyMerged.length - 1] as AgentMessage & {
-      role?: string;
-      content?: unknown;
-      toolCallId?: string;
-      toolName?: string;
-      isError?: boolean;
-    };
+    const role = (msg as any).role;
+    const last = fullyMerged[fullyMerged.length - 1] as any;
 
-    const shouldMerge =
-      last && (last.role === role || (isUserTurnRole(last.role) && isUserTurnRole(role)));
+    if (!last) {
+      fullyMerged.push({ ...msg });
+      continue;
+    }
 
-    if (shouldMerge) {
-      // Merge content blocks into the previous message of the same turn.
-      // For user/toolResult, this combines them into a single turn.
-      const prevBlocks = toBlocks(last);
-      const curBlocks = toBlocks(msg);
-      last.content = [...prevBlocks, ...curBlocks];
+    const isUserSide = (r: string) => r === "user" || r === "toolResult";
 
-      // When merging multiple tool results into one turn, top-level single-result
-      // fields (toolCallId, toolName, etc) are misleading or invalid.
-      if (last.role === "toolResult" || role === "toolResult") {
-        delete last.toolCallId;
-        delete last.toolName;
-        delete last.isError;
-      }
-
-      // If we merge a toolResult into a user message, the turn becomes a user turn.
-      if (isUserTurnRole(last.role) && isUserTurnRole(role)) {
-        last.role = "user";
-      }
+    if (role === last.role && role !== "toolResult") {
+      // Merge consecutive messages of the same role (user or assistant).
+      // Consecutive tool results are kept SEPARATE as individual AgentMessages
+      // so their metadata (toolName, toolCallId) is preserved for pi-ai.
+      (last as any).content = [...toBlocks(last), ...toBlocks(msg)];
+    } else if (last.role === "toolResult" && role === "user") {
+      // Merge a user prompt following a tool result into the same turn.
+      // Append content to the tool result message so it stays a single AgentMessage
+      // from pi-ai's perspective, but contains both the result and the new prompt.
+      (last as any).content = [...toBlocks(last), ...toBlocks(msg)];
+    } else if (last.role === "user" && role === "toolResult") {
+      // Merge a preceding user prompt into a following tool result.
+      // Prepend content to the tool result message.
+      const next = { ...msg } as any;
+      next.content = [...toBlocks(last), ...toBlocks(msg)];
+      fullyMerged[fullyMerged.length - 1] = next;
+    } else if (isUserSide(last.role) && isUserSide(role)) {
+      // Fallback for mixed user-side roles not caught above (should be rare).
+      // Keep them separate; pi-ai will attempt to merge them into the Gemini payload.
+      fullyMerged.push({ ...msg });
     } else {
-      // Create a fresh message to avoid mutating shared history objects.
-      const next = { ...msg } as AgentMessage & { content?: unknown };
-      // Normalizing all turns to block-based content ensures consistency for merging.
-      next.content = toBlocks(msg);
-
-      // If this is a toolResult, we keep the top-level fields for single-result messages,
-      // but they will be deleted if a second result is merged into this turn above.
-      fullyMerged.push(next);
+      // Normal role transition (e.g. user -> assistant).
+      fullyMerged.push({ ...msg });
     }
   }
 

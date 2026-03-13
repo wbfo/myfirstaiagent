@@ -490,11 +490,11 @@ export function createGatewayHttpServer(opts: {
   } = opts;
   const httpServer: HttpServer = opts.tlsOptions
     ? createHttpsServer(opts.tlsOptions, (req, res) => {
-        void handleRequest(req, res);
-      })
+      void handleRequest(req, res);
+    })
     : createHttpServer((req, res) => {
-        void handleRequest(req, res);
-      });
+      void handleRequest(req, res);
+    });
 
   async function handleRequest(req: IncomingMessage, res: ServerResponse) {
     setDefaultSecurityHeaders(res);
@@ -517,6 +517,11 @@ export function createGatewayHttpServer(opts: {
         req.url = scopedCanvas.rewrittenUrl;
       }
       const requestPath = new URL(req.url ?? "/", "http://localhost").pathname;
+      if (req.method === "GET" && requestPath === "/health") {
+        console.log(`[DEBUG] Handling /health request from ${req.headers["user-agent"]}`);
+        sendJson(res, 200, { ok: true, debug: "v2" });
+        return;
+      }
       if (await handleHooksRequest(req, res)) {
         return;
       }

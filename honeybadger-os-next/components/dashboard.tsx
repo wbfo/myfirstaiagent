@@ -159,8 +159,28 @@ export function Dashboard() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [chatAgent, setChatAgent] = useState("honeybadger");
 
-  const [host, setHost] = useState("127.0.0.1:18789");
-  const [token, setToken] = useState("");
+  const RAILWAY_HOST = "wss://openclaw-production-3319.up.railway.app";
+  const RAILWAY_TOKEN = "RO1gmG_nj878aCE5PDFCWoWhzBGkDxFW";
+  const [host, setHost] = useState(() => {
+    if (typeof window === "undefined") {return RAILWAY_HOST;}
+    // Clear old broken default if stored
+    const stored = localStorage.getItem("hb_gateway_host");
+    if (!stored || stored === "127.0.0.1:18789" || stored === "openclaw-production-3319.up.railway.app") {
+      localStorage.setItem("hb_gateway_host", RAILWAY_HOST);
+      return RAILWAY_HOST;
+    }
+    return stored;
+  });
+  const [token, setToken] = useState(() => {
+    if (typeof window === "undefined") {return RAILWAY_TOKEN;}
+    // Use hardcoded token if nothing stored or empty
+    const stored = localStorage.getItem("hb_gateway_token");
+    if (!stored || stored === "") {
+      localStorage.setItem("hb_gateway_token", RAILWAY_TOKEN);
+      return RAILWAY_TOKEN;
+    }
+    return stored;
+  });
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -635,6 +655,14 @@ export function Dashboard() {
       pendingRef.current.clear();
     };
   }, [connectGateway]);
+
+  // Persist gateway settings to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== "undefined") {localStorage.setItem("hb_gateway_host", host);}
+  }, [host]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {localStorage.setItem("hb_gateway_token", token);}
+  }, [token]);
 
   useEffect(() => {
     if (screen === "overview") {
@@ -1545,7 +1573,7 @@ export function Dashboard() {
     return (
       <div className="flex h-full flex-col pt-12 md:pt-0">
         <div className="flex items-center gap-3 border-b border-[#1e1e2d] p-4">
-          <h2 className="flex-1 text-lg font-bold">Chat Console</h2>
+          <h2 className="flex-1 text-lg font-bold">Chat</h2>
           <select
             className="rounded-lg border border-hb-amber/30 bg-hb-panel px-3 py-2 text-sm font-bold text-hb-amber focus:border-hb-amber focus:outline-none"
             value={chatAgent}
@@ -1563,9 +1591,17 @@ export function Dashboard() {
               </option>
             ))}
           </select>
-          <code className="rounded bg-hb-panel px-2 py-1 text-xs text-hb-muted">
-            agent:{chatAgent}:main
-          </code>
+          <span
+            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+              gatewayStatus === "connected"
+                ? "bg-hb-green/15 text-hb-green"
+                : gatewayStatus === "connecting"
+                  ? "bg-hb-amber/15 text-hb-amber animate-pulse"
+                  : "bg-hb-red/15 text-hb-red"
+            }`}
+          >
+            {gatewayStatus}
+          </span>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto p-6">
@@ -1575,6 +1611,11 @@ export function Dashboard() {
                 <p className="text-4xl">{currentChatAgent.emoji}</p>
                 <p className="text-lg font-bold">{currentChatAgent.name}</p>
                 <p className="text-sm text-hb-muted">{currentChatAgent.role}</p>
+                {gatewayStatus !== "connected" && (
+                  <p className="mt-3 text-xs text-hb-muted animate-pulse">
+                    {gatewayStatus === "connecting" ? "Connecting to gateway…" : "Reconnecting…"}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -1636,7 +1677,7 @@ export function Dashboard() {
           <div className="flex gap-2">
             <textarea
               rows={3}
-              className="w-full rounded-xl border border-hb-border bg-hb-panel px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-hb-border bg-hb-panel px-3 py-2 text-sm focus:border-hb-amber focus:outline-none"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => {
@@ -1645,11 +1686,12 @@ export function Dashboard() {
                   void sendChat();
                 }
               }}
-              placeholder={`Message ${currentChatAgent.name}...`}
+              placeholder={`Message ${currentChatAgent.name}… (Enter to send)`}
+              disabled={gatewayStatus !== "connected"}
             />
             <button
               onClick={() => void sendChat()}
-              disabled={!chatInput.trim() || chatRunState === "streaming"}
+              disabled={!chatInput.trim() || chatRunState === "streaming" || gatewayStatus !== "connected"}
               className="h-fit rounded-xl bg-hb-amber px-4 py-2 font-bold text-black disabled:cursor-not-allowed disabled:bg-hb-border disabled:text-hb-muted"
             >
               Send
